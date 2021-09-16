@@ -21,12 +21,14 @@ import (
 )
 
 type Options struct {
-	Endpoint string `json:"endpoint,omitempty" yaml:"endpoint"`
+	EnableGPUMonitoring bool   `json:"enableGPUMonitoring,omitempty" yaml:"enableGPUMonitoring"`
+	Endpoint            string `json:"endpoint,omitempty" yaml:"endpoint"`
 }
 
 func NewPrometheusOptions() *Options {
 	return &Options{
-		Endpoint: "",
+		Endpoint:            "",
+		EnableGPUMonitoring: true,
 	}
 }
 
@@ -39,9 +41,12 @@ func (s *Options) ApplyTo(options *Options) {
 	if s.Endpoint != "" {
 		options.Endpoint = s.Endpoint
 	}
+	options.EnableGPUMonitoring = s.EnableGPUMonitoring
 }
 
 func (s *Options) AddFlags(fs *pflag.FlagSet, c *Options) {
+	fs.BoolVar(&s.EnableGPUMonitoring, "enable-gpu-monitoring-query", c.EnableGPUMonitoring, ""+
+		"The switch to enable/disable the GPU-related metrics query.")
 	fs.StringVar(&s.Endpoint, "prometheus-endpoint", c.Endpoint, ""+
 		"Prometheus service endpoint which stores KubeSphere monitoring data, if left "+
 		"blank, will use builtin metrics-server as data source.")

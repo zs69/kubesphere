@@ -53,13 +53,14 @@ import (
 )
 
 type handler struct {
-	k               kubernetes.Interface
-	mo              model.MonitoringOperator
-	opRelease       openpitrix.ReleaseInterface
-	meteringOptions *meteringclient.Options
+	k                   kubernetes.Interface
+	mo                  model.MonitoringOperator
+	opRelease           openpitrix.ReleaseInterface
+	meteringOptions     *meteringclient.Options
+	enableGPUMonitoring bool
 }
 
-func NewHandler(k kubernetes.Interface, monitoringClient monitoring.Interface, metricsClient monitoring.Interface, f informers.InformerFactory, ksClient versioned.Interface, resourceGetter *resourcev1alpha3.ResourceGetter, meteringOptions *meteringclient.Options, opOptions *openpitrixoptions.Options) *handler {
+func NewHandler(k kubernetes.Interface, monitoringClient monitoring.Interface, metricsClient monitoring.Interface, f informers.InformerFactory, ksClient versioned.Interface, resourceGetter *resourcev1alpha3.ResourceGetter, meteringOptions *meteringclient.Options, opOptions *openpitrixoptions.Options, enableGPUMonitoring bool) *handler {
 	var opRelease openpitrix.Interface
 	var s3Client s3.Interface
 	if opOptions != nil && opOptions.S3Options != nil && len(opOptions.S3Options.Endpoint) != 0 {
@@ -77,10 +78,11 @@ func NewHandler(k kubernetes.Interface, monitoringClient monitoring.Interface, m
 	}
 
 	return &handler{
-		k:               k,
-		mo:              model.NewMonitoringOperator(monitoringClient, metricsClient, k, f, resourceGetter, opRelease),
-		opRelease:       opRelease,
-		meteringOptions: meteringOptions,
+		k:                   k,
+		mo:                  model.NewMonitoringOperator(monitoringClient, metricsClient, k, f, resourceGetter, opRelease),
+		opRelease:           opRelease,
+		meteringOptions:     meteringOptions,
+		enableGPUMonitoring: enableGPUMonitoring,
 	}
 }
 
@@ -249,6 +251,10 @@ func (h handler) handleNamedMetricsQuery(resp *restful.Response, q queryOptions)
 	for _, metric := range q.namedMetrics {
 		if strings.HasPrefix(metric, model.MetricMeterPrefix) {
 			// skip meter metric
+			continue
+		}
+		if strings.Contains(metric, "_gpu_") && !h.enableGPUMonitoring {
+			// skip querying gpu metrics when it is disabled.
 			continue
 		}
 		ok, _ := regexp.MatchString(q.metricFilter, metric)

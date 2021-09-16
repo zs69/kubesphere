@@ -45,6 +45,6 @@ type meterHandler interface {
 	HandlePVCMeterQuery(req *restful.Request, resp *restful.Response)
 }
 
-func newHandler(k kubernetes.Interface, m monitoring.Interface, f informers.InformerFactory, ksClient versioned.Interface, resourceGetter *resourcev1alpha3.ResourceGetter, meteringOptions *meteringclient.Options, opOptions *openpitrixoptions.Options) meterHandler {
-	return monitorhle.NewHandler(k, m, nil, f, ksClient, resourceGetter, meteringOptions, opOptions)
+func newHandler(k kubernetes.Interface, m monitoring.Interface, f informers.InformerFactory, ksClient versioned.Interface, resourceGetter *resourcev1alpha3.ResourceGetter, meteringOptions *meteringclient.Options, opOptions *openpitrixoptions.Options, enableGPUMonitoring bool) meterHandler {
+	return monitorhle.NewHandler(k, m, nil, f, ksClient, resourceGetter, meteringOptions, opOptions, enableGPUMonitoring)
 }
