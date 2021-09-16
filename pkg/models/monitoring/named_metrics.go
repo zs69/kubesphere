@@ -87,6 +87,15 @@ var ClusterMetrics = []string{
 	"meter_cluster_net_bytes_transmitted",
 	"meter_cluster_net_bytes_received",
 	"meter_cluster_pvc_bytes_total",
+
+	// gpu
+	"cluster_gpu_utilization",
+	"cluster_gpu_usage",
+	"cluster_gpu_total",
+	"cluster_gpu_memory_utilization",
+	"cluster_gpu_memory_usage",
+	"cluster_gpu_memory_available",
+	"cluster_gpu_memory_total",
 }
 
 var NodeMetrics = []string{
@@ -129,6 +138,17 @@ var NodeMetrics = []string{
 	"meter_node_net_bytes_transmitted",
 	"meter_node_net_bytes_received",
 	"meter_node_pvc_bytes_total",
+
+	// gpu
+	"node_gpu_utilization",
+	"node_gpu_usage",
+	"node_gpu_total",
+	"node_gpu_memory_utilization",
+	"node_gpu_memory_usage",
+	"node_gpu_memory_available",
+	"node_gpu_memory_total",
+	"node_gpu_temp",
+	"node_gpu_power_usage",
 }
 
 var WorkspaceMetrics = []string{
@@ -161,6 +181,10 @@ var WorkspaceMetrics = []string{
 	"meter_workspace_net_bytes_transmitted",
 	"meter_workspace_net_bytes_received",
 	"meter_workspace_pvc_bytes_total",
+
+	// gpu
+	"workspace_gpu_usage",
+	"workspace_gpu_memory_usage",
 }
 
 var NamespaceMetrics = []string{
@@ -198,6 +222,11 @@ var NamespaceMetrics = []string{
 	"meter_namespace_net_bytes_transmitted",
 	"meter_namespace_net_bytes_received",
 	"meter_namespace_pvc_bytes_total",
+
+	// gpu
+	"namespace_gpu_limit_hard",
+	"namespace_gpu_usage",
+	"namespace_gpu_memory_usage",
 }
 
 var ApplicationMetrics = []string{
@@ -232,6 +261,10 @@ var WorkloadMetrics = []string{
 	"meter_workload_net_bytes_transmitted",
 	"meter_workload_net_bytes_received",
 	"meter_workload_pvc_bytes_total",
+
+	// gpu
+	"workload_gpu_usage",
+	"workload_gpu_memory_usage",
 }
 
 var ServiceMetrics = []string{
@@ -255,12 +288,19 @@ var PodMetrics = []string{
 	"meter_pod_net_bytes_transmitted",
 	"meter_pod_net_bytes_received",
 	"meter_pod_pvc_bytes_total",
+
+	// gpu
+	"pod_gpu_usage",
+	"pod_gpu_memory_usage",
 }
 
 var ContainerMetrics = []string{
 	"container_cpu_usage",
 	"container_memory_usage",
 	"container_memory_usage_wo_cache",
+	// gpu
+	"container_gpu_usage",
+	"container_gpu_memory_usage",
 }
 
 var PVCMetrics = []string{
