@@ -40,7 +40,7 @@ func newNotificationHandler(
 	ksClient kubesphere.Interface) *handler {
 
 	return &handler{
-		operator: notification.NewOperator(informers, k8sClient, ksClient),
+		operator: notification.NewOperator(informers, k8sClient, ksClient, nil),
 	}
 }
 

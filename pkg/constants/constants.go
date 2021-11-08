@@ -116,9 +116,10 @@ const (
 	ComponentMetricsTag  = "Component Metrics"
 	CustomMetricsTag     = "Custom Metrics"
 
-	LogQueryTag      = "Log Query"
-	EventsQueryTag   = "Events Query"
-	AuditingQueryTag = "Auditing Query"
+	LogQueryTag          = "Log Query"
+	EventsQueryTag       = "Events Query"
+	AuditingQueryTag     = "Auditing Query"
+	NotificationQueryTag = "Notification Query"
 
 	ClusterMetersTag   = "Cluster Meters"
 	NodeMetersTag      = "Node Meters"

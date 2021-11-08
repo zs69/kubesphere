@@ -47,6 +47,7 @@ import (
 	esclient "kubesphere.io/kubesphere/pkg/simple/client/logging/elasticsearch"
 	"kubesphere.io/kubesphere/pkg/simple/client/monitoring/metricsserver"
 	"kubesphere.io/kubesphere/pkg/simple/client/monitoring/prometheus"
+	notificationclient "kubesphere.io/kubesphere/pkg/simple/client/notification/elasticsearch"
 	"kubesphere.io/kubesphere/pkg/simple/client/s3"
 	fakes3 "kubesphere.io/kubesphere/pkg/simple/client/s3/fake"
 	"kubesphere.io/kubesphere/pkg/simple/client/sonarqube"
@@ -207,6 +208,14 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 			return nil, fmt.Errorf("failed to init alerting client: %v", err)
 		}
 		apiServer.AlertingClient = alertingClient
+	}
+
+	if s.NotificationOptions != nil && s.NotificationOptions.Host != "" {
+		nc, err := notificationclient.NewClient(s.NotificationOptions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to init notification client: %v", err)
+		}
+		apiServer.NotificationClient = nc
 	}
 
 	server := &http.Server{

@@ -3,7 +3,10 @@ package notification
 import (
 	"context"
 	"fmt"
+	"io"
 	"reflect"
+
+	"kubesphere.io/kubesphere/pkg/utils/stringutils"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -16,6 +19,9 @@ import (
 	"kubesphere.io/api/notification/v2beta1"
 
 	"kubesphere.io/kubesphere/pkg/api"
+	notificationv2beta2 "kubesphere.io/kubesphere/pkg/api/notification/v2beta2"
+	notificationclient "kubesphere.io/kubesphere/pkg/simple/client/notification"
+
 	"kubesphere.io/kubesphere/pkg/apiserver/query"
 	kubesphere "kubesphere.io/kubesphere/pkg/client/clientset/versioned"
 	"kubesphere.io/kubesphere/pkg/constants"
@@ -36,25 +42,31 @@ type Operator interface {
 
 	GetObject(resource string) runtime.Object
 	IsKnownResource(resource, subresource string) bool
+
+	SearchNotification(queryParam *notificationv2beta2.Query) (notificationv2beta2.APIResponse, error)
+	ExportNotification(queryParam *notificationv2beta2.Query, writer io.Writer) error
 }
 
 type operator struct {
-	k8sClient      kubernetes.Interface
-	ksClient       kubesphere.Interface
-	informers      informers.InformerFactory
-	resourceGetter *resource.ResourceGetter
+	k8sClient          kubernetes.Interface
+	ksClient           kubesphere.Interface
+	informers          informers.InformerFactory
+	resourceGetter     *resource.ResourceGetter
+	notificationClient notificationclient.Client
 }
 
 func NewOperator(
 	informers informers.InformerFactory,
 	k8sClient kubernetes.Interface,
-	ksClient kubesphere.Interface) Operator {
+	ksClient kubesphere.Interface,
+	notificationClient notificationclient.Client) Operator {
 
 	return &operator{
-		informers:      informers,
-		k8sClient:      k8sClient,
-		ksClient:       ksClient,
-		resourceGetter: resource.NewResourceGetter(informers, nil),
+		informers:          informers,
+		k8sClient:          k8sClient,
+		ksClient:           ksClient,
+		resourceGetter:     resource.NewResourceGetter(informers, nil),
+		notificationClient: notificationClient,
 	}
 }
 
@@ -240,6 +252,50 @@ func (o *operator) IsKnownResource(resource, subresource string) bool {
 	}
 
 	return true
+}
+
+func (o *operator) SearchNotification(queryParam *notificationv2beta2.Query) (notificationv2beta2.APIResponse, error) {
+
+	ar := notificationv2beta2.APIResponse{}
+	result, err := o.notificationClient.SearchNotifications(queryToFilter(queryParam),
+		queryParam.Sort, queryParam.Order,
+		queryParam.From, queryParam.Size)
+	if err != nil {
+		return ar, err
+	}
+
+	ar.Notifications = result
+	return ar, nil
+}
+
+func (o *operator) ExportNotification(queryParam *notificationv2beta2.Query, writer io.Writer) error {
+
+	return o.notificationClient.ExportNotifications(queryToFilter(queryParam), queryParam.Sort, queryParam.Order, writer)
+}
+
+func queryToFilter(queryParam *notificationv2beta2.Query) *notificationclient.Filter {
+
+	f := &notificationclient.Filter{
+		AlertName:      stringutils.Split(queryParam.AlertName, ","),
+		AlertNameFuzzy: stringutils.Split(queryParam.AlertNameFuzzy, ","),
+		AlertType:      stringutils.Split(queryParam.AlertType, ","),
+		AlertTypeFuzzy: stringutils.Split(queryParam.AlertTypeFuzzy, ","),
+		Severity:       stringutils.Split(queryParam.Severity, ","),
+		SeverityFuzzy:  stringutils.Split(queryParam.SeverityFuzzy, ","),
+		Namespace:      stringutils.Split(queryParam.Namespace, ","),
+		NamespaceFuzzy: stringutils.Split(queryParam.NamespaceFuzzy, ","),
+		Service:        stringutils.Split(queryParam.Service, ","),
+		ServiceFuzzy:   stringutils.Split(queryParam.ServiceFuzzy, ","),
+		Container:      stringutils.Split(queryParam.Container, ","),
+		ContainerFuzzy: stringutils.Split(queryParam.ContainerFuzzy, ","),
+		Pod:            stringutils.Split(queryParam.Pod, ","),
+		PodFuzzy:       stringutils.Split(queryParam.PodFuzzy, ","),
+		MessageFuzzy:   stringutils.Split(queryParam.Message, ","),
+		StartTime:      queryParam.StartTime,
+		EndTime:        queryParam.EndTime,
+	}
+
+	return f
 }
 
 // Does the user has permission to access this object.

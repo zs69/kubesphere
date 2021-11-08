@@ -142,6 +142,9 @@ func newTestConfig() (*Config, error) {
 		},
 		NotificationOptions: &notification.Options{
 			Endpoint: "http://notification.kubesphere-alerting-system.svc:9200",
+			History: notification.History{
+				IndexPrefix: "ks-logstash-notification",
+			},
 		},
 		AuthorizationOptions: authorization.NewOptions(),
 		AuthenticationOptions: &authentication.Options{
