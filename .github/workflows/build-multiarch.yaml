@@ -5,12 +5,9 @@ on:
     branches:
       - 'master'
       - 'release-*'
+      - 'qkcp'
     tags:
       - 'v*'
-  pull_request:
-    branches:
-      - 'master'
-      - 'release-*'
 
 jobs:
   build:
