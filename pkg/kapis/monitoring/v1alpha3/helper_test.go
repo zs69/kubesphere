@@ -354,6 +354,8 @@ func TestParseRequestParams(t *testing.T) {
 					"meter_pod_net_bytes_transmitted",
 					"meter_pod_net_bytes_received",
 					"meter_pod_pvc_bytes_total",
+					"pod_gpu_usage",
+					"pod_gpu_memory_usage",
 				},
 				Operation: OperationQuery,
 				option:    monitoring.PodOption{NamespacedResourcesFilter: "test1|test2", ResourceFilter: ".*"},
