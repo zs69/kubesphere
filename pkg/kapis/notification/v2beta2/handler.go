@@ -151,6 +151,12 @@ func (h *handler) SearchNotification(req *restful.Request, resp *restful.Respons
 		return
 	}
 
+	operation := req.QueryParameter("operation")
+	if operation == "export" {
+		h.ExportNotification(req, resp)
+		return
+	}
+
 	result, err := h.operator.SearchNotification(queryParam)
 	if err != nil {
 		klog.Errorln(err)

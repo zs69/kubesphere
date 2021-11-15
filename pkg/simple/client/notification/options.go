@@ -1,5 +1,5 @@
 /*
-Copyright 2020 KubeSphere Authors
+Copyright 2021 KubeSphere Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -67,13 +67,13 @@ func (s *Options) AddFlags(fs *pflag.FlagSet, c *Options) {
 	fs.BoolVar(&s.Enable, "notification-history-enabled", c.Enable, "Enable notification history component or not. ")
 
 	fs.BoolVar(&s.BasicAuth, "notification-history-elasticsearch-basicAuth", c.BasicAuth, ""+
-		"Does elasticsearch basic auth enabled.")
+		"Is elasticsearch basic auth enabled.")
 
 	fs.StringVar(&s.Username, "notification-history-elasticsearch-username", c.Username, ""+
 		"ElasticSearch authentication username")
 
 	fs.StringVar(&s.Password, "notification-history-elasticsearch-password", c.Password, ""+
-		"ElasticSearch authentication passwor")
+		"ElasticSearch authentication password")
 
 	fs.StringVar(&s.Host, "notification-history-elasticsearch-host", c.Host, ""+
 		"Elasticsearch service host.")

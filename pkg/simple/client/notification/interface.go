@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The KubeSphere Authors.
+Copyright 2021 The KubeSphere Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,23 +27,30 @@ type Client interface {
 }
 
 type Filter struct {
+	// The name of the alert that trigger the notification.
 	AlertName      []string
 	AlertNameFuzzy []string
+	// The type of the alert that trigger the notification, "auditing", "events" and so on.
 	AlertType      []string
 	AlertTypeFuzzy []string
-	Severity       []string
-	SeverityFuzzy  []string
+	// The severity of the alert that trigger the notification, "normal", "warning" and "ciritial".
+	Severity      []string
+	SeverityFuzzy []string
+	// The namespace of the alert that trigger the notification.
 	Namespace      []string
 	NamespaceFuzzy []string
-	Service        []string
-	ServiceFuzzy   []string
+	// The service that triggered the alert.
+	Service      []string
+	ServiceFuzzy []string
+	// The container that triggered the alert.
 	Container      []string
 	ContainerFuzzy []string
-	Pod            []string
-	PodFuzzy       []string
-	MessageFuzzy   []string
-	StartTime      time.Time
-	EndTime        time.Time
+	// The pod that triggered the alert.
+	Pod          []string
+	PodFuzzy     []string
+	MessageFuzzy []string
+	StartTime    time.Time
+	EndTime      time.Time
 }
 
 type Notifications struct {
