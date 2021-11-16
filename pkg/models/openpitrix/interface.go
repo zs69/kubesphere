@@ -36,6 +36,7 @@ type Interface interface {
 	ApplicationInterface
 	RepoInterface
 	ReleaseInterface
+	ManifestInterface
 	CategoryInterface
 }
 
@@ -44,6 +45,7 @@ type openpitrixOperator struct {
 	ApplicationInterface
 	RepoInterface
 	ReleaseInterface
+	ManifestInterface
 	CategoryInterface
 }
 
@@ -95,6 +97,7 @@ func NewOpenpitrixOperator(ksInformers ks_informers.InformerFactory, ksClient ve
 		ApplicationInterface: newApplicationOperator(cachedReposData, ksInformers.KubeSphereSharedInformerFactory(), ksClient, s3Client),
 		RepoInterface:        newRepoOperator(cachedReposData, ksInformers.KubeSphereSharedInformerFactory(), ksClient),
 		ReleaseInterface:     newReleaseOperator(cachedReposData, ksInformers.KubernetesSharedInformerFactory(), ksInformers.KubeSphereSharedInformerFactory(), ksClient),
+		ManifestInterface:    newManifestOperator(ksInformers.KubernetesSharedInformerFactory(), ksInformers.KubeSphereSharedInformerFactory(), ksClient),
 		CategoryInterface:    newCategoryOperator(cachedReposData, ksInformers.KubeSphereSharedInformerFactory(), ksClient),
 	}
 }

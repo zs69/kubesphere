@@ -62,4 +62,13 @@ const (
 
 	RepoSyncPeriod          = "app.kubesphere.io/sync-period"
 	OriginWorkspaceLabelKey = "kubesphere.io/workspace-origin"
+
+	// custom resource status
+	StatusCreating = "Creating"
+	StatusCreated  = "Created"
+	StatusFailed   = "Failed"
+	StatusError    = "Error"
+	StatusUnknown  = "Unknown"
+
+	OperatorApplicationIdPrefix = "app-"
 )

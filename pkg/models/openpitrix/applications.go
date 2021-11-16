@@ -73,8 +73,10 @@ type applicationOperator struct {
 	appClient        v1alpha13.HelmApplicationInterface
 	appVersionClient v1alpha13.HelmApplicationVersionInterface
 
-	appLister     listers_v1alpha1.HelmApplicationLister
-	versionLister listers_v1alpha1.HelmApplicationVersionLister
+	appLister                listers_v1alpha1.HelmApplicationLister
+	versionLister            listers_v1alpha1.HelmApplicationVersionLister
+	operatorAppLister        listers_v1alpha1.OperatorApplicationLister
+	operatorAppVersionLister listers_v1alpha1.OperatorApplicationVersionLister
 
 	repoLister listers_v1alpha1.HelmRepoLister
 	ctgLister  listers_v1alpha1.HelmCategoryLister
@@ -92,8 +94,10 @@ func newApplicationOperator(cached reposcache.ReposCache, informers externalvers
 		appClient:        ksClient.ApplicationV1alpha1().HelmApplications(),
 		appVersionClient: ksClient.ApplicationV1alpha1().HelmApplicationVersions(),
 
-		appLister:     informers.Application().V1alpha1().HelmApplications().Lister(),
-		versionLister: informers.Application().V1alpha1().HelmApplicationVersions().Lister(),
+		appLister:                informers.Application().V1alpha1().HelmApplications().Lister(),
+		versionLister:            informers.Application().V1alpha1().HelmApplicationVersions().Lister(),
+		operatorAppLister:        informers.Application().V1alpha1().OperatorApplications().Lister(),
+		operatorAppVersionLister: informers.Application().V1alpha1().OperatorApplicationVersions().Lister(),
 
 		ctgLister:   informers.Application().V1alpha1().HelmCategories().Lister(),
 		rlsLister:   informers.Application().V1alpha1().HelmReleases().Lister(),
@@ -302,24 +306,41 @@ func buildLabelSelector(conditions *params.Conditions) map[string]string {
 }
 
 func (c *applicationOperator) ListApps(conditions *params.Conditions, orderBy string, reverse bool, limit, offset int) (*models.PageableResponse, error) {
-
+	// operator apps
+	operatorApps, err := c.listOperatorApps()
 	apps, err := c.listApps(conditions)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
 	}
 	apps = filterApps(apps, conditions)
+	operatorApps = filterOperatorApps(operatorApps, conditions)
 
 	if reverse {
 		sort.Sort(sort.Reverse(HelmApplicationList(apps)))
+		sort.Sort(sort.Reverse(OperatorApplicationList(operatorApps)))
 	} else {
 		sort.Sort(HelmApplicationList(apps))
+		sort.Sort(OperatorApplicationList(operatorApps))
 	}
 
 	totalCount := len(apps)
 	start, end := (&query.Pagination{Limit: limit, Offset: offset}).GetValidPagination(totalCount)
 	apps = apps[start:end]
 	items := make([]interface{}, 0, len(apps))
+
+	// add operator apps and app versions
+	for i := range operatorApps {
+		versions, err := c.getOperatorAppVersionByName(operatorApps[i].Name)
+		if err != nil && !apierrors.IsNotFound(err) {
+			return nil, err
+		}
+		items = append(items, convertOperatorApp(operatorApps[i], versions))
+	}
+
+	if conditions.Match[CategoryId] == RadonDBCategoryID {
+		return &models.PageableResponse{Items: items, TotalCount: len(operatorApps)}, nil
+	}
 
 	for i := range apps {
 		versions, err := c.getAppVersionsByAppId(apps[i].GetHelmApplicationId())
@@ -330,6 +351,11 @@ func (c *applicationOperator) ListApps(conditions *params.Conditions, orderBy st
 		items = append(items, convertApp(apps[i], versions, ctg, 0))
 	}
 	return &models.PageableResponse{Items: items, TotalCount: totalCount}, nil
+}
+
+func (c *applicationOperator) listOperatorApps() (ret []*v1alpha1.OperatorApplication, err error) {
+	ret, err = c.operatorAppLister.List(labels.Everything())
+	return
 }
 
 func (c *applicationOperator) DeleteApp(id string) error {
@@ -581,9 +607,27 @@ func (c *applicationOperator) appAttachmentDiff(old, newApp *v1alpha1.HelmApplic
 }
 
 func (c *applicationOperator) DescribeApp(id string) (*App, error) {
+	var operatorApp *v1alpha1.OperatorApplication
 	var helmApp *v1alpha1.HelmApplication
 	var ctg *v1alpha1.HelmCategory
 	var err error
+
+	operatorApp, err = c.getOperatorApplication(strings.TrimPrefix(id, v1alpha1.OperatorApplicationIdPrefix))
+	if err != nil {
+		klog.Error(err)
+	}
+
+	if operatorApp != nil {
+		operatorVersion, err := c.getOperatorAppVersionByName(operatorApp.Name)
+		if err != nil {
+			klog.Error(err)
+			return nil, err
+		}
+		oApp := convertOperatorApp(operatorApp, operatorVersion)
+		if oApp != nil {
+			return oApp, nil
+		}
+	}
 
 	helmApp, err = c.getHelmApplication(id)
 	if err != nil {
@@ -650,4 +694,9 @@ func (c *applicationOperator) getHelmApplication(appId string) (*v1alpha1.HelmAp
 	} else {
 		return c.appLister.Get(appId)
 	}
+}
+
+func (c *applicationOperator) getOperatorApplication(appName string) (*v1alpha1.OperatorApplication, error) {
+	app, err := c.operatorAppLister.Get(appName)
+	return app, err
 }

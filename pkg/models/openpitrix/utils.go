@@ -126,6 +126,33 @@ func (l AppVersionAuditList) Less(i, j int) bool {
 	}
 }
 
+type ManifestList []*v1alpha1.Manifest
+
+func (l ManifestList) Len() int      { return len(l) }
+func (l ManifestList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+func (l ManifestList) Less(i, j int) bool {
+	var t1, t2 time.Time
+	if l[i].Status.LastUpdate == nil {
+		t1 = l[i].CreationTimestamp.Time
+	} else {
+		t1 = l[i].Status.LastUpdate.Time
+	}
+
+	if l[j].Status.LastUpdate == nil {
+		t2 = l[j].CreationTimestamp.Time
+	} else {
+		t2 = l[j].Status.LastUpdate.Time
+	}
+
+	if t1.After(t2) {
+		return true
+	} else if t1.Before(t2) {
+		return false
+	} else {
+		return l[i].Name > l[j].Name
+	}
+}
+
 // copy from openpitrix
 func matchPackageFailedError(err error, res *ValidatePackageResponse) {
 	var errStr = err.Error()
@@ -468,6 +495,24 @@ type HelmApplicationList []*v1alpha1.HelmApplication
 func (l HelmApplicationList) Len() int      { return len(l) }
 func (l HelmApplicationList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 func (l HelmApplicationList) Less(i, j int) bool {
+	t1 := l[i].CreationTimestamp.UnixNano()
+	t2 := l[j].CreationTimestamp.UnixNano()
+	if t1 < t2 {
+		return true
+	} else if t1 > t2 {
+		return false
+	} else {
+		n1 := l[i].GetTrueName()
+		n2 := l[j].GetTrueName()
+		return n1 < n2
+	}
+}
+
+type OperatorApplicationList []*v1alpha1.OperatorApplication
+
+func (l OperatorApplicationList) Len() int      { return len(l) }
+func (l OperatorApplicationList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+func (l OperatorApplicationList) Less(i, j int) bool {
 	t1 := l[i].CreationTimestamp.UnixNano()
 	t2 := l[j].CreationTimestamp.UnixNano()
 	if t1 < t2 {
@@ -839,4 +884,139 @@ func parseChartVersionName(name string) (version, appVersion string) {
 	appVersion = strings.Trim(parts[1], "]")
 	appVersion = strings.TrimSpace(appVersion)
 	return
+}
+
+func convertOperatorApp(app *v1alpha1.OperatorApplication, version *v1alpha1.OperatorApplicationVersion) *App {
+	if app == nil {
+		return nil
+	}
+	out := &App{}
+	out.AppId = "app-" + app.Name
+	out.Name = app.Spec.AppName
+	out.Abstraction = app.Spec.Abstraction
+	out.AbstractionZh = app.Spec.AbstractionZh
+	out.Description = app.Spec.Description
+	out.DescriptionZh = app.Spec.DescriptionZh
+	date := strfmt.DateTime(app.CreationTimestamp.Time)
+	out.CreateTime = &date
+	out.Status = app.Status.State
+
+	out.Description = app.Spec.Description
+	out.Icon = app.Spec.Icon
+	ct := strfmt.DateTime(app.CreationTimestamp.Time)
+	rc := ResourceCategory{
+		CategoryId: RadonDBCategoryID,
+		Name:       RadonDBCategoryName,
+		CreateTime: &ct,
+	}
+	out.CategorySet = AppCategorySet{&rc}
+	out.LatestAppVersion = convertOperatorAppVersion(version)
+	out.Owner = app.Spec.Owner
+	out.AppVersionTypes = OperatorAppVersionType
+	return out
+}
+
+func convertOperatorAppVersion(in *v1alpha1.OperatorApplicationVersion) *AppVersion {
+	if in == nil {
+		return nil
+	}
+	out := &AppVersion{}
+	out.AppId = in.Name
+	out.Active = true
+	out.VersionId = in.Spec.AppVersion
+	out.Screenshots = in.Spec.Screenshots
+	out.ScreenshotsZh = in.Spec.ScreenshotsZh
+	t := in.CreationTimestamp.Time
+	date := strfmt.DateTime(t)
+	out.CreateTime = &date
+	out.Status = in.Status.State
+	out.Owner = in.Spec.AppName
+	out.Name = in.GetVersionName()
+	out.Owner = in.Spec.Owner
+	out.VersionId = in.Spec.AppName
+	// operator APP version
+	out.Description = in.Spec.ChangeLog
+	out.DescriptionZh = in.Spec.ChangeLogZh
+	return out
+}
+
+func filterOperatorApps(operatorApps []*v1alpha1.OperatorApplication, conditions *params.Conditions) []*v1alpha1.OperatorApplication {
+	if conditions == nil || len(conditions.Match) == 0 || len(operatorApps) == 0 {
+		return operatorApps
+	}
+	key := conditions.Match[Keyword]
+	curr := 0
+	for i := range operatorApps {
+		if key != "" {
+			if !strings.Contains(strings.ToLower(operatorApps[i].Name), key) {
+				continue
+			}
+		}
+		if curr != i {
+			operatorApps[curr] = operatorApps[i]
+		}
+		curr++
+	}
+	return operatorApps[:curr:curr]
+}
+
+// convertManifest convert v1alpha1.Manifest to Manifest
+func convertManifest(mft *v1alpha1.Manifest) *Manifest {
+	manifest := &Manifest{}
+	manifest.Name = mft.Name
+	manifest.Namespace = mft.Spec.Namespace
+	manifest.Cluster = mft.Spec.Cluster
+	manifest.AppVersion = mft.Spec.AppVersion
+	manifest.Description = mft.Spec.Description
+	manifest.Version = mft.Spec.Version
+	manifest.CustomResource = mft.Spec.CustomResource
+	manifest.ResourceState = mft.Status.ResourceState
+	manifest.CreationTimestamp = mft.CreationTimestamp
+	return manifest
+}
+
+func filterManifests(manifests []*v1alpha1.Manifest, conditions *params.Conditions) []*v1alpha1.Manifest {
+	if conditions == nil || len(conditions.Match) == 0 || len(manifests) == 0 {
+		return manifests
+	}
+
+	curr := 0
+	for i := 0; i < len(manifests); i++ {
+		keyword := strings.ToLower(conditions.Match[Keyword])
+		if keyword != "" {
+			fv := strings.Contains(strings.ToLower(manifests[i].GetManifestCluster()), keyword) ||
+				strings.Contains(strings.ToLower(manifests[i].Spec.AppVersion), keyword)
+			if !fv {
+				continue
+			}
+		}
+
+		if conditions.Match[Status] != "" {
+			states := strings.Split(conditions.Match[Status], "|")
+			fv := filterManifestByStates(manifests[i], states)
+			if !fv {
+				continue
+			}
+		}
+		if curr != i {
+			manifests[curr] = manifests[i]
+		}
+		curr++
+	}
+
+	return manifests[:curr:curr]
+}
+
+func filterManifestByStates(rls *v1alpha1.Manifest, state []string) bool {
+	if len(state) == 0 {
+		return true
+	}
+	st := rls.Status.State
+	if st == "" {
+		st = v1alpha1.StatusCreating
+	}
+	if sliceutil.HasString(state, st) {
+		return true
+	}
+	return false
 }

@@ -696,6 +696,111 @@ func AddToContainer(c *restful.Container, ksInfomrers informers.InformerFactory,
 		Param(webservice.PathParameter("attachment", "attachment id")).
 		Returns(http.StatusOK, api.StatusOK, errors.Error{}))
 
+	webservice.Route(webservice.POST("/workspaces/{workspace}/clusters/{cluster}/namespaces/{namespace}/manifests").
+		To(handler.CreateManifest).
+		Doc("Deploy a new manifest").
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.OpenpitrixTag}).
+		Reads(openpitrix.CreateManifestRequest{}).
+		Returns(http.StatusOK, api.StatusOK, errors.Error{}).
+		Param(webservice.PathParameter("cluster", "the name of the cluster.").Required(true)).
+		Param(webservice.PathParameter("namespace", "the name of the project").Required(true)))
+
+	webservice.Route(webservice.POST("/workspaces/{workspace}/namespaces/{namespace}/manifests").
+		To(handler.CreateManifest).
+		Doc("Deploy a new manifest").
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.OpenpitrixTag}).
+		Reads(openpitrix.CreateManifestRequest{}).
+		Returns(http.StatusOK, api.StatusOK, errors.Error{}).
+		Param(webservice.PathParameter("namespace", "the name of the project").Required(true)))
+
+	webservice.Route(webservice.DELETE("/workspaces/{workspace}/clusters/{cluster}/namespaces/{namespace}/manifests/{manifest}").
+		To(handler.DeleteManifest).
+		Doc("Delete the specified manifest").
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.NamespaceResourcesTag}).
+		Returns(http.StatusOK, api.StatusOK, errors.Error{}).
+		Param(webservice.PathParameter("cluster", "the name of the cluster.").Required(true)).
+		Param(webservice.PathParameter("namespace", "the name of the project").Required(true)).
+		Param(webservice.PathParameter("manifest", "the id of the manifest").Required(true)))
+
+	webservice.Route(webservice.DELETE("/workspaces/{workspace}/clusters/{cluster}/manifests/{manifest}").
+		To(handler.DeleteManifest).
+		Doc("Delete the specified manifest").
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.NamespaceResourcesTag}).
+		Returns(http.StatusOK, api.StatusOK, errors.Error{}).
+		Param(webservice.PathParameter("cluster", "the name of the cluster.").Required(true)).
+		Param(webservice.PathParameter("workspace", "the workspaces of the project").Required(true)).
+		Param(webservice.PathParameter("manifest", "the id of the manifest").Required(true)))
+
+	webservice.Route(webservice.PUT("/workspaces/{workspace}/clusters/{cluster}/namespaces/{namespace}/manifests/{manifest}").
+		Consumes(mimePatch...).
+		To(handler.ModifyManifest).
+		Doc("Modify manifests").
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.NamespaceResourcesTag}).
+		Reads(openpitrix.ModifyManifestRequest{}).
+		Returns(http.StatusOK, api.StatusOK, errors.Error{}).
+		Param(webservice.PathParameter("cluster", "the name of the cluster.").Required(true)).
+		Param(webservice.PathParameter("namespace", "the name of the project").Required(true)).
+		Param(webservice.PathParameter("manifest", "the id of the manifest").Required(true)))
+
+	webservice.Route(webservice.PUT("/workspaces/{workspace}/namespaces/{namespace}/manifests/{manifest}").
+		Consumes(mimePatch...).
+		To(handler.ModifyManifest).
+		Doc("Modify manifest").
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.NamespaceResourcesTag}).
+		Reads(openpitrix.ModifyClusterAttributesRequest{}).
+		Returns(http.StatusOK, api.StatusOK, errors.Error{}).
+		Param(webservice.PathParameter("namespace", "the name of the project").Required(true)).
+		Param(webservice.PathParameter("manifest", "the id of the manifest").Required(true)))
+
+	webservice.Route(webservice.GET("/workspaces/{workspace}/namespaces/{namespace}/manifests").
+		To(handler.ListManifests).
+		Returns(http.StatusOK, api.StatusOK, models.PageableResponse{}).
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.NamespaceResourcesTag}).
+		Doc("List all manifests within the specified cluster").
+		Param(webservice.QueryParameter(params.ConditionsParam, "query conditions, connect multiple conditions with commas, equal symbol for exact query, wave symbol for fuzzy query e.g. name~a").
+			Required(false).
+			DataFormat("key=value,key~value").
+			DefaultValue("")).
+		Param(webservice.PathParameter("cluster", "the cluster of the project.").Required(true)).
+		Param(webservice.QueryParameter(params.PagingParam, "paging query, e.g. limit=100,page=1").
+			Required(false).
+			DataFormat("limit=%d,page=%d").
+			DefaultValue("limit=10,page=1")))
+
+	webservice.Route(webservice.GET("/workspaces/{workspace}/clusters/{cluster}/namespaces/{namespace}/manifests").
+		To(handler.ListManifests).
+		Returns(http.StatusOK, api.StatusOK, models.PageableResponse{}).
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.NamespaceResourcesTag}).
+		Doc("List all manifests within the specified namespace").
+		Param(webservice.QueryParameter(params.ConditionsParam, "query conditions, connect multiple conditions with commas, equal symbol for exact query, wave symbol for fuzzy query e.g. name~a").
+			Required(false).
+			DataFormat("key=value,key~value").
+			DefaultValue("")).
+		Param(webservice.PathParameter("workspace", "the workspace of the project.").Required(true)).
+		Param(webservice.PathParameter("cluster", "the name of the cluster.").Required(true)).
+		Param(webservice.PathParameter("namespace", "the name of the project").Required(true)).
+		Param(webservice.QueryParameter(params.PagingParam, "paging query, e.g. limit=100,page=1").
+			Required(false).
+			DataFormat("limit=%d,page=%d").
+			DefaultValue("limit=10,page=1")))
+
+	webservice.Route(webservice.GET("/workspaces/{workspace}/clusters/{cluster}/namespaces/{namespace}/manifests/{manifest}").
+		To(handler.DescribeManifest).
+		Returns(http.StatusOK, api.StatusOK, openpitrix.Manifest{}).
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.NamespaceResourcesTag}).
+		Doc("Describe the specified manifest of the namespace").
+		Param(webservice.PathParameter("cluster", "the name of the cluster.").Required(true)).
+		Param(webservice.PathParameter("namespace", "the name of the project").Required(true)).
+		Param(webservice.PathParameter("manifest", "the id of the manifest").Required(true)))
+
+	webservice.Route(webservice.GET("/workspaces/{workspace}/namespaces/{namespace}/manifests/{manifest}").
+		To(handler.DescribeManifest).
+		Returns(http.StatusOK, api.StatusOK, openpitrix.Manifest{}).
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.NamespaceResourcesTag}).
+		Doc("Describe the specified manifest of the namespace").
+		Param(webservice.PathParameter("namespace", "the name of the project").Required(true)).
+		Param(webservice.PathParameter("manifests", "the id of the manifest").Required(true)))
+
 	c.Add(webservice)
 
 	return nil

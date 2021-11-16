@@ -75,6 +75,12 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Application().V1alpha1().HelmReleases().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("helmrepos"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Application().V1alpha1().HelmRepos().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("manifests"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Application().V1alpha1().Manifests().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("operatorapplications"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Application().V1alpha1().OperatorApplications().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("operatorapplicationversions"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Application().V1alpha1().OperatorApplicationVersions().Informer()}, nil
 
 		// Group=auditing.kubesphere.io, Version=v1alpha1
 	case auditingv1alpha1.SchemeGroupVersion.WithResource("rules"):
