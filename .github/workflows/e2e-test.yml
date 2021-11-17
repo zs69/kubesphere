@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       GO111MODULE: on
     steps:
