@@ -24,6 +24,8 @@ import (
 	"io/ioutil"
 	"log"
 
+	licensev1alpha1 "kubesphere.io/kubesphere/pkg/kapis/license/v1alpha1"
+
 	"kubesphere.io/kubesphere/pkg/client/clientset/versioned/fake"
 	"kubesphere.io/kubesphere/pkg/version"
 
@@ -133,6 +135,7 @@ func generateSwaggerJson() []byte {
 	urlruntime.Must(terminalv1alpha2.AddToContainer(container, clientsets.Kubernetes(), nil, nil))
 	urlruntime.Must(metricsv1alpha2.AddToContainer(nil, container, clientsets.Kubernetes(), nil))
 	urlruntime.Must(networkv1alpha2.AddToContainer(container, ""))
+	urlruntime.Must(licensev1alpha1.AddToContainer(container, clientsets.Kubernetes(), informerFactory, nil))
 	alertingOptions := &alerting.Options{}
 	alertingClient, _ := alerting.NewRuleClient(alertingOptions)
 	urlruntime.Must(alertingv2alpha1.AddToContainer(container, informerFactory, promfake.NewSimpleClientset(), alertingClient, alertingOptions))

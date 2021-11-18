@@ -140,8 +140,7 @@ const (
 	NotificationSecretNamespace = "kubesphere-monitoring-federated"
 	NotificationManagedLabel    = "notification.kubesphere.io/managed"
 
-	DashboardTag            = "Dashboard"
-	LicenseCpuNumAnnotation = "license.kubesphere.io/cpu-num"
+	DashboardTag = "Dashboard"
 )
 
 var (

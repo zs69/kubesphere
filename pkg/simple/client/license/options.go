@@ -33,5 +33,6 @@ func NewOptions() *Options {
 func (s *Options) AddFlags(fs *pflag.FlagSet, c *Options) {
 	// We will skip the license check only when the user sets this field to true.
 	fs.BoolVar(&s.SkipLicenseCheck, "skip-license-check", c.SkipLicenseCheck, "Skip license check")
+	// Hidden this flag. So the user won't set this flag to true to skip license check.
 	fs.MarkHidden("skip-license-check")
 }
