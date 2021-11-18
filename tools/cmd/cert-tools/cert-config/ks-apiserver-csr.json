@@ -1,0 +1,25 @@
+{
+  "cn":"ks-apiserver",
+  "hosts": [
+    "localhost",
+    "127.0.0.1",
+    "ks-apiserver",
+    "ks-apiserver.kubesphere-system",
+    "ks-apiserver.kubesphere-system.svc",
+    "ks-apiserver.kubesphere-system.svc.cluster",
+    "ks-apiserver.kubesphere-system.svc.cluster.local"
+  ],
+  "key": {
+    "algo": "rsa",
+    "size": 4096
+  },
+  "names": [
+    {
+      "C":  "CN",
+      "L":  "BJ",
+      "O":  "QingCloud",
+      "OU": "KubeSphere",
+      "ST": "BJ"
+    }
+  ]
+}
