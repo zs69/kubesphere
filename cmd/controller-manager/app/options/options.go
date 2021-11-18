@@ -21,9 +21,9 @@ import (
 	"strings"
 	"time"
 
-	"kubesphere.io/kubesphere/pkg/apiserver/authentication"
-
 	"k8s.io/apimachinery/pkg/labels"
+
+	"kubesphere.io/kubesphere/pkg/apiserver/authentication"
 
 	"github.com/spf13/pflag"
 	"k8s.io/client-go/tools/leaderelection"

@@ -28,8 +28,6 @@ import (
 )
 
 // ClusterRole get the cluster role of the kubernetes cluster.
-// If the current is a host cluster or a cluster with multi-cluster mode disabled, this controller should update the status of license.
-// If the current is a member cluster, just return.
 // TODO: We should use a more reliable method to find out whether this cluster is a host cluster or not.
 func ClusterRole(ctx context.Context, config *rest.Config) (string, error) {
 	dyn, err := dynamic.NewForConfig(config)
