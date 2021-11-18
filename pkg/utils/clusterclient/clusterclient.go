@@ -47,6 +47,7 @@ type clusterClients struct {
 	sync.RWMutex
 	clusterMap        map[string]*clusterv1alpha1.Cluster
 	clusterKubeconfig map[string]string
+	clusterRestConfig map[string]*rest.Config
 
 	// build a in memory cluster cache to speed things up
 	innerClusters map[string]*innerCluster
@@ -58,6 +59,8 @@ type ClusterClients interface {
 	GetClusterKubeconfig(string) (string, error)
 	Get(string) (*clusterv1alpha1.Cluster, error)
 	GetInnerCluster(string) *innerCluster
+	Clusters() map[string]*clusterv1alpha1.Cluster
+	GetRestConfig(name string) *rest.Config
 }
 
 func (c *clusterClients) IsClusterReady(cluster *clusterv1alpha1.Cluster) bool {
@@ -102,6 +105,7 @@ func NewClusterClient(clusterInformer clusterinformer.ClusterInformer) ClusterCl
 			clusterMap:        map[string]*clusterv1alpha1.Cluster{},
 			clusterKubeconfig: map[string]string{},
 			innerClusters:     make(map[string]*innerCluster),
+			clusterRestConfig: map[string]*rest.Config{},
 		}
 
 		clusterInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -158,6 +162,7 @@ func newInnerCluster(cluster *clusterv1alpha1.Cluster) *innerCluster {
 		klog.Errorf("Failed to get client config, %#v", err)
 		return nil
 	}
+	c.clusterRestConfig[cluster.Name] = clusterConfig
 
 	transport, err := rest.TransportFor(clusterConfig)
 	if err != nil {
@@ -207,4 +212,22 @@ func (c *clusterClients) Get(clusterName string) (*clusterv1alpha1.Cluster, erro
 	} else {
 		return nil, fmt.Errorf(ClusterNotExistsFormat, clusterName)
 	}
+}
+
+func (c *clusterClients) Clusters() map[string]*clusterv1alpha1.Cluster {
+	c.RLock()
+	defer c.RUnlock()
+
+	m := make(map[string]*clusterv1alpha1.Cluster, len(c.clusterMap))
+	for name := range c.clusterMap {
+		m[name] = c.clusterMap[name]
+	}
+
+	return m
+}
+
+func (c *clusterClients) GetRestConfig(name string) *rest.Config {
+	c.RLock()
+	defer c.RUnlock()
+	return c.clusterRestConfig[name]
 }
