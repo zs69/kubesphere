@@ -1,3 +1,19 @@
+/*
+Copyright 2021 The KubeSphere Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package notification
 
 import (
@@ -5,6 +21,9 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
+
+	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3"
 
 	"kubesphere.io/kubesphere/pkg/utils/stringutils"
 
@@ -98,7 +117,7 @@ func (o *operator) List(user, resource, subresource string, q *query.Query) (*ap
 		ns = constants.NotificationSecretNamespace
 	}
 
-	res, err := o.resourceGetter.List(resource, ns, q)
+	res, err := o.list(resource, ns, q)
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +136,71 @@ func (o *operator) List(user, resource, subresource string, q *query.Query) (*ap
 	results.TotalItems = len(results.Items)
 
 	return results, nil
+}
+
+func (o *operator) list(resource, ns string, q *query.Query) (*api.ListResult, error) {
+	var res []runtime.Object
+	if resource == v2beta1.ResourcesPluralConfig {
+		cl, err := o.ksClient.NotificationV2beta1().Configs().List(context.Background(), v1.ListOptions{})
+		if err != nil {
+			return nil, err
+		}
+		for _, c := range cl.Items {
+			item := c
+			res = append(res, &item)
+		}
+	} else if resource == v2beta1.ResourcesPluralReceiver {
+		rl, err := o.ksClient.NotificationV2beta1().Receivers().List(context.Background(), v1.ListOptions{})
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range rl.Items {
+			item := r
+			res = append(res, &item)
+		}
+	} else {
+		return o.resourceGetter.List(resource, ns, q)
+	}
+
+	return v1alpha3.DefaultList(res, q, compare, filter), nil
+}
+
+func compare(left runtime.Object, right runtime.Object, field query.Field) bool {
+
+	leftObj, err := meta.Accessor(left)
+	if err != nil {
+		return false
+	}
+
+	rightObj, err := meta.Accessor(right)
+	if err != nil {
+		return false
+	}
+
+	return v1alpha3.DefaultObjectMetaCompare(meta.AsPartialObjectMetadata(leftObj).ObjectMeta,
+		meta.AsPartialObjectMetadata(rightObj).ObjectMeta, field)
+}
+
+func filter(object runtime.Object, filter query.Filter) bool {
+
+	accessor, err := meta.Accessor(object)
+	if err != nil {
+		return false
+	}
+
+	switch filter.Field {
+	case query.FieldNames:
+		for _, name := range strings.Split(string(filter.Value), ",") {
+			if accessor.GetName() == name {
+				return true
+			}
+		}
+		return false
+	case query.FieldName:
+		return strings.Contains(accessor.GetName(), string(filter.Value))
+	default:
+		return true
+	}
 }
 
 // Get the specified object, if you want to get a global object, the user must be nil.
