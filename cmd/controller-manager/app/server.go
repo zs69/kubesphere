@@ -306,7 +306,8 @@ func run(s *options.KubeSphereControllerManagerOptions, ctx context.Context) err
 		klog.Fatalf("Unable to create application controller: %v", err)
 	}
 
-	lc := license.NewLicenseController(kubernetesClient, informerFactory, s.MultiClusterOptions.Enable, ctx.Done())
+	lc := license.NewLicenseController(kubernetesClient.Config(), informerFactory.KubernetesSharedInformerFactory(),
+		informerFactory.KubeSphereSharedInformerFactory(), s.MultiClusterOptions.Enable, ctx.Done())
 	err = lc.SetupWithManager(mgr)
 	if err != nil {
 		klog.Fatalf("Unable to create license controller: %v", err)

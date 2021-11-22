@@ -20,14 +20,15 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"fmt"
 
 	"k8s.io/klog"
 )
 
 // KSCert is the public key to verify license signature.
-// It's initialized by go build with `-ldflags="-X '${KUBE_GO_PACKAGE}/pkg/simple/client/license/cert.KSCert=$(cat ks-cloud/cert/ks-apiserver.pem | base64)'"`
+// It's initialized by go build with `-ldflags="-X '${KUBE_GO_PACKAGE}/pkg/simple/client/license/cert.KSCert=$(cat ks-apiserver.pem | base64)'"`
 // Please refer to hack/lib/golang.sh#L62-64.
-var KSCert string = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUdxakNDQkpLZ0F3SUJBZ0lVVzQ0eGQ1UVBRclFuVFlVdmRtU0tHTS9LYWhJd0RRWUpLb1pJaHZjTkFRRU4KQlFBd1l6RUxNQWtHQTFVRUJoTUNRMDR4Q3pBSkJnTlZCQWdUQWtoQ01Rc3dDUVlEVlFRSEV3SlhTREVTTUJBRwpBMVVFQ2hNSlVXbHVaME5zYjNWa01STXdFUVlEVlFRTEV3cExkV0psYzNCb1pYSmxNUkV3RHdZRFZRUURFd2hyCmN5MWpiRzkxWkRBZUZ3MHlNVEEzTVRrd09UVTNNREJhRncweU1qQTNNVGt3T1RVM01EQmFNR2N4Q3pBSkJnTlYKQkFZVEFrTk9NUXN3Q1FZRFZRUUlFd0pJUWpFTE1Ba0dBMVVFQnhNQ1YwZ3hFakFRQmdOVkJBb1RDVkZwYm1kRApiRzkxWkRFVE1CRUdBMVVFQ3hNS1MzVmlaWE53YUdWeVpURVZNQk1HQTFVRUF4TU1hM010WVhCcGMyVnlkbVZ5Ck1JSUNJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBZzhBTUlJQ0NnS0NBZ0VBeFIyNEdmMHlFYXh2VDlFVjZWV1gKelhNTlp5OEg1U25nTzlTUnk0d3FZR1k2RjNhZG9EakhGRnZGNWZDZEl0S0FwSUo3MHd0MGEvRHJLMXVadGRGVQpDVklBZzVzRFBYU1d3U3lxWXllT29WbC9oN2I2SlVVZ0tFeUJ0MWxyZG9HTnNCT3QvM0xvU2lqM1hSYzlBcGZJClRTWUluYmxQaW81Sm5KUHcvaFJvVTkrNXJqUGF1am9VM0lMRnJCalo2aEU2MzNVb25MemdmNkd0dlBnbEtweWUKR1dUSHU1S0IyQkgyL0xPSlFpaWlOSVRPNGhhRW0xcDN6WVpRY1ZSbTJWa0JZaHpUZkJDdzd6ZlVhaERyc3lReQpjWVJ2V1ZuVEJhTVAxNXlOaEJWY0kvUnlKRCszVmNJVUM5TjdndjZZRWQ3NnREN0xPTzZFMVdSWHhEcm43OGtFCnFzYSs2RlNUbm4yTzlXNjN0emR5bjlVUkI3YUVmeTFOcXNjTFo0MFo2SW4zOUNNUnVJY0lneXFpMmc1YVNzTHIKWnBGb1pwbm45QmxxRnlab2NlcnZNUXJFRUlIaDJBS0VPMTlzVGhBTWNVNndXcjZneHNxcWFrUTh4OHowcVFucgpVUGlURER2Y2ZGemxjeTBpS0lEbWFVbGRiL29UdkVHQmcvc0FZbG81Wmg5cWExY3Q5bUluVUdjZ2FyeTl3UFhpCk91MWJva3k0VDNzM0tiQWlYeDBaRkVTVm1oTk02dmkvNUYwUDFRR0JsbjJUUjVUVjNvdGJIMlJTcHJEaVN6UEQKMnRYNXNKWXIzbGszaFhoZFdMc3FKczFKZWNlUGxySkJpUm9YdnB4cGtTUFgrUTYrQWorYjhJSVZEMVhOOTNuQQovR1g5UW5FcGR4ZVdJVXB6OUEwNGx3RUNBd0VBQWFPQ0FWQXdnZ0ZNTUE0R0ExVWREd0VCL3dRRUF3SUZvREFkCkJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEQVlEVlIwVEFRSC9CQUl3QURBZEJnTlYKSFE0RUZnUVUycFZaRnFMRUlyMFYzQ2x0YllWVEowK2V6amN3SHdZRFZSMGpCQmd3Rm9BVWIwSitnczRzZkNVNwpkQyt2ak40dW5xZlhuWnN3Z2N3R0ExVWRFUVNCeERDQndZSUpiRzlqWVd4b2IzTjBnZ3hyY3kxaGNHbHpaWEoyClpYS0NIbXR6TFdGd2FYTmxjblpsY2k1cmRXSmxjM0JvWlhKbExYTjVjM1JsYllJaWEzTXRZWEJwYzJWeWRtVnkKTG10MVltVnpjR2hsY21VdGMzbHpkR1Z0TG5OMlk0SXFhM010WVhCcGMyVnlkbVZ5TG10MVltVnpjR2hsY21VdApjM2x6ZEdWdExuTjJZeTVqYkhWemRHVnlnakJyY3kxaGNHbHpaWEoyWlhJdWEzVmlaWE53YUdWeVpTMXplWE4wClpXMHVjM1pqTG1Oc2RYTjBaWEl1Ykc5allXeUhCSDhBQUFFd0RRWUpLb1pJaHZjTkFRRU5CUUFEZ2dJQkFMN1MKYytKK3YxMEVtOW90TEovdmlwYmZkdnFMcC9FSklZVjRIQ3kwb2NRYThsUzB1cnV0c0l4Mm1WMzIwS3dJWGcvUgpqUmJSdUJsSTJyY29pMzNXUW9ROGUvaWE3YXdXWTlTWGkyZG5NSXkxSjROaDg1M2ZNYitNNGpiZUQvcnVCV3dHCkk0L2o2cmlyTWw1Snk1Wlc2U2g0STE3YWtKVEczalMwbVptRHBITmVZVVhCTEYxNmRVRXB0eUN0WTh0RkJIYzMKZk5PRy9aZUJOUXVOa1FHVk5LSU9jemRWcGZTaU1hbUVWOUVKWkJaM3k4UXVLVGEvR0tobS9UdjFTQk1pMXVrZwpjbEh4bm8yY2dHeDZEOTNlZmgwdXdrdWNHOTJCMlhQUXhBb0w4bUNxR3Y0Y1FYYTFCdE9aSk9qeTJxQkJKSTZZCktKbG9FeUFDbGNUTTQyczhEZjhGWGlodVN6WE1jbDUvelBkdUgrUnJBNkx0ak04REFOa2N1WEtOWGVUZEVoS3YKTVdmY1NLWXdoOU4vNVcyWVlYK1F5czB5cmd0Um9Ic3FMOGFJTktKS2VaZmdSQ3VlbmFjM2d6VjhRUzRhQnRrTwpwTGFBQjRLREF6MndqejBsekhjYnFoOXZTMDNaMnhRU2tVUFBFd3R4VzZMM3YwYjRVRnhtQldrOEE4NzdlWEI3CmFaSW4zOUFuSEFibE5IZ1RpV2RIa05MWG9CckpmQnZRdlFFNFczT0lWWTViREQ1ZXR2WVhnMklhN2c5WVBhQ1UKd0Zwc0s4VHBTSFozV3JFbW95V0J0UzFxbHlGS29iVzZyeVBFM2pIYXh1eUV6R2wvZmpvQnYxbTI4SkcxVDA1UAplbVJUdEJLS2MyeEEvbGR1YmMzQ0FSNHFKL3BSMUx2Zkg4STZOTjhsCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K"
+var KSCert string = ""
 
 type CertificateStore struct {
 	Cert *x509.Certificate
@@ -35,20 +36,26 @@ type CertificateStore struct {
 
 var CertStore *CertificateStore
 
-func init() {
+func InitCert() error {
 	CertStore = &CertificateStore{}
 	data, err := base64.StdEncoding.DecodeString(KSCert)
 	if err != nil {
 		klog.Infof("ks cert: %s", KSCert)
-		klog.Fatalf("decode cert failed, error: %s", err)
+		klog.Errorf("decode cert failed, error: %s", err)
+		return err
+	}
+	block, _ := pem.Decode(data)
+	if block == nil {
+		return fmt.Errorf("cert data is empty")
 	}
 
-	block, _ := pem.Decode(data)
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		klog.Infof("decoded ks cert: %s", string(data))
-		klog.Fatalf("parse certificate failed, error: %s", err)
+		klog.Infof("decoded ks cert: %s", KSCert)
+		klog.Errorf("parse certificate failed, error: %s", err)
+		return err
 	}
 
 	CertStore.Cert = cert
+	return nil
 }

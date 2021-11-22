@@ -56,6 +56,10 @@ type licenseHandler struct {
 }
 
 func newLicenseHandler(client clientset.Interface, informerFactory informers.InformerFactory, opts *multicluster.Options) licensesInterface {
+	err := cert.InitCert()
+	if err != nil {
+		klog.Errorf("init cert failed, error: %s", err)
+	}
 	handler := licenseHandler{
 		client: client,
 	}

@@ -340,7 +340,7 @@ func (s *APIServer) buildHandlerChain(stopCh <-chan struct{}) {
 		handler = filters.WithMultipleClusterDispatcher(handler, clusterDispatcher)
 	}
 
-	if s.Config.LicenseCheckOptions == nil || s.Config.LicenseCheckOptions.SkipLicenseCheck == false {
+	if s.Config.LicenseOptions == nil || s.Config.LicenseOptions.SkipLicenseCheck == false {
 		licenseLister := s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets().Lister()
 		handler = filters.WithLicense(handler, licenseLister, s.KubernetesClient)
 	}

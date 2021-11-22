@@ -17,7 +17,7 @@ import (
 	"net/http"
 
 	"kubesphere.io/kubesphere/pkg/informers"
-	client2 "kubesphere.io/kubesphere/pkg/simple/client/license/client"
+	licenseclient "kubesphere.io/kubesphere/pkg/simple/client/license/client"
 	"kubesphere.io/kubesphere/pkg/simple/client/multicluster"
 
 	clientset "k8s.io/client-go/kubernetes"
@@ -44,28 +44,28 @@ func AddToContainer(c *restful.Container, client clientset.Interface, informerFa
 
 	// In fact, the name parameter is not used now,
 	// it is used to support multiple licenses in the future
-	webservice.Route(webservice.GET("/license/{name}").
+	webservice.Route(webservice.GET("/licenses/{name}").
 		To(handler.GetLicense).
 		Doc("Get the license").
 		Metadata(restfulspec.KeyOpenAPITags, []string{LicenseTag}).
-		Returns(http.StatusOK, api.StatusOK, client2.License{}).
-		Returns(http.StatusOK, api.StatusOK, client2.License{}))
+		Returns(http.StatusOK, api.StatusOK, licenseclient.License{}).
+		Returns(http.StatusOK, api.StatusOK, licenseclient.License{}))
 
-	webservice.Route(webservice.POST("/license/").
+	webservice.Route(webservice.POST("/licenses/").
 		To(handler.UpdateLicense).
-		Reads(client2.License{}).
+		Reads(licenseclient.License{}).
 		Doc("Create the license").
-		Returns(http.StatusOK, api.StatusOK, client2.License{}).
+		Returns(http.StatusOK, api.StatusOK, licenseclient.License{}).
 		Metadata(restfulspec.KeyOpenAPITags, []string{LicenseTag}))
 
-	webservice.Route(webservice.PUT("/license/{name}").
+	webservice.Route(webservice.PUT("/licenses/{name}").
 		To(handler.UpdateLicense).
-		Reads(client2.License{}).
+		Reads(licenseclient.License{}).
 		Doc("Update the license").
-		Returns(http.StatusOK, api.StatusOK, client2.License{}).
+		Returns(http.StatusOK, api.StatusOK, licenseclient.License{}).
 		Metadata(restfulspec.KeyOpenAPITags, []string{LicenseTag}))
 
-	webservice.Route(webservice.DELETE("/license/{name}").
+	webservice.Route(webservice.DELETE("/licenses/{name}").
 		To(handler.DeleteLicense).
 		Doc("Delete the license").
 		Metadata(restfulspec.KeyOpenAPITags, []string{LicenseTag}))

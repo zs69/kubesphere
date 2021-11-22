@@ -19,6 +19,8 @@ package utils
 import (
 	"context"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
@@ -30,6 +32,9 @@ import (
 // ClusterRole get the cluster role of the kubernetes cluster.
 // TODO: We should use a more reliable method to find out whether this cluster is a host cluster or not.
 func ClusterRole(ctx context.Context, config *rest.Config) (string, error) {
+	if config == nil {
+		return "", nil
+	}
 	dyn, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return "", nil
@@ -41,6 +46,9 @@ func ClusterRole(ctx context.Context, config *rest.Config) (string, error) {
 		Resource: "clusterconfigurations",
 	}).Namespace(constants.KubeSphereNamespace).
 		Get(ctx, "ks-installer", metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		return "", nil
+	}
 	if err != nil {
 		return "", err
 	}

@@ -1,6 +1,3 @@
-//go:build !license_disable
-// +build !license_disable
-
 /*
 Copyright 2021 The KubeSphere Authors.
 
@@ -25,6 +22,10 @@ import (
 	"encoding/json"
 	"sync"
 
+	k8sinformers "k8s.io/client-go/informers"
+
+	ksinformers "kubesphere.io/kubesphere/pkg/client/informers/externalversions"
+
 	"kubesphere.io/kubesphere/pkg/simple/client/license/utils"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -33,7 +34,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"kubesphere.io/kubesphere/pkg/simple/client/k8s"
 	"kubesphere.io/kubesphere/pkg/simple/client/license/clusterinfo"
 
 	corev1 "k8s.io/api/core/v1"
@@ -44,7 +44,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"kubesphere.io/kubesphere/pkg/constants"
-	"kubesphere.io/kubesphere/pkg/informers"
 	"kubesphere.io/kubesphere/pkg/simple/client/license/cert"
 	licensetype "kubesphere.io/kubesphere/pkg/simple/client/license/types/v1alpha1"
 )
@@ -65,20 +64,26 @@ type LicenseController struct {
 	eventChan chan *clusterinfo.ClusterNodeEvent
 	cim       *clusterinfo.ClusterInfoManager
 
-	informerFactory informers.InformerFactory
+	k8s k8sinformers.SharedInformerFactory
+	ks  ksinformers.SharedInformerFactory
 }
 
 // NewLicenseController create a controller the watch the nodes info and license info.
 // 1. The controller will fetch all the node info from member clusters and the host cluster if the cluster is a host cluster.
 // 2. If the cluster is just a cluster which multi-cluster mode is not enable, the controller just watch the node of this cluster.
 // 3. If the cluster is a member cluster, this controller will just exit.
-func NewLicenseController(client k8s.Client, informerFactory informers.InformerFactory, multiCluster bool, stopCh <-chan struct{}) *LicenseController {
+func NewLicenseController(config *rest.Config, k8s k8sinformers.SharedInformerFactory, ks ksinformers.SharedInformerFactory, multiCluster bool, stopCh <-chan struct{}) *LicenseController {
+	err := cert.InitCert()
+	if err != nil {
+		klog.Errorf("init cert failed, error: %s", err)
+	}
 	return &LicenseController{
-		cert:            cert.CertStore.Cert,
-		stopCh:          stopCh,
-		multiCluster:    multiCluster,
-		restConfig:      client.Config(),
-		informerFactory: informerFactory,
+		cert:         cert.CertStore.Cert,
+		stopCh:       stopCh,
+		multiCluster: multiCluster,
+		restConfig:   config,
+		k8s:          k8s,
+		ks:           ks,
 	}
 }
 
@@ -146,8 +151,12 @@ func (lc *LicenseController) collectClusterInfo(ctx context.Context) (licenseSta
 
 func checkLicense(clusterStats *licensetype.LicenseStatus, secret *corev1.Secret) (violation *licensetype.Violation, err error) {
 	var license *licensetype.License
-	license, err = licensetype.LoadLicense(secret.Data[licensetype.LicenseKey])
+	if len(secret.Data[licensetype.LicenseKey]) == 0 {
+		violation = &licensetype.Violation{Type: licensetype.EmptyLicense}
+		return
+	}
 
+	license, err = licensetype.LoadLicense(secret.Data[licensetype.LicenseKey])
 	if err != nil {
 		violation.Type = licensetype.FormatError
 	} else {
@@ -283,7 +292,7 @@ func (lc *LicenseController) SetupWithManager(mgr ctrl.Manager) error {
 	if role == "host" {
 		// If the cluster is a host cluster, the controller must fetch all the node's info from host cluster and member clusters.
 		lc.eventChan = make(chan *clusterinfo.ClusterNodeEvent, 200)
-		lc.cim = clusterinfo.NewClusterInfoManager(lc.informerFactory.KubeSphereSharedInformerFactory().Cluster().V1alpha1().Clusters(), lc.eventChan)
+		lc.cim = clusterinfo.NewClusterInfoManager(lc.ks.Cluster().V1alpha1().Clusters(), lc.eventChan)
 		go func() {
 			<-mgr.Elected()
 			go lc.cim.Run(lc.stopCh)
@@ -295,8 +304,9 @@ func (lc *LicenseController) SetupWithManager(mgr ctrl.Manager) error {
 		}()
 	} else if role == "" {
 		// Multi cluster mode is not enabled. The controller just watch the nodes of the cluster.
-		lc.nodeInformer = lc.informerFactory.KubernetesSharedInformerFactory().Core().V1().Nodes()
-		lc.nodeInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		lc.nodeInformer = lc.k8s.Core().V1().Nodes()
+		i := lc.nodeInformer.Informer()
+		i.AddEventHandler(cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				klog.V(4).Infof("node has changed, sync license start")
 				lc.syncLicenseStatus(context.Background())
@@ -315,7 +325,7 @@ func (lc *LicenseController) SetupWithManager(mgr ctrl.Manager) error {
 		})
 		go func() {
 			<-mgr.Elected()
-			lc.nodeInformer.Informer().Run(lc.stopCh)
+			i.Run(lc.stopCh)
 		}()
 	} else {
 		// Member cluster

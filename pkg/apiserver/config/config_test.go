@@ -195,7 +195,7 @@ func newTestConfig() (*Config, error) {
 		GPUOptions: &gpu.Options{
 			Kinds: []gpu.GPUKind{},
 		},
-		LicenseCheckOptions: &license.Options{},
+		LicenseOptions: &license.Options{},
 	}
 	return conf, nil
 }

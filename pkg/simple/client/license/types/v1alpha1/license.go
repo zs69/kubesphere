@@ -39,19 +39,16 @@ import (
 )
 
 const (
-	NoViolation        = "no_violation"
-	EmptyLicense       = "empty_license"
-	FormatError        = "format_error"
-	InvalidSignature   = "invalid_signature"
-	TimeExpired        = "time_expired"
-	TimeNotStart       = "time_not_start"
-	VersionNotMatch    = "version_not_match"
-	NodeOverflow       = "node_overflow"
-	CpuOverflow        = "cpu_overflow"
-	CoreOverflow       = "core_overflow"
-	ClusterOverflow    = "cluster_overflow"
-	ClusterNotMatch    = "cluster_not_match"
-	InvalidLicenseType = "invalid_type"
+	NoViolation        = "No violation"
+	EmptyLicense       = "Empty license"
+	FormatError        = "Format error"
+	InvalidSignature   = "Invalid signature"
+	TimeExpired        = "Time expired"
+	TimeNotStart       = "Time not start"
+	NodeOverflow       = "Node count limit exceeded"
+	CoreOverflow       = "Core count limit exceeded"
+	ClusterOverflow    = "Cluster count limit exceeded"
+	InvalidLicenseType = "Invalid type"
 
 	LicenseName = "ks-license"
 	LicenseKey  = "license"
@@ -63,6 +60,12 @@ const (
 	LicenseTypeMaintenance = "ma"
 
 	LicenseViolationCode = 430
+
+	ViolationType      = "X-QKCP-License-Violation"
+	ViolationExpected  = "X-QKCP-Violation-Expected"
+	ViolationCurrent   = "X-QKCP-Violation-Current"
+	ViolationEndTime   = "X-QKCP-Violation-End-Time"
+	ViolationStartTime = "X-QKCP-Violation-Start-Time"
 )
 
 type Violation struct {
