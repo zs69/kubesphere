@@ -11,6 +11,9 @@ GV="network:v1alpha1 servicemesh:v1alpha2 tenant:v1alpha1 tenant:v1alpha2 devops
 # App Version
 APP_VERSION = v3.2.0
 
+# The public key file to verify the signature of license.
+export PUB_KEY_FILE ?=
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -55,7 +58,7 @@ binary: | ks-apiserver ks-controller-manager; $(info $(M)...Build all of binary.
 
 # Build ks-apiserver binary
 ks-apiserver: ; $(info $(M)...Begin to build ks-apiserver binary.)  @ ## Build ks-apiserver.
-	 hack/gobuild.sh cmd/ks-apiserver; 
+	hack/gobuild.sh cmd/ks-apiserver;
 
 # Build ks-controller-manager binary
 ks-controller-manager: ; $(info $(M)...Begin to build ks-controller-manager binary.)  @ ## Build ks-controller-manager.
