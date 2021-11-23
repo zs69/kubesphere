@@ -23,6 +23,7 @@ var startDate string
 var endDate string
 var maEnd string
 var keyFile string
+var licenseType string
 
 var ls = licensetypes.License{}
 
@@ -54,6 +55,7 @@ func newCmd(args []string) *cobra.Command {
 			if ls.LicenseId == "" {
 				ls.LicenseId = idutils.GetUuid36("")
 			}
+			ls.LicenseType = licensetypes.LicenseType(licenseType)
 
 			now := time.Now().UTC()
 			ls.IssueAt = now
@@ -139,7 +141,7 @@ func newCmd(args []string) *cobra.Command {
 	f.StringVar(&keyFile, "key", "ks-apiserver-key.pem", "the key to sign the license")
 	f.StringVar(&environment, "env", "prod", "environment to build, prod or dev")
 	f.StringVar(&outputFile, "output", "license.out", "output file")
-	f.StringVar(&ls.LicenseType, "type", "", "type of the license, valid value: sub, managed, maintenance")
+	f.StringVar(&licenseType, "type", "", "type of the license, valid value: subscription, managed, maintenance")
 	f.IntVar(&ls.MaxNode, "max-node", 0, "max node")
 	f.IntVar(&ls.MaxCluster, "max-cluster", 1, "max cluster")
 	f.IntVar(&ls.MaxCPU, "max-cpu", 0, "max cpu num")

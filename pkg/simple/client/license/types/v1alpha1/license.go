@@ -38,34 +38,41 @@ import (
 	"kubesphere.io/kubesphere/pkg/constants"
 )
 
+type ViolationHttpHeader string
+type LicenseType string
+
 const (
-	NoViolation        = "No violation"
-	EmptyLicense       = "Empty license"
-	FormatError        = "Format error"
-	InvalidSignature   = "Invalid signature"
-	TimeExpired        = "Time expired"
-	TimeNotStart       = "Time not start"
-	NodeOverflow       = "Node count limit exceeded"
-	CoreOverflow       = "Core count limit exceeded"
-	ClusterOverflow    = "Cluster count limit exceeded"
-	InvalidLicenseType = "Invalid type"
+	NoViolation               = "No violation"
+	EmptyLicense              = "Empty license"
+	FormatError               = "Format error"
+	InvalidSignature          = "Invalid signature"
+	TimeExpired               = "Time expired"
+	TimeNotStart              = "Time not start"
+	NodeCountLimitExceeded    = "Node count limit exceeded"
+	CoreCountLimitExceeded    = "Core count limit exceeded"
+	ClusterCountLimitExceeded = "Cluster count limit exceeded"
+	InvalidLicenseType        = "Invalid type"
 
 	LicenseName = "ks-license"
 	LicenseKey  = "license"
 
 	LicenseStatusKey = "license.kubesphere.io/status"
 
-	LicenseTypeSub         = "sub"
-	LicenseTypeManged      = "managed"
-	LicenseTypeMaintenance = "ma"
+	// LicenseTypeSubscription  type, license controller will check whether the node count and cluster count match the count of the license
+	LicenseTypeSubscription LicenseType = "subscription"
+	// LicenseTypeManged type, license controller will check whether the core count on the host cluster and cluster count match the count of the license
+	LicenseTypeManged LicenseType = "managed"
+	// LicenseTypeMaintenance type, license controller will check whether the core count match the count of the license
+	LicenseTypeMaintenance LicenseType = "maintenance"
 
 	LicenseViolationCode = 430
 
-	ViolationType      = "X-QKCP-License-Violation"
-	ViolationExpected  = "X-QKCP-Violation-Expected"
-	ViolationCurrent   = "X-QKCP-Violation-Current"
-	ViolationEndTime   = "X-QKCP-Violation-End-Time"
-	ViolationStartTime = "X-QKCP-Violation-Start-Time"
+	ViolationType                  ViolationHttpHeader = "X-QKCP-License-Violation"
+	ViolationExpectedResourceCount ViolationHttpHeader = "X-QKCP-Expected-Resource-Count"
+	ViolationCurrentResourceCount  ViolationHttpHeader = "X-QKCP-Current-Resource-Count"
+
+	ViolationLicenseEndTime   ViolationHttpHeader = "X-QKCP-License-End-Time"
+	ViolationLicenseStartTime ViolationHttpHeader = "X-QKCP-License-Start-Time"
 )
 
 type Violation struct {
@@ -78,68 +85,68 @@ type Violation struct {
 	// the expected value
 	Expected int `json:"expected,omitempty"`
 
-	EndTime   *time.Time `json:"end_time,omitempty"`
-	StartTime *time.Time `json:"start_time,omitempty"`
+	EndTime   *time.Time `json:"endTime,omitempty"`
+	StartTime *time.Time `json:"startTime,omitempty"`
 }
 
 type ClusterInfo struct {
-	CPUNum  int `json:"cpu_num,omitempty"`
-	CoreNum int `json:"core_num,omitempty"`
-	NodeNum int `json:"node_num,omitempty"`
+	CPUNum  int `json:"cpuNum,omitempty"`
+	CoreNum int `json:"coreNum,omitempty"`
+	NodeNum int `json:"nodeNum,omitempty"`
 }
 
 type LicenseStatus struct {
 	Host       ClusterInfo `json:"host,omitempty"`
 	Member     ClusterInfo `json:"member,omitempty"`
-	ClusterNum int         `json:"cluster_num,omitempty"`
+	ClusterNum int         `json:"clusterNum,omitempty"`
 
 	Violation Violation `json:"violation"`
 }
 
 type License struct {
 	// license id which uniquely identifies the license. It's MUST NOT be empty.
-	LicenseId string `json:"l_id,omitempty"`
-	ClusterId string `json:"c_id,omitempty"`
+	LicenseId string `json:"licenseId,omitempty"`
+	ClusterId string `json:"clusterId,omitempty"`
 	// the type of the license, valid values are `ma` for maintenance, `sub` for subscription, and `managed` from managed k8s.
-	LicenseType string `json:"l_type"`
+	LicenseType LicenseType `json:"licenseType"`
 	// license version number.
-	Version int `json:"ver,omitempty"`
+	Version int `json:"version,omitempty"`
 	// The user who will use this license.
-	Subject User `json:"subj,omitempty"`
+	Subject User `json:"subject,omitempty"`
 	// The issuer who issued this license.
 	Issuer User `json:"issuer,omitempty"`
 	// License is not valid before this time
-	NotBefore *time.Time `json:"not_before,omitempty"`
+	NotBefore *time.Time `json:"notBefore,omitempty"`
 	// License is not valid after this time.
-	NotAfter *time.Time `json:"not_after,omitempty"`
+	NotAfter *time.Time `json:"notAfter,omitempty"`
 	// The end time of maintenance.
-	MaintenanceEnd *time.Time `json:"ma_end,omitempty"`
+	MaintenanceEnd *time.Time `json:"maintenanceEnd,omitempty"`
 	// license issue time
-	IssueAt time.Time `json:"issue_at,omitempty"`
+	IssueAt time.Time `json:"issueAt,omitempty"`
 	// Max clusters for this license.
-	MaxCluster int `json:"max_cluster,omitempty"`
+	MaxCluster int `json:"maxCluster,omitempty"`
 	// Max Node for this license.
-	MaxNode int `json:"max_node,omitempty"`
+	MaxNode int `json:"maxNode,omitempty"`
 	// Max cpu num for this license.
-	MaxCPU int `json:"max_cpu,omitempty"`
+	MaxCPU int `json:"maxCpu,omitempty"`
 	// Max CPU Core for this license.
-	MaxCore int `json:"max_core,omitempty"`
+	MaxCore int `json:"maxCore,omitempty"`
 	// Max Virtual Machine for this license.
-	MaxVM       int `json:"max_vm,omitempty"`
-	GracePeriod int `json:"grace_period,omitempty"`
+	MaxVM       int `json:"maxVm,omitempty"`
+	GracePeriod int `json:"gracePeriod,omitempty"`
 	// ks-controller-manager must be in the range of [start_version, end_version)
-	StartVersion         string       `json:"start_ver,omitempty"`
-	EndVersion           string       `json:"end_ver,omitempty"`
-	ComponentConstraints []Constraint `json:"component_constraints,omitempty"`
+	StartVersion         string       `json:"startVersion,omitempty"`
+	EndVersion           string       `json:"endVersion,omitempty"`
+	ComponentConstraints []Constraint `json:"componentConstraints,omitempty"`
 
 	// ID to identify the client
-	APIKey string `json:"api_key,omitempty"`
+	APIKey string `json:"apiKey,omitempty"`
 	// Secret to connect to kubesphere cloud
-	APISecret string `json:"api_secret,omitempty"`
+	APISecret string `json:"apiSecret,omitempty"`
 	// An endpoint from where to fetch new license
-	APIEndpoint string `json:"api_ep,omitempty"`
+	APIEndpoint string `json:"apiEndpoint,omitempty"`
 
-	Signature string `json:"sig"`
+	Signature string `json:"signature"`
 }
 
 type User struct {
@@ -151,10 +158,10 @@ type User struct {
 type Constraint struct {
 	Name string `json:"name"`
 	// constraint type
-	Type      string     `json:"type"`
-	Value     string     `json:"value"`
-	NotAfter  *time.Time `json:"not_after,omitempty"`
-	NotBefore *time.Time `json:"not_before,omitempty"`
+	Type      string     `json:"type,omitempty"`
+	Value     string     `json:"value,omitempty"`
+	NotAfter  *time.Time `json:"notAfter,omitempty"`
+	NotBefore *time.Time `json:"notBefore,omitempty"`
 }
 
 func (l *License) IsExpired() (bool, *Violation) {

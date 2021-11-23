@@ -236,6 +236,6 @@ func (h *licenseHandler) DeleteLicense(req *restful.Request, resp *restful.Respo
 		return
 	}
 
-	klog.Infof("license deleted")
+	klog.V(2).Infof("license deleted")
 	resp.WriteEntity(servererr.None)
 }

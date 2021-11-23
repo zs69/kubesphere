@@ -24,12 +24,13 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
-	"time"
+
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/client-go/tools/cache"
 
 	"kubesphere.io/kubesphere/pkg/simple/client/k8s"
 	"kubesphere.io/kubesphere/pkg/simple/client/license/utils"
 
-	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog"
 
 	"kubesphere.io/kubesphere/pkg/apiserver/request"
@@ -40,7 +41,7 @@ import (
 // WithLicense checks whether the license is valid for these clusters.
 // If the license is not valid, forbid all the WRITE operations,
 // and add HTTP headers to the get requests.
-func WithLicense(handler http.Handler, lister v1.SecretLister, client k8s.Client) http.Handler {
+func WithLicense(handler http.Handler, informer cache.SharedInformer, client k8s.Client) http.Handler {
 	role, err := utils.ClusterRole(context.Background(), client.Config())
 	if err != nil {
 		klog.Errorf("get cluster role failed, error: %s", err)
@@ -61,7 +62,7 @@ func WithLicense(handler http.Handler, lister v1.SecretLister, client k8s.Client
 		"patch":  true,
 	}
 
-	go syncLicenseStatus(lister)
+	go syncLicenseStatus(informer)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		info, ok := request.RequestInfoFrom(req.Context())
@@ -85,17 +86,17 @@ func WithLicense(handler http.Handler, lister v1.SecretLister, client k8s.Client
 			} else {
 				// Return the violation type, so all the GET requests know the status of the license, then the console
 				// will show this info to the user.
-				w.Header().Add(licensetypes.ViolationType, vio.Type)
+				w.Header().Add(string(licensetypes.ViolationType), vio.Type)
 				if vio.Expected != 0 {
 					klog.V(4).Infof("violation type: %s, expected: %d, current: %d", vio.Type, vio.Expected, vio.Current)
-					w.Header().Add(licensetypes.ViolationExpected, strconv.Itoa(vio.Expected))
-					w.Header().Add(licensetypes.ViolationCurrent, strconv.Itoa(vio.Current))
+					w.Header().Add(string(licensetypes.ViolationExpectedResourceCount), strconv.Itoa(vio.Expected))
+					w.Header().Add(string(licensetypes.ViolationCurrentResourceCount), strconv.Itoa(vio.Current))
 				}
 
 				if vio.EndTime != nil {
 					klog.V(4).Infof("violation type: %s, end time: %v, start-time: %v", vio.Type, vio.EndTime, vio.StartTime)
-					w.Header().Add(licensetypes.ViolationEndTime, fmt.Sprintf("%v", vio.EndTime))
-					w.Header().Add(licensetypes.ViolationStartTime, fmt.Sprintf("%v", vio.StartTime))
+					w.Header().Add(string(licensetypes.ViolationLicenseEndTime), fmt.Sprintf("%v", vio.EndTime))
+					w.Header().Add(string(licensetypes.ViolationLicenseStartTime), fmt.Sprintf("%v", vio.StartTime))
 				}
 				handler.ServeHTTP(w, req)
 			}
@@ -107,46 +108,58 @@ func WithLicense(handler http.Handler, lister v1.SecretLister, client k8s.Client
 
 var cachedViolation atomic.Value
 
-// syncLicenseStatus sync the license status to cachedViolation every second.
+// syncLicenseStatus sync the license status to cachedViolation.
 // Then every request loads the status from the atomic value.
-func syncLicenseStatus(lister v1.SecretLister) {
-	ticker := time.NewTicker(1 * time.Second)
-	klog.V(4).Infof("start to sync license status")
-
-	for range ticker.C {
-		vio := &licensetypes.Violation{}
-		klog.V(4).Infof("start to fetch license status")
-
-		secret, err := lister.Secrets(constants.KubeSphereNamespace).Get(licensetypes.LicenseName)
-		if err != nil {
-			klog.Errorf("get license failed, error: %s", err)
-			vio.Type = licensetypes.EmptyLicense
-			cachedViolation.Store(vio)
-			continue
-		}
-
-		sts := secret.Annotations[licensetypes.LicenseStatusKey]
-		if len(sts) > 0 {
-			var licenseStatus licensetypes.LicenseStatus
-			err = json.Unmarshal([]byte(sts), &licenseStatus)
-			if err != nil {
-				vio.Type = licensetypes.FormatError
-			} else {
-				vio = &licenseStatus.Violation
-			}
-		} else {
-			vio.Type = licensetypes.EmptyLicense
-		}
-
-		cachedViolation.Store(vio)
-	}
+func syncLicenseStatus(informer cache.SharedInformer) {
+	informer.AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: func(obj interface{}) bool {
+			objMeta, _ := meta.Accessor(obj)
+			return objMeta.GetName() == licensetypes.LicenseName && objMeta.GetNamespace() == constants.KubeSphereNamespace
+		},
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				objMeta, _ := meta.Accessor(obj)
+				stats := objMeta.GetAnnotations()[licensetypes.LicenseStatusKey]
+				vio := parseLicenseStatus([]byte(stats))
+				cachedViolation.Store(vio)
+			},
+			DeleteFunc: func(obj interface{}) {
+				vio := &licensetypes.Violation{
+					Type: licensetypes.EmptyLicense,
+				}
+				cachedViolation.Store(vio)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				objMeta, _ := meta.Accessor(newObj)
+				stats := objMeta.GetAnnotations()[licensetypes.LicenseStatusKey]
+				vio := parseLicenseStatus([]byte(stats))
+				cachedViolation.Store(vio)
+			},
+		},
+	})
 }
 
-// getLicenseViolation load the licese status from atomic value.
+func parseLicenseStatus(status []byte) *licensetypes.Violation {
+	vio := &licensetypes.Violation{}
+	if len(status) > 0 {
+		var licenseStatus licensetypes.LicenseStatus
+		err := json.Unmarshal(status, &licenseStatus)
+		if err != nil {
+			vio.Type = licensetypes.FormatError
+		} else {
+			vio = &licenseStatus.Violation
+		}
+	} else {
+		vio.Type = licensetypes.EmptyLicense
+	}
+	return vio
+}
+
+// getLicenseViolation load the license status from atomic value.
 func getLicenseViolation() *licensetypes.Violation {
 	if cached := cachedViolation.Load(); cached != nil {
 		return cached.(*licensetypes.Violation)
 	} else {
-		return &licensetypes.Violation{Type: licensetypes.NoViolation}
+		return &licensetypes.Violation{Type: licensetypes.EmptyLicense}
 	}
 }

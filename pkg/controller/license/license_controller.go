@@ -166,27 +166,27 @@ func checkLicense(clusterStats *licensetype.LicenseStatus, secret *corev1.Secret
 	if violation == nil {
 		violation = &licensetype.Violation{Type: licensetype.NoViolation}
 		switch license.LicenseType {
-		// sub mode, checks the cluster num and node num.
-		case licensetype.LicenseTypeSub:
+		// subscription mode, checks the cluster num and node num.
+		case licensetype.LicenseTypeSubscription:
 			if clusterStats.ClusterNum > license.MaxCluster {
 				return &licensetype.Violation{
-					Type:     licensetype.ClusterOverflow,
+					Type:     licensetype.ClusterCountLimitExceeded,
 					Current:  clusterStats.ClusterNum,
 					Expected: license.MaxCluster,
 				}, nil
 			}
 			if clusterStats.Host.NodeNum+clusterStats.Member.NodeNum > license.MaxNode {
 				return &licensetype.Violation{
-					Type:     licensetype.NodeOverflow,
+					Type:     licensetype.NodeCountLimitExceeded,
 					Current:  clusterStats.Host.NodeNum + clusterStats.Member.NodeNum,
 					Expected: license.MaxNode,
 				}, nil
 			}
-		// ma mode, just checks the core num.
+		// maintenance mode, just checks the core num.
 		case licensetype.LicenseTypeMaintenance:
 			if clusterStats.Host.CoreNum+clusterStats.Member.CoreNum > license.MaxCore {
 				return &licensetype.Violation{
-					Type:     licensetype.CoreOverflow,
+					Type:     licensetype.CoreCountLimitExceeded,
 					Expected: license.MaxCore,
 					Current:  clusterStats.Host.CoreNum + clusterStats.Member.CoreNum,
 				}, nil
@@ -195,21 +195,21 @@ func checkLicense(clusterStats *licensetype.LicenseStatus, secret *corev1.Secret
 		case licensetype.LicenseTypeManged:
 			if clusterStats.ClusterNum > license.MaxCluster {
 				return &licensetype.Violation{
-					Type:     licensetype.ClusterOverflow,
+					Type:     licensetype.ClusterCountLimitExceeded,
 					Current:  clusterStats.ClusterNum,
 					Expected: license.MaxCluster,
 				}, nil
 			}
 			if clusterStats.Host.CoreNum > license.MaxCore {
 				return &licensetype.Violation{
-					Type:     licensetype.CoreOverflow,
+					Type:     licensetype.CoreCountLimitExceeded,
 					Expected: license.MaxCore,
 					Current:  clusterStats.Host.CoreNum,
 				}, nil
 			}
 
 		default:
-			klog.V(2).Infof("invalid license type: %s", license.LicenseType)
+			klog.V(4).Infof("invalid license type: %s", license.LicenseType)
 			violation.Type = licensetype.InvalidLicenseType
 		}
 	}
@@ -263,14 +263,14 @@ func (lc *LicenseController) patchSecret(ctx context.Context, old, new *corev1.S
 		klog.V(4).Infof("there is no update for secret %s", old.Name)
 		return nil
 	} else {
-		klog.V(2).Infof("start to patch secret %s", new.Name)
+		klog.V(4).Infof("start to patch secret %s", new.Name)
 	}
 
 	err := lc.Client.Patch(ctx, new, client.MergeFrom(old), &client.PatchOptions{})
 
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			klog.V(1).Infof("patch license failed, license not found")
+			klog.V(4).Infof("patch license failed, license not found")
 			return nil
 		} else {
 			klog.Errorf("patch license failed, error: %s", err)

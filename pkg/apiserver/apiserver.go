@@ -328,7 +328,7 @@ func (s *APIServer) buildHandlerChain(stopCh <-chan struct{}) {
 	default:
 		fallthrough
 	case authorization.RBAC:
-		excludedPaths := []string{"/oauth/*", "/kapis/config.kubesphere.io/*", "/kapis/version", "/kapis/metrics", "/kapis/license.kubesphere.io/*"}
+		excludedPaths := []string{"/oauth/*", "/kapis/config.kubesphere.io/*", "/kapis/version", "/kapis/metrics"}
 		pathAuthorizer, _ := path.NewAuthorizer(excludedPaths)
 		amOperator := am.NewReadOnlyOperator(s.InformerFactory, s.DevopsClient)
 		authorizers = unionauthorizer.New(pathAuthorizer, rbac.NewRBACAuthorizer(amOperator))
@@ -341,8 +341,9 @@ func (s *APIServer) buildHandlerChain(stopCh <-chan struct{}) {
 	}
 
 	if s.Config.LicenseOptions == nil || s.Config.LicenseOptions.SkipLicenseCheck == false {
-		licenseLister := s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets().Lister()
-		handler = filters.WithLicense(handler, licenseLister, s.KubernetesClient)
+		informer := s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets().Informer()
+		handler = filters.WithLicense(handler, informer, s.KubernetesClient)
+		go informer.Run(stopCh)
 	}
 
 	userLister := s.InformerFactory.KubeSphereSharedInformerFactory().Iam().V1alpha2().Users().Lister()
