@@ -92,6 +92,20 @@ type Application struct {
 	ReleaseInfo []runtime.Object `json:"releaseInfo,omitempty" description:"release info"`
 }
 
+type Manifest struct {
+	Cluster           string      `json:"cluster"`
+	Namespace         string      `json:"namespace"`
+	Kind              string      `json:"kind"`
+	Description       string      `json:"description,omitempty"`
+	AppName           string      `json:"app,omitempty"`
+	AppVersion        string      `json:"appVersion"`
+	CustomResource    string      `json:"customResource" yaml:"customResource"`
+	Version           int         `json:"version"`
+	Name              string      `json:"name" description:"clusterName"`
+	ResourceState     string      `json:"resourceState"`
+	CreationTimestamp metav1.Time `json:"creationTimestamp"`
+}
+
 func (c *releaseOperator) UpgradeApplication(request UpgradeClusterRequest) error {
 	oldRls, err := c.rlsLister.Get(request.ClusterId)
 

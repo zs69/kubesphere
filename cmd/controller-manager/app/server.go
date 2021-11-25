@@ -47,6 +47,7 @@ import (
 	"kubesphere.io/kubesphere/pkg/controller/openpitrix/helmcategory"
 	"kubesphere.io/kubesphere/pkg/controller/openpitrix/helmrelease"
 	"kubesphere.io/kubesphere/pkg/controller/openpitrix/helmrepo"
+	"kubesphere.io/kubesphere/pkg/controller/openpitrix/manifest"
 	"kubesphere.io/kubesphere/pkg/controller/quota"
 	"kubesphere.io/kubesphere/pkg/controller/serviceaccount"
 	"kubesphere.io/kubesphere/pkg/controller/user"
@@ -328,6 +329,13 @@ func run(s *options.KubeSphereControllerManagerOptions, ctx context.Context) err
 		if err := helmReconciler.SetupWithManager(mgr); err != nil {
 			klog.Fatalf("Unable to create helm controller: %v", err)
 		}
+	}
+
+	manifestReconciler := manifest.ManifestReconciler{
+		KsFactory:          informerFactory.KubeSphereSharedInformerFactory(),
+		MultiClusterEnable: s.MultiClusterOptions.Enable}
+	if err := manifestReconciler.SetupWithManager(mgr); err != nil {
+		klog.Fatalf("Unable to create Manifest controller: %v", err)
 	}
 
 	// TODO(jeff): refactor config with CRD

@@ -19,6 +19,7 @@ package resource
 import (
 	"errors"
 
+	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/openpitrix/manifest"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/persistentvolume"
 
 	snapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
@@ -140,6 +141,7 @@ func NewResourceGetter(factory informers.InformerFactory, cache cache.Cache) *Re
 	clusterResourceGetters[notificationv2beta1.SchemeGroupVersion.WithResource(notificationv2beta1.ResourcesPluralConfig)] = notification.NewNotificationConfigGetter(factory.KubeSphereSharedInformerFactory())
 	clusterResourceGetters[notificationv2beta1.SchemeGroupVersion.WithResource(notificationv2beta1.ResourcesPluralReceiver)] = notification.NewNotificationReceiverGetter(factory.KubeSphereSharedInformerFactory())
 	clusterResourceGetters[monitoringdashboardv1alpha2.GroupVersion.WithResource("clusterdashboards")] = clusterdashboard.New(cache)
+	clusterResourceGetters[schema.GroupVersionResource{Group: "application.kubesphere.io", Version: "v1alpha1", Resource: "manifests"}] = manifest.New(factory.KubeSphereSharedInformerFactory())
 
 	// federated resources
 	namespacedResourceGetters[typesv1beta1.SchemeGroupVersion.WithResource(typesv1beta1.ResourcePluralFederatedNamespace)] = federatednamespace.New(factory.KubeSphereSharedInformerFactory())

@@ -15,6 +15,7 @@ package openpitrix
 
 import (
 	"github.com/go-openapi/strfmt"
+	"kubesphere.io/api/application/v1alpha1"
 )
 
 type ModifyAppRequest struct {
@@ -121,7 +122,8 @@ type ValidatePackageRequest struct {
 type App struct {
 
 	// abstraction of app
-	Abstraction string `json:"abstraction,omitempty"`
+	Abstraction   string `json:"abstraction,omitempty"`
+	AbstractionZh string `json:"abstraction_zh,omitempty"`
 
 	// whether there is a released version in the app
 	Active bool `json:"active,omitempty"`
@@ -154,7 +156,8 @@ type App struct {
 	CreateTime *strfmt.DateTime `json:"create_time,omitempty"`
 
 	// app description
-	Description string `json:"description,omitempty"`
+	Description   string `json:"description,omitempty"`
+	DescriptionZh string `json:"description_zh,omitempty"`
 
 	// app home page
 	Home string `json:"home,omitempty"`
@@ -326,7 +329,8 @@ type AppVersion struct {
 	CreateTime *strfmt.DateTime `json:"create_time,omitempty"`
 
 	// description of app of specific version
-	Description string `json:"description,omitempty"`
+	Description   string `json:"description,omitempty"`
+	DescriptionZh string `json:"description_zh,omitempty"`
 
 	// home of app of specific version
 	Home string `json:"home,omitempty"`
@@ -359,7 +363,8 @@ type AppVersion struct {
 	ReviewId string `json:"review_id,omitempty"`
 
 	// screenshots of app of specific version
-	Screenshots string `json:"screenshots,omitempty"`
+	Screenshots   string `json:"screenshots,omitempty"`
+	ScreenshotsZh string `json:"screenshots_zh,omitempty"`
 
 	// sequence of app of specific version
 	Sequence int64 `json:"sequence,omitempty"`
@@ -895,6 +900,52 @@ type ModifyClusterAttributesRequest struct {
 	Name *string `json:"name,omitempty"`
 }
 
+type CreateManifestRequest struct {
+	// The name of the manifest
+	Name string `json:"name"`
+
+	// The description of the manifest
+	Description string `json:"description"`
+
+	// The version of the manifest
+	Version int `json:"version"`
+
+	// The version of the application
+	AppVersion string `json:"appVersion"`
+
+	// custom resource
+	CustomResource   string                     `json:"customResource"`
+	RelatedResources []v1alpha1.RelatedResource `json:"relatedResources,omitempty"`
+
+	Username string `json:"-"`
+
+	// current workspace
+	Workspace string `json:"workspace,omitempty"`
+}
+
+type ModifyManifestRequest struct {
+	// The name of the manifest
+	Name string `json:"name"`
+
+	// The description of the manifest
+	Description string `json:"description"`
+
+	// The version of the manifest
+	Version int `json:"version"`
+
+	// The version of the application
+	AppVersion string `json:"operatorVersion"`
+
+	// custom resource
+	CustomResource   string                     `json:"customResource"`
+	RelatedResources []v1alpha1.RelatedResource `json:"relatedResources,omitempty"`
+
+	Username string `json:"-"`
+
+	// current workspace
+	Workspace string `json:"workspace,omitempty"`
+}
+
 const (
 	CreateTime = "create_time"
 	StatusTime = "status_time"
@@ -921,4 +972,8 @@ const (
 	ActionRelease   = "release"
 	Ascending       = "ascending"
 	ActionIndex     = "index"
+
+	RadonDBCategoryID      = "radondb"
+	RadonDBCategoryName    = "RadonDB"
+	OperatorAppVersionType = "operator"
 )

@@ -24,8 +24,10 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 
 	"helm.sh/helm/v3/pkg/chart/loader"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"kubesphere.io/kubesphere/pkg/apiserver/query"
 
@@ -36,7 +38,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/klog"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"kubesphere.io/api/application/v1alpha1"
 
@@ -254,7 +255,6 @@ func (c *applicationOperator) ModifyAppVersion(id string, request *ModifyAppVers
 
 func (c *applicationOperator) ListAppVersions(conditions *params.Conditions, orderBy string, reverse bool, limit, offset int) (*models.PageableResponse, error) {
 	versions, err := c.getAppVersionsByAppId(conditions.Match[AppId])
-
 	if err != nil {
 		klog.Error(err)
 		return nil, err
@@ -271,10 +271,26 @@ func (c *applicationOperator) ListAppVersions(conditions *params.Conditions, ord
 	start, end := (&query.Pagination{Limit: limit, Offset: offset}).GetValidPagination(totalCount)
 	versions = versions[start:end]
 	items := make([]interface{}, 0, len(versions))
+
+	// operator app versions
+	operatorVersion, err := c.listOperatorAppVersionsByAppId(strings.TrimPrefix(conditions.Match[AppId], v1alpha1.OperatorApplicationIdPrefix))
+	if err != nil {
+		klog.Errorf("get operator app version error: %s", err)
+	}
+	if operatorVersion != nil {
+		items = append(items, convertOperatorAppVersion(operatorVersion))
+		return &models.PageableResponse{Items: items, TotalCount: totalCount}, nil
+	}
+
 	for i := range versions {
 		items = append(items, convertAppVersion(versions[i]))
 	}
 	return &models.PageableResponse{Items: items, TotalCount: totalCount}, nil
+}
+
+func (c *applicationOperator) listOperatorAppVersionsByAppId(oAppVersionName string) (ret *v1alpha1.OperatorApplicationVersion, err error) {
+	ret, err = c.operatorAppVersionLister.Get(oAppVersionName)
+	return
 }
 
 func (c *applicationOperator) ListAppVersionReviews(conditions *params.Conditions, orderBy string, reverse bool, limit, offset int) (*models.PageableResponse, error) {
@@ -606,5 +622,14 @@ func (c *applicationOperator) getAppVersion(id string) (ret *v1alpha1.HelmApplic
 	}
 
 	ret, err = c.versionLister.Get(id)
+	return
+}
+
+func (c *applicationOperator) getOperatorAppVersionByName(appVersionName string) (ret *v1alpha1.OperatorApplicationVersion, err error) {
+	ret, err = c.operatorAppVersionLister.Get(appVersionName)
+	if err != nil && !apierrors.IsNotFound(err) {
+		klog.Error(err)
+		return nil, err
+	}
 	return
 }
