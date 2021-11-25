@@ -21,6 +21,8 @@ import (
 	"reflect"
 	"strings"
 
+	"kubesphere.io/kubesphere/pkg/simple/client/license"
+
 	"kubesphere.io/kubesphere/pkg/apiserver/authentication"
 	"kubesphere.io/kubesphere/pkg/apiserver/authorization"
 
@@ -109,6 +111,7 @@ type Config struct {
 	MeteringOptions       *metering.Options       `json:"metering,omitempty" yaml:"metering,omitempty" mapstructure:"metering"`
 	GatewayOptions        *gateway.Options        `json:"gateway,omitempty" yaml:"gateway,omitempty" mapstructure:"gateway"`
 	GPUOptions            *gpu.Options            `json:"gpu,omitempty" yaml:"gpu,omitempty" mapstructure:"gpu"`
+	LicenseOptions        *license.Options        `json:"license,omitempty" yaml:"license,omitempty" mapstructure:"license"`
 }
 
 // newConfig creates a default non-empty Config
@@ -136,6 +139,7 @@ func New() *Config {
 		MeteringOptions:       metering.NewMeteringOptions(),
 		GatewayOptions:        gateway.NewGatewayOptions(),
 		GPUOptions:            gpu.NewGPUOptions(),
+		LicenseOptions:        license.NewOptions(),
 	}
 }
 

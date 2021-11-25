@@ -52,6 +52,8 @@ import (
 	tenantv1alpha1 "kubesphere.io/api/tenant/v1alpha1"
 	typesv1beta1 "kubesphere.io/api/types/v1beta1"
 
+	licensev1alpha1 "kubesphere.io/kubesphere/pkg/kapis/license/v1alpha1"
+
 	audit "kubesphere.io/kubesphere/pkg/apiserver/auditing"
 	"kubesphere.io/kubesphere/pkg/apiserver/authentication/authenticators/basic"
 	"kubesphere.io/kubesphere/pkg/apiserver/authentication/authenticators/jwt"
@@ -218,6 +220,7 @@ func (s *APIServer) installKubeSphereAPIs() {
 		s.DevopsClient)
 	rbacAuthorizer := rbac.NewRBACAuthorizer(amOperator)
 
+	urlruntime.Must(licensev1alpha1.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.InformerFactory, s.Config.MultiClusterOptions))
 	urlruntime.Must(configv1alpha2.AddToContainer(s.container, s.Config))
 	urlruntime.Must(resourcev1alpha3.AddToContainer(s.container, s.InformerFactory, s.RuntimeCache))
 	urlruntime.Must(monitoringv1alpha3.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.MonitoringClient, s.MetricsClient, s.InformerFactory, s.KubernetesClient.KubeSphere(), s.Config.OpenPitrixOptions, s.Config.MonitoringOptions.EnableGPUMonitoring))
@@ -335,6 +338,12 @@ func (s *APIServer) buildHandlerChain(stopCh <-chan struct{}) {
 	if s.Config.MultiClusterOptions.Enable {
 		clusterDispatcher := dispatch.NewClusterDispatch(s.InformerFactory.KubeSphereSharedInformerFactory().Cluster().V1alpha1().Clusters())
 		handler = filters.WithMultipleClusterDispatcher(handler, clusterDispatcher)
+	}
+
+	if s.Config.LicenseOptions == nil || s.Config.LicenseOptions.SkipLicenseCheck == false {
+		informer := s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets().Informer()
+		handler = filters.WithLicense(handler, informer, s.KubernetesClient)
+		go informer.Run(stopCh)
 	}
 
 	userLister := s.InformerFactory.KubeSphereSharedInformerFactory().Iam().V1alpha2().Users().Lister()

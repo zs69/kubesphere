@@ -91,6 +91,7 @@ func (s *ServerRunOptions) Flags() (fss cliflag.NamedFlagSets) {
 	s.EventsOptions.AddFlags(fss.FlagSet("events"), s.EventsOptions)
 	s.AuditingOptions.AddFlags(fss.FlagSet("auditing"), s.AuditingOptions)
 	s.AlertingOptions.AddFlags(fss.FlagSet("alerting"), s.AlertingOptions)
+	s.LicenseOptions.AddFlags(fss.FlagSet("license"), s.LicenseOptions)
 
 	fs = fss.FlagSet("klog")
 	local := flag.NewFlagSet("klog", flag.ExitOnError)

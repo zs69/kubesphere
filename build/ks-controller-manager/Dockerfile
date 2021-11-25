@@ -39,6 +39,7 @@ RUN mv /tmp/ingress-nginx ${OUTDIR}/var/helm-charts/
 
 FROM golang:1.16.3 as build_context
 
+ARG PUB_KEY_FILE
 ENV OUTDIR=/out
 RUN mkdir -p ${OUTDIR}/usr/local/bin/
 RUN mkdir -p ${OUTDIR}/var/helm-charts
@@ -46,7 +47,7 @@ RUN mkdir -p ${OUTDIR}/var/helm-charts
 WORKDIR /workspace
 ADD . /workspace/
 
-RUN make ks-controller-manager
+RUN make ks-controller-manager PUB_KEY_FILE=${PUB_KEY_FILE}
 RUN mv /workspace/bin/cmd/controller-manager ${OUTDIR}/usr/local/bin/
 
 # Copy gateway config and helm chart

@@ -1,0 +1,16 @@
+{
+  "cn": "ks-cloud",
+  "key": {
+    "algo": "rsa",
+    "size": 4096
+  },
+  "names": [
+    {
+      "C":  "CN",
+      "L":  "BJ",
+      "O":  "QingCloud",
+      "OU": "KubeSphere",
+      "ST": "BJ"
+    }
+  ]
+}

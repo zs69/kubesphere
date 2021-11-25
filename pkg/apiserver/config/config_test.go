@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"kubesphere.io/kubesphere/pkg/simple/client/license"
+
 	"kubesphere.io/kubesphere/pkg/apiserver/authentication"
 	"kubesphere.io/kubesphere/pkg/apiserver/authorization"
 
@@ -193,6 +195,7 @@ func newTestConfig() (*Config, error) {
 		GPUOptions: &gpu.Options{
 			Kinds: []gpu.GPUKind{},
 		},
+		LicenseOptions: &license.Options{},
 	}
 	return conf, nil
 }

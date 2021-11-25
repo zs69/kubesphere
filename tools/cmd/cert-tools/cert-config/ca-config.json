@@ -1,0 +1,23 @@
+{
+  "signing": {
+    "default": {
+      "expiry": "168h"
+    },
+    "profiles": {
+      "ks": {
+        "expiry": "87600h",
+        "usages": [
+          "signing",
+          "key encipherment",
+          "server auth",
+          "client auth",
+          "cert sign",
+          "crl sign"
+        ],
+        "ca_constraint": {
+          "is_ca": true
+        }
+      }
+    }
+  }
+}

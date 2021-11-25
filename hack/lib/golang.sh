@@ -59,6 +59,10 @@ kube::version::ldflags() {
     add_ldflag "gitMinor" "${KUBE_GIT_MINOR}"
   fi
 
+  # set the public key to verify license signature
+  if [[ -n ${PUB_KEY_FILE} ]]; then
+    ldflags+=("-X '${KUBE_GO_PACKAGE}/pkg/simple/client/license/cert.KSCert=$(base64  < "${PUB_KEY_FILE}")'")
+  fi
   # The -ldflags parameter takes a single string, so join the output.
   echo "${ldflags[*]-}"
 }
