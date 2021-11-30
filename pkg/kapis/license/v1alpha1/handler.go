@@ -85,8 +85,13 @@ func (h *licenseHandler) UpdateLicense(req *restful.Request, resp *restful.Respo
 		},
 	}
 	err := req.ReadEntity(licenseResp)
-	if err != nil || licenseResp.Data == nil {
+	if err != nil {
 		api.HandleBadRequest(resp, nil, err)
+		return
+	}
+
+	if licenseResp.Data == nil {
+		api.HandleBadRequest(resp, nil, errors.New(licensetypes.EmptyLicense))
 		return
 	}
 
@@ -100,7 +105,8 @@ func (h *licenseHandler) UpdateLicense(req *restful.Request, resp *restful.Respo
 	if vio != nil {
 		licenseResp.Status.Violation = *vio
 		klog.V(2).Infof("check license failed, violation type: %s, reason: %s", vio.Type, vio.Reason)
-		resp.WriteAsJson(licenseResp)
+		// Set status code to 400, then the console shows the alert message.
+		api.HandleBadRequest(resp, nil, errors.New(vio.Type))
 		return
 	}
 

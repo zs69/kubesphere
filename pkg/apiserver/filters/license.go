@@ -55,9 +55,10 @@ func WithLicense(handler http.Handler, informer cache.SharedInformer, client k8s
 	}
 
 	// If the license is invalid, forbid all the WRITE operations.
+	// All the verb comes form pkg/apiserver/request/requestinfo.go#196
 	var forbiddenVerb = map[string]bool{
-		"post":   true,
-		"put":    true,
+		"create": true,
+		"update": true,
 		"delete": true,
 		"patch":  true,
 	}
@@ -74,10 +75,12 @@ func WithLicense(handler http.Handler, informer cache.SharedInformer, client k8s
 
 		if vio := getLicenseViolation(); vio.Type != licensetypes.NoViolation {
 			// License is invalid.
-			verb := strings.ToLower(info.Verb)
+			verb := info.Verb
 			if _, exists := forbiddenVerb[verb]; exists {
-				if strings.HasPrefix(info.Path, "/kapis/license.v1") || strings.HasPrefix(info.Path, "/oauth/") ||
-					(verb == "delete" && strings.HasPrefix(info.Path, "/kapis/cluster")) {
+				if strings.HasPrefix(info.Path, "/kapis/license.kubesphere.io/") || strings.HasPrefix(info.Path, "/oauth/") ||
+					(verb == "delete" && strings.HasPrefix(info.Path, "/kapis/cluster.kubesphere.io/") ||
+						// The first login, user needs to change the password.
+						(verb == "patch" && strings.HasPrefix(info.Path, "/apis/iam.kubesphere.io/v1alpha2"))) {
 					handler.ServeHTTP(w, req)
 				} else {
 					klog.V(4).Infof("forbidden path: %s, verb: %s, reason: %s", info.Path, info.Verb, vio.Type)
