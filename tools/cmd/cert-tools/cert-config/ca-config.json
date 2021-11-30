@@ -5,7 +5,7 @@
     },
     "profiles": {
       "ks": {
-        "expiry": "87600h",
+        "expiry": "876000h",
         "usages": [
           "signing",
           "key encipherment",

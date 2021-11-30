@@ -24,14 +24,13 @@ RUN mv /tmp/${TARGETOS}-${TARGETARCH}/helm ${OUTDIR}/usr/local/bin/
 # Build 
 FROM golang:1.16.3 as build_context
 
-ARG PUB_KEY_FILE
 ENV OUTDIR=/out
 RUN mkdir -p ${OUTDIR}/usr/local/bin/
 
 WORKDIR /workspace
 ADD . /workspace/
 
-RUN make ks-apiserver PUB_KEY_FILE=${PUB_KEY_FILE}
+RUN make ks-apiserver
 RUN mv /workspace/bin/cmd/ks-apiserver ${OUTDIR}/usr/local/bin/
 
 ##############

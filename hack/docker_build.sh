@@ -24,7 +24,6 @@ TARGETARCH=${TARGETARCH:-$(kube::util::host_arch)}
 ${CONTAINER_CLI} "${CONTAINER_BUILDER}" \
   --build-arg TARGETARCH="${TARGETARCH}" \
   --build-arg TARGETOS="${TARGETOS}" \
-  --build-arg PUB_KEY_FILE="${PUB_KEY_FILE}" \
   -f build/ks-apiserver/Dockerfile \
   -t "${REPO}"/ks-apiserver:"${TAG}" .
 
@@ -32,7 +31,6 @@ ${CONTAINER_CLI} "${CONTAINER_BUILDER}" \
 ${CONTAINER_CLI} "${CONTAINER_BUILDER}" \
   --build-arg "TARGETARCH=${TARGETARCH}" \
   --build-arg "TARGETOS=${TARGETOS}" \
-  --build-arg PUB_KEY_FILE="${PUB_KEY_FILE}" \
   -f build/ks-controller-manager/Dockerfile \
   -t "${REPO}"/ks-controller-manager:"${TAG}" .
 
