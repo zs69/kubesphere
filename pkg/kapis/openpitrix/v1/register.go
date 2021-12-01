@@ -713,6 +713,15 @@ func AddToContainer(c *restful.Container, ksInfomrers informers.InformerFactory,
 		Returns(http.StatusOK, api.StatusOK, errors.Error{}).
 		Param(webservice.PathParameter("namespace", "the name of the project").Required(true)))
 
+	webservice.Route(webservice.DELETE("/workspaces/{workspace}/namespaces/{namespace}/manifests/{manifest}").
+		To(handler.DeleteManifest).
+		Doc("Delete the specified manifest").
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.NamespaceResourcesTag}).
+		Returns(http.StatusOK, api.StatusOK, errors.Error{}).
+		Param(webservice.PathParameter("namespace", "the name of the project").Required(true)).
+		Param(webservice.PathParameter("workspace", "the workspace of the project").Required(true)).
+		Param(webservice.PathParameter("manifest", "the id of the manifest").Required(true)))
+
 	webservice.Route(webservice.DELETE("/workspaces/{workspace}/clusters/{cluster}/namespaces/{namespace}/manifests/{manifest}").
 		To(handler.DeleteManifest).
 		Doc("Delete the specified manifest").

@@ -897,6 +897,8 @@ func convertOperatorApp(app *v1alpha1.OperatorApplication, version *v1alpha1.Ope
 	out.AbstractionZh = app.Spec.AbstractionZh
 	out.Description = app.Spec.Description
 	out.DescriptionZh = app.Spec.DescriptionZh
+	out.Screenshots = app.Spec.Screenshots
+	out.ScreenshotsZh = app.Spec.ScreenshotsZh
 	date := strfmt.DateTime(app.CreationTimestamp.Time)
 	out.CreateTime = &date
 	out.Status = app.Status.State
