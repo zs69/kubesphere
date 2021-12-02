@@ -27,6 +27,8 @@ type OperatorApplicationSpec struct {
 	DescriptionZh string `json:"description_zh,omitempty"`
 	Abstraction   string `json:"abstraction,omitempty"`
 	AbstractionZh string `json:"abstraction_zh,omitempty"`
+	Screenshots   string `json:"screenshots,omitempty"`
+	ScreenshotsZh string `json:"screenshots_zh,omitempty"`
 	Icon          string `json:"icon,omitempty"`
 	Owner         string `json:"owner,omitempty"`
 }

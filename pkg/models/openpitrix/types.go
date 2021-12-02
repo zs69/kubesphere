@@ -190,7 +190,8 @@ type App struct {
 	RepoId string `json:"repo_id,omitempty"`
 
 	// app screenshots
-	Screenshots string `json:"screenshots,omitempty"`
+	Screenshots   string `json:"screenshots,omitempty"`
+	ScreenshotsZh string `json:"screenshots_zh,omitempty"`
 
 	// sources of app
 	Sources string `json:"sources,omitempty"`
