@@ -11,9 +11,6 @@ GV="network:v1alpha1 servicemesh:v1alpha2 tenant:v1alpha1 tenant:v1alpha2 devops
 # App Version
 APP_VERSION = v3.2.0
 
-# The public key file to verify the signature of license.
-export PUB_KEY_FILE ?=
-
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
