@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	restful "github.com/emicklei/go-restful"
 	corev1 "k8s.io/api/core/v1"
@@ -79,6 +80,7 @@ func newLicenseHandler(client clientset.Interface, informerFactory informers.Inf
 func (h *licenseHandler) UpdateLicense(req *restful.Request, resp *restful.Response) {
 	licenseResp := &client.License{
 		Status: &licensetypes.LicenseStatus{
+			CurrentTime: time.Now().UTC(),
 			Violation: licensetypes.Violation{
 				Type: licensetypes.NoViolation,
 			},
@@ -105,9 +107,11 @@ func (h *licenseHandler) UpdateLicense(req *restful.Request, resp *restful.Respo
 	if vio != nil {
 		licenseResp.Status.Violation = *vio
 		klog.V(2).Infof("check license failed, violation type: %s, reason: %s", vio.Type, vio.Reason)
-		// Set status code to 400, then the console shows the alert message.
-		api.HandleBadRequest(resp, nil, errors.New(vio.Type))
-		return
+		if vio.Type == licensetypes.InvalidSignature || vio.Type == licensetypes.FormatError {
+			// Set status code to 400, then the console shows the alert message.
+			api.HandleBadRequest(resp, nil, errors.New(vio.Type))
+			return
+		}
 	}
 
 	// update license
@@ -179,6 +183,7 @@ func (h *licenseHandler) GetLicense(req *restful.Request, resp *restful.Response
 		license.Status = &status
 	}
 
+	license.Status.CurrentTime = time.Now().UTC()
 	resp.WriteAsJson(license)
 }
 
