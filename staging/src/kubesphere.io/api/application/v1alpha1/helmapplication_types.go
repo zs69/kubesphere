@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"strings"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -98,10 +99,11 @@ func (in *HelmApplication) GetHelmRepoId() string {
 	return getValue(in.Labels, constants.ChartRepoIdLabelKey)
 }
 
-func (in *HelmApplication) GetHelmApplicationId() string {
+func (in *HelmApplication) GetApplicationId() string {
 	return strings.TrimSuffix(in.Name, HelmApplicationAppStoreSuffix)
 }
-func (in *HelmApplication) GetHelmCategoryId() string {
+
+func (in *HelmApplication) GetCategoryId() string {
 	return getValue(in.Labels, constants.CategoryIdLabelKey)
 }
 
@@ -120,11 +122,7 @@ func getValue(m map[string]string, key string) string {
 	return m[key]
 }
 
-func (in *HelmApplication) GetCategoryId() string {
-	return getValue(in.Labels, constants.CategoryIdLabelKey)
-}
-
-func (in *HelmApplication) State() string {
+func (in *HelmApplication) GetState() string {
 	if in.Status.State == "" {
 		return StateDraft
 	}
@@ -133,4 +131,48 @@ func (in *HelmApplication) State() string {
 
 func (in *HelmApplication) GetCreator() string {
 	return getValue(in.Annotations, constants.CreatorAnnotationKey)
+}
+
+func (in *HelmApplication) GetAppName() string {
+	return in.Name
+}
+
+func (in *HelmApplication) GetCreationTime() time.Time {
+	return in.CreationTimestamp.Time
+}
+
+func (in *HelmApplication) GetLatestVersion() string {
+	return in.Status.LatestVersion
+}
+
+func (in *HelmApplication) GetUpdateTime() *metav1.Time {
+	return in.Status.UpdateTime
+}
+
+func (in *HelmApplication) GetStatusTime() *metav1.Time {
+	return in.Status.StatusTime
+}
+
+func (in *HelmApplication) GetAbstraction() string {
+	return in.Spec.Abstraction
+}
+
+func (in *HelmApplication) GetDescription() string {
+	return in.Spec.Description
+}
+
+func (in *HelmApplication) GetAttachments() []string {
+	return in.Spec.Attachments
+}
+
+func (in *HelmApplication) GetAppHome() string {
+	return in.Spec.AppHome
+}
+
+func (in *HelmApplication) GetIcon() string {
+	return in.Spec.Icon
+}
+
+func (in *HelmApplication) GetAnnotations() map[string]string {
+	return in.Annotations
 }

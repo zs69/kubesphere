@@ -46,6 +46,34 @@ import (
 	"kubesphere.io/kubesphere/pkg/utils/stringutils"
 )
 
+type AppInterface interface {
+	GetTrueName() string
+	GetState() string
+	GetAppName() string
+	GetCreationTime() time.Time
+	GetApplicationId() string
+	GetCategoryId() string
+	GetLatestVersion() string
+	GetWorkspace() string
+	GetCreator() string
+	GetStatusTime() *metav1.Time
+	GetUpdateTime() *metav1.Time
+	GetAbstraction() string
+	GetDescription() string
+	GetAttachments() []string
+	GetAppHome() string
+	GetIcon() string
+	GetAnnotations() map[string]string
+}
+
+type OperatorAppInterface interface {
+	AppInterface
+	GetDescriptionZh() string
+	GetAbstractionZh() string
+	GetScreenshots() string
+	GetScreenshotsZh() string
+}
+
 type ApplicationInterface interface {
 	ListApps(conditions *params.Conditions, orderBy string, reverse bool, limit, offset int) (*models.PageableResponse, error)
 	DescribeApp(id string) (*App, error)
@@ -281,7 +309,7 @@ func (c *applicationOperator) CreateApp(req *CreateAppRequest) (*CreateAppRespon
 	}
 
 	return &CreateAppResponse{
-		AppID:     app.GetHelmApplicationId(),
+		AppID:     app.GetApplicationId(),
 		VersionID: ver.GetHelmApplicationVersionId(),
 	}, nil
 }
@@ -306,22 +334,17 @@ func buildLabelSelector(conditions *params.Conditions) map[string]string {
 }
 
 func (c *applicationOperator) ListApps(conditions *params.Conditions, orderBy string, reverse bool, limit, offset int) (*models.PageableResponse, error) {
-	// operator apps
-	operatorApps, err := c.listOperatorApps()
 	apps, err := c.listApps(conditions)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
 	}
 	apps = filterApps(apps, conditions)
-	operatorApps = filterOperatorApps(operatorApps, conditions)
 
 	if reverse {
-		sort.Sort(sort.Reverse(HelmApplicationList(apps)))
-		sort.Sort(sort.Reverse(OperatorApplicationList(operatorApps)))
+		sort.Sort(sort.Reverse(apps))
 	} else {
-		sort.Sort(HelmApplicationList(apps))
-		sort.Sort(OperatorApplicationList(operatorApps))
+		sort.Sort(apps)
 	}
 
 	totalCount := len(apps)
@@ -329,26 +352,22 @@ func (c *applicationOperator) ListApps(conditions *params.Conditions, orderBy st
 	apps = apps[start:end]
 	items := make([]interface{}, 0, len(apps))
 
-	// add operator apps and app versions
-	for i := range operatorApps {
-		versions, err := c.getOperatorAppVersionByName(operatorApps[i].Name)
-		if err != nil && !apierrors.IsNotFound(err) {
-			return nil, err
+	for _, app := range apps {
+		if helmApp, ok := app.(*v1alpha1.HelmApplication); ok {
+			versions, err := c.getAppVersionsByAppId(helmApp.GetApplicationId())
+			if err != nil && !apierrors.IsNotFound(err) {
+				return nil, err
+			}
+			ctg, _ := c.ctgLister.Get(helmApp.GetCategoryId())
+			items = append(items, convertApp(helmApp, versions, ctg, 0))
 		}
-		items = append(items, convertOperatorApp(operatorApps[i], versions))
-	}
-
-	if conditions.Match[CategoryId] == RadonDBCategoryID {
-		return &models.PageableResponse{Items: items, TotalCount: len(operatorApps)}, nil
-	}
-
-	for i := range apps {
-		versions, err := c.getAppVersionsByAppId(apps[i].GetHelmApplicationId())
-		if err != nil && !apierrors.IsNotFound(err) {
-			return nil, err
+		if operatorApp, ok := app.(*v1alpha1.OperatorApplication); ok {
+			versions, err := c.getOperatorAppVersionByName(operatorApp.GetAppName())
+			if err != nil && !apierrors.IsNotFound(err) {
+				return nil, err
+			}
+			items = append(items, convertOperatorApp(operatorApp, versions))
 		}
-		ctg, _ := c.ctgLister.Get(apps[i].GetHelmCategoryId())
-		items = append(items, convertApp(apps[i], versions, ctg, 0))
 	}
 	return &models.PageableResponse{Items: items, TotalCount: totalCount}, nil
 }
@@ -370,7 +389,7 @@ func (c *applicationOperator) DeleteApp(id string) error {
 	}
 
 	ls := map[string]string{
-		constants.ChartApplicationIdLabelKey: app.GetHelmApplicationId(),
+		constants.ChartApplicationIdLabelKey: app.GetApplicationId(),
 	}
 
 	list, err := c.versionLister.List(labels.SelectorFromSet(ls))
@@ -635,13 +654,13 @@ func (c *applicationOperator) DescribeApp(id string) (*App, error) {
 		return nil, err
 	}
 
-	versions, err := c.getAppVersionsByAppId(helmApp.GetHelmApplicationId())
+	versions, err := c.getAppVersionsByAppId(helmApp.GetApplicationId())
 	if err != nil {
 		klog.Error(err)
 		return nil, err
 	}
 
-	ctg, err = c.ctgLister.Get(helmApp.GetHelmCategoryId())
+	ctg, err = c.ctgLister.Get(helmApp.GetCategoryId())
 
 	if err != nil && !apierrors.IsNotFound(err) {
 		klog.Error(err)
@@ -652,20 +671,26 @@ func (c *applicationOperator) DescribeApp(id string) (*App, error) {
 	return app, nil
 }
 
-func (c *applicationOperator) listApps(conditions *params.Conditions) (ret []*v1alpha1.HelmApplication, err error) {
+func (c *applicationOperator) listApps(conditions *params.Conditions) (AppsInterface, error) {
+	var ret AppsInterface
+	var err error
 	repoId := conditions.Match[RepoId]
 	if repoId != "" && repoId != v1alpha1.AppStoreRepoId {
 		// get helm application from helm repo
-		if ret, exists := c.cachedRepos.ListApplicationsInRepo(repoId); !exists {
+		appsInRepo, exists := c.cachedRepos.ListApplicationsInRepo(repoId)
+		if !exists {
 			klog.Warningf("load repo failed, repo id: %s", repoId)
 			return nil, loadRepoInfoFailed
 		} else {
+			for i := range appsInRepo {
+				ret = append(ret, appsInRepo[i])
+			}
 			return ret, nil
 		}
 	} else if repoId == v1alpha1.AppStoreRepoId {
 		// List apps in the app-store and built-in repo
 		if c.backingStoreClient == nil {
-			return []*v1alpha1.HelmApplication{}, nil
+			return AppsInterface{}, nil
 		}
 
 		ls := map[string]string{}
@@ -673,19 +698,47 @@ func (c *applicationOperator) listApps(conditions *params.Conditions) (ret []*v1
 		if conditions.Match[CategoryId] != "" {
 			ls[constants.CategoryIdLabelKey] = conditions.Match[CategoryId]
 		}
-		appInRepo, _ := c.cachedRepos.ListApplicationsInBuiltinRepo(labels.SelectorFromSet(ls))
-
-		ret, err = c.appLister.List(labels.SelectorFromSet(buildLabelSelector(conditions)))
-		ret = append(ret, appInRepo...)
-	} else {
-		if c.backingStoreClient == nil {
-			return []*v1alpha1.HelmApplication{}, nil
+		operatorApps, err := c.operatorAppLister.List(labels.SelectorFromSet(ls))
+		if err != nil {
+			klog.Errorf("list operator apps error: %s", err)
 		}
 
-		ret, err = c.appLister.List(labels.SelectorFromSet(buildLabelSelector(conditions)))
+		appInRepo, exists := c.cachedRepos.ListApplicationsInBuiltinRepo(labels.SelectorFromSet(ls))
+		if !exists {
+			klog.Warning("failed to list apps form build-in repo!")
+		}
+
+		appsList, err := c.appLister.List(labels.SelectorFromSet(buildLabelSelector(conditions)))
+		if err != nil {
+			klog.Errorf("list helm apps error: %s", err)
+		}
+
+		for i := range appInRepo {
+			ret = append(ret, appInRepo[i])
+		}
+		for i := range appsList {
+			ret = append(ret, appsList[i])
+		}
+		for i := range operatorApps {
+			ret = append(ret, operatorApps[i])
+		}
+	} else {
+		if c.backingStoreClient == nil {
+			return AppsInterface{}, nil
+		}
+
+		appsList, err := c.appLister.List(labels.SelectorFromSet(buildLabelSelector(conditions)))
+		if err != nil {
+			klog.Errorf("list apps error: %s", err)
+			return nil, err
+		}
+
+		for i := range appsList {
+			ret = append(ret, appsList[i])
+		}
 	}
 
-	return
+	return ret, err
 }
 
 func (c *applicationOperator) getHelmApplication(appId string) (*v1alpha1.HelmApplication, error) {

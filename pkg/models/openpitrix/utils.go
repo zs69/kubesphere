@@ -508,13 +508,13 @@ func (l HelmApplicationList) Less(i, j int) bool {
 	}
 }
 
-type OperatorApplicationList []*v1alpha1.OperatorApplication
+type AppsInterface []AppInterface
 
-func (l OperatorApplicationList) Len() int      { return len(l) }
-func (l OperatorApplicationList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
-func (l OperatorApplicationList) Less(i, j int) bool {
-	t1 := l[i].CreationTimestamp.UnixNano()
-	t2 := l[j].CreationTimestamp.UnixNano()
+func (l AppsInterface) Len() int      { return len(l) }
+func (l AppsInterface) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+func (l AppsInterface) Less(i, j int) bool {
+	t1 := l[i].GetCreationTime().UnixNano()
+	t2 := l[j].GetCreationTime().UnixNano()
 	if t1 < t2 {
 		return true
 	} else if t1 > t2 {
@@ -602,7 +602,7 @@ func buildApplicationVersion(app *v1alpha1.HelmApplication, chrt helmrepoindex.V
 			},
 			Name: idutils.GetUuid36(v1alpha1.HelmApplicationVersionIdPrefix),
 			Labels: map[string]string{
-				constants.ChartApplicationIdLabelKey: app.GetHelmApplicationId(),
+				constants.ChartApplicationIdLabelKey: app.GetApplicationId(),
 				constants.WorkspaceLabelKey:          app.GetWorkspace(),
 			},
 			OwnerReferences: []metav1.OwnerReference{
@@ -644,7 +644,7 @@ func buildApplicationVersion(app *v1alpha1.HelmApplication, chrt helmrepoindex.V
 	return ver
 }
 
-func filterAppByName(app *v1alpha1.HelmApplication, namePart string) bool {
+func filterAppByName(app AppInterface, namePart string) bool {
 	if len(namePart) == 0 {
 		return true
 	}
@@ -656,11 +656,11 @@ func filterAppByName(app *v1alpha1.HelmApplication, namePart string) bool {
 	return false
 }
 
-func filterAppByStates(app *v1alpha1.HelmApplication, state []string) bool {
+func filterAppByStates(app AppInterface, state []string) bool {
 	if len(state) == 0 {
 		return true
 	}
-	st := app.Status.State
+	st := app.GetState()
 	// default value is draft
 	if st == "" {
 		st = v1alpha1.StateDraft
@@ -732,7 +732,7 @@ func filterAppVersions(versions []*v1alpha1.HelmApplicationVersion, conditions *
 	return versions[:curr:curr]
 }
 
-func filterApps(apps []*v1alpha1.HelmApplication, conditions *params.Conditions) []*v1alpha1.HelmApplication {
+func filterApps(apps []AppInterface, conditions *params.Conditions) []AppInterface {
 	if conditions == nil || len(conditions.Match) == 0 || len(apps) == 0 {
 		return apps
 	}
@@ -758,7 +758,7 @@ func filterApps(apps []*v1alpha1.HelmApplication, conditions *params.Conditions)
 		}
 
 		if len(appIdMap) > 0 {
-			if _, exists := appIdMap[apps[i].Name]; !exists {
+			if _, exists := appIdMap[apps[i].GetAppName()]; !exists {
 				continue
 			}
 		}
@@ -891,21 +891,34 @@ func convertOperatorApp(app *v1alpha1.OperatorApplication, version *v1alpha1.Ope
 		return nil
 	}
 	out := &App{}
-	out.AppId = "app-" + app.Name
-	out.Name = app.Spec.AppName
-	out.Abstraction = app.Spec.Abstraction
-	out.AbstractionZh = app.Spec.AbstractionZh
-	out.Description = app.Spec.Description
-	out.DescriptionZh = app.Spec.DescriptionZh
-	out.Screenshots = app.Spec.Screenshots
-	out.ScreenshotsZh = app.Spec.ScreenshotsZh
-	date := strfmt.DateTime(app.CreationTimestamp.Time)
+	out.AppId = "app-" + app.GetAppName()
+	out.Name = app.GetTrueName()
+	out.Abstraction = app.GetAbstraction()
+	out.AbstractionZh = app.GetAbstractionZh()
+	out.Description = app.GetDescription()
+	out.DescriptionZh = app.GetDescriptionZh()
+	out.Screenshots = app.GetScreenshots()
+	out.ScreenshotsZh = app.GetScreenshotsZh()
+	date := strfmt.DateTime(app.GetCreationTime())
 	out.CreateTime = &date
-	out.Status = app.Status.State
+	if app.GetStatusTime() != nil {
+		s := strfmt.DateTime(app.GetStatusTime().Time)
+		out.StatusTime = &s
+	} else {
+		out.StatusTime = out.CreateTime
+	}
 
-	out.Description = app.Spec.Description
-	out.Icon = app.Spec.Icon
-	ct := strfmt.DateTime(app.CreationTimestamp.Time)
+	if app.GetUpdateTime() == nil {
+		out.UpdateTime = out.CreateTime
+	} else {
+		u := strfmt.DateTime(app.GetUpdateTime().Time)
+		out.UpdateTime = &u
+	}
+
+	out.Status = app.GetState()
+	out.Isv = app.GetWorkspace()
+	out.Icon = app.GetIcon()
+	ct := strfmt.DateTime(app.GetCreationTime())
 	rc := ResourceCategory{
 		CategoryId: RadonDBCategoryID,
 		Name:       RadonDBCategoryName,
@@ -913,7 +926,8 @@ func convertOperatorApp(app *v1alpha1.OperatorApplication, version *v1alpha1.Ope
 	}
 	out.CategorySet = AppCategorySet{&rc}
 	out.LatestAppVersion = convertOperatorAppVersion(version)
-	out.Owner = app.Spec.Owner
+	out.Home = app.GetAppHome()
+	out.Owner = app.GetCreator()
 	out.AppVersionTypes = OperatorAppVersionType
 	return out
 }
@@ -934,32 +948,19 @@ func convertOperatorAppVersion(in *v1alpha1.OperatorApplicationVersion) *AppVers
 	out.Status = in.Status.State
 	out.Owner = in.Spec.AppName
 	out.Name = in.GetVersionName()
+
+	if len(in.Spec.Maintainers) > 0 {
+		maintainers, _ := json.Marshal(in.Spec.Maintainers)
+		out.Maintainers = string(maintainers)
+	}
+
 	out.Owner = in.Spec.Owner
 	out.VersionId = in.Spec.AppName
+
 	// operator APP version
 	out.Description = in.Spec.ChangeLog
 	out.DescriptionZh = in.Spec.ChangeLogZh
 	return out
-}
-
-func filterOperatorApps(operatorApps []*v1alpha1.OperatorApplication, conditions *params.Conditions) []*v1alpha1.OperatorApplication {
-	if conditions == nil || len(conditions.Match) == 0 || len(operatorApps) == 0 {
-		return operatorApps
-	}
-	key := conditions.Match[Keyword]
-	curr := 0
-	for i := range operatorApps {
-		if key != "" {
-			if !strings.Contains(strings.ToLower(operatorApps[i].Name), key) {
-				continue
-			}
-		}
-		if curr != i {
-			operatorApps[curr] = operatorApps[i]
-		}
-		curr++
-	}
-	return operatorApps[:curr:curr]
 }
 
 // convertManifest convert v1alpha1.Manifest to Manifest

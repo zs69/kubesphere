@@ -139,7 +139,7 @@ func (r *ManifestReconciler) updateManifest(ctx context.Context, manifest *v1alp
 
 	// get unstructured object
 	objSlice, err := getUnstructuredObj(manifest)
-	if err != nil || objSlice == nil {
+	if err != nil || len(objSlice) == 0 {
 		return ctrl.Result{}, err
 	}
 
@@ -235,7 +235,7 @@ func (r *ManifestReconciler) updateManifestState(manifest *v1alpha1.Manifest, st
 func (r *ManifestReconciler) checkResourceStatus(ctx context.Context, manifest *v1alpha1.Manifest) (ctrl.Result, error) {
 	// periodically check the status of the custom resource
 	objSlice, err := getUnstructuredObj(manifest)
-	if err != nil {
+	if err != nil || len(objSlice) == 0 {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	cli, err := r.getClusterClient(manifest.GetManifestCluster())

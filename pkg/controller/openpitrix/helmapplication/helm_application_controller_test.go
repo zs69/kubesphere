@@ -40,8 +40,8 @@ var _ = Describe("helmApplication", func() {
 	const interval = time.Second * 1
 
 	app := createApp()
-	appVer := createAppVersion(app.GetHelmApplicationId(), "0.0.1")
-	appVer2 := createAppVersion(app.GetHelmApplicationId(), "0.0.2")
+	appVer := createAppVersion(app.GetApplicationId(), "0.0.1")
+	appVer2 := createAppVersion(app.GetApplicationId(), "0.0.2")
 
 	BeforeEach(func() {
 		err := k8sClient.Create(context.Background(), app)
@@ -74,7 +74,7 @@ var _ = Describe("helmApplication", func() {
 					Name: app.Name,
 				}
 				k8sClient.Get(context.Background(), appKey, &localApp)
-				return localApp.State() == v1alpha1.StateActive
+				return localApp.GetState() == v1alpha1.StateActive
 			}, timeout, interval).Should(BeTrue())
 
 			By("Mark workspace is deleted")
