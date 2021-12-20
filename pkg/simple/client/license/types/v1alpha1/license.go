@@ -96,9 +96,11 @@ type ClusterInfo struct {
 }
 
 type LicenseStatus struct {
-	Host       ClusterInfo `json:"host,omitempty"`
-	Member     ClusterInfo `json:"member,omitempty"`
-	ClusterNum int         `json:"clusterNum,omitempty"`
+	// The current time of server.
+	CurrentTime time.Time   `json:"currentTime"`
+	Host        ClusterInfo `json:"host,omitempty"`
+	Member      ClusterInfo `json:"member,omitempty"`
+	ClusterNum  int         `json:"clusterNum,omitempty"`
 
 	Violation Violation `json:"violation"`
 }

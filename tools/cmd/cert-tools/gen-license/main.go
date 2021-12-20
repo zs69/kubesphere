@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
+
+	"kubesphere.io/kubesphere/pkg/utils/sliceutil"
 
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
@@ -14,6 +17,8 @@ import (
 	"kubesphere.io/kubesphere/pkg/utils/idutils"
 )
 
+var Components = []string{"radondb-mysql", "radondb-postgresql", "radondb-clickhouse", "kubeedge"}
+
 var outputFile string
 
 // environment can be dev or prod
@@ -21,9 +26,9 @@ var environment string
 var duration time.Duration
 var startDate string
 var endDate string
-var maEnd string
 var keyFile string
 var licenseType string
+var components []string
 
 var ls = licensetypes.License{}
 
@@ -60,19 +65,7 @@ func newCmd(args []string) *cobra.Command {
 			now := time.Now().UTC()
 			ls.IssueAt = now
 
-			if ls.LicenseType == licensetypes.LicenseTypeMaintenance {
-				ls.MaxCluster = 0
-				if maEnd == "" {
-					return fmt.Errorf("the ma-end should not be empty")
-				}
-				t, err := time.ParseInLocation("2006-01-02", maEnd, time.UTC)
-				if err != nil {
-					klog.Errorf("parse start time failed, error: %s", err)
-					return err
-				}
-				ls.MaintenanceEnd = &t
-			}
-
+			var end time.Time
 			if startDate != "" && endDate != "" {
 				t, err := time.ParseInLocation("2006-01-02", startDate, time.UTC)
 				if err != nil {
@@ -81,31 +74,52 @@ func newCmd(args []string) *cobra.Command {
 				}
 				ls.NotBefore = &t
 
-				t, err = time.ParseInLocation("2006-01-02", endDate, time.UTC)
+				endTime, err := time.ParseInLocation("2006-01-02", endDate, time.UTC)
 				if err != nil {
 					klog.Errorf("parse end time failed, error: %s", err)
 					return err
 				}
-				end := t.Add(24*time.Hour - time.Second)
-				ls.NotAfter = &end
+				end = endTime.Add(24*time.Hour - time.Second)
 			} else if startDate != "" && duration != 0 {
 				t, err := time.ParseInLocation("2006-01-02", startDate, time.UTC)
 				if err != nil {
 					klog.Errorf("parse start time failed, error: %s", err)
 					return err
 				}
+
 				ls.NotBefore = &t
-				end := t.Add(duration)
-				ls.NotAfter = &end
+				end = t.Add(duration)
 			} else {
 				ls.NotBefore = &now
-				end := now.Add(duration)
+				end = now.Add(duration)
+			}
+
+			if ls.LicenseType == licensetypes.LicenseTypeMaintenance {
+				ls.MaintenanceEnd = &end
+			} else {
 				ls.NotAfter = &end
 			}
 
 			// license for ma is valid forever.
 			if ls.LicenseType == licensetypes.LicenseTypeMaintenance {
 				ls.NotAfter = nil
+			}
+
+			if components != nil && len(components) > 0 {
+				ls.ComponentConstraints = []licensetypes.Constraint{}
+				existsComponents := make(map[string]bool, len(components))
+				for _, name := range components {
+					if !sliceutil.HasString(Components, name) {
+						err := fmt.Errorf("component name must be one of the %s", strings.Join(Components, ","))
+						return err
+					}
+					if _, exists := existsComponents[name]; exists {
+						continue
+					}
+					existsComponents[name] = true
+					constraint := licensetypes.Constraint{Name: name}
+					ls.ComponentConstraints = append(ls.ComponentConstraints, constraint)
+				}
 			}
 
 			ls.Version = 1
@@ -115,7 +129,8 @@ func newCmd(args []string) *cobra.Command {
 			}
 			data, err := json.Marshal(ls)
 			if err != nil {
-				klog.Fatalf("json marshal failed, error: %s", err)
+				klog.Errorf("json marshal failed, error: %s", err)
+				return err
 			}
 
 			if outputFile != "" {
@@ -156,9 +171,11 @@ func newCmd(args []string) *cobra.Command {
 
 	f.StringVar(&startDate, "start-date", "", "the start date this license can work, format: 2021-07-22")
 	f.StringVar(&endDate, "end-date", "", "the end date this license can work")
-	f.StringVar(&maEnd, "ma-end", "", "the end date maintenance")
 
-	f.DurationVarP(&duration, "duration", "d", 365*24*time.Hour, "valid duration, default value is 1 year")
+	f.StringSliceVarP(&components, "components", "c", nil,
+		fmt.Sprintf("the components issued with this license, the valid components are %s", strings.Join(Components, ",")))
+
+	f.DurationVarP(&duration, "duration", "d", 30*24*time.Hour, "valid duration, default value is 30 days")
 	return cmd
 }
 
