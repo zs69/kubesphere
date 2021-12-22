@@ -37,7 +37,7 @@ var _ = Describe("helmCategory", func() {
 	const interval = time.Second * 1
 
 	app := createApp()
-	appVer := createAppVersion(app.GetHelmApplicationId())
+	appVer := createAppVersion(app.GetApplicationId())
 	ctg := createCtg()
 
 	BeforeEach(func() {
@@ -80,7 +80,7 @@ var _ = Describe("helmCategory", func() {
 					Name: app.Name,
 				}
 				k8sClient.Get(context.Background(), appKey, app)
-				return app.State() == v1alpha1.StateActive
+				return app.GetState() == v1alpha1.StateActive
 			}, timeout, interval).Should(BeTrue())
 
 			By("Reconcile for `uncategorized` category")

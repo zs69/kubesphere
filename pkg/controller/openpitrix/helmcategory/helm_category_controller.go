@@ -82,7 +82,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 			repoId := app.GetHelmRepoId()
 			if repoId == v1alpha1.AppStoreRepoId {
-				ctgId := app.GetHelmCategoryId()
+				ctgId := app.GetCategoryId()
 				if ctgId == "" {
 					ctgId = v1alpha1.UncategorizedId
 				}
@@ -103,7 +103,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 			var oldId string
 			repoId := newApp.GetHelmRepoId()
 			if repoId == v1alpha1.AppStoreRepoId {
-				oldId = oldApp.GetHelmCategoryId()
+				oldId = oldApp.GetCategoryId()
 				if oldId == "" {
 					oldId = v1alpha1.UncategorizedId
 				}
@@ -117,7 +117,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 			repoId = newApp.GetHelmRepoId()
 			if repoId == v1alpha1.AppStoreRepoId {
 				// new category id
-				newId := newApp.GetHelmCategoryId()
+				newId := newApp.GetCategoryId()
 				if newId == "" {
 					newId = v1alpha1.UncategorizedId
 				}
@@ -133,7 +133,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 			app := deleteEvent.Object.(*v1alpha1.HelmApplication)
 			repoId := app.GetHelmRepoId()
 			if repoId == v1alpha1.AppStoreRepoId {
-				id := app.GetHelmCategoryId()
+				id := app.GetCategoryId()
 				if id == "" {
 					id = v1alpha1.UncategorizedId
 				}
@@ -326,7 +326,7 @@ func (r *ReconcileHelmCategory) updateUncategorizedApplicationLabels(app *v1alph
 	if app == nil {
 		return nil
 	}
-	if app.GetHelmRepoId() == v1alpha1.AppStoreRepoId && app.GetHelmCategoryId() == "" {
+	if app.GetHelmRepoId() == v1alpha1.AppStoreRepoId && app.GetCategoryId() == "" {
 		appCopy := app.DeepCopy()
 		appCopy.Labels[constants.CategoryIdLabelKey] = v1alpha1.UncategorizedId
 		patch := client.MergeFrom(app)

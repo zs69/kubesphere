@@ -207,7 +207,7 @@ func (r *ReconcileHelmApplication) cleanupDanglingApp(ctx context.Context, app *
 			err := r.Delete(ctx, app)
 			if err != nil {
 				klog.Errorf("delete app: %s, state: %s, error: %s",
-					app.GetHelmApplicationId(), app.Status.State, err)
+					app.GetApplicationId(), app.Status.State, err)
 				return err
 			}
 			return nil
@@ -215,9 +215,9 @@ func (r *ReconcileHelmApplication) cleanupDanglingApp(ctx context.Context, app *
 
 		var appVersions v1alpha1.HelmApplicationVersionList
 		err := r.List(ctx, &appVersions, &client.ListOptions{LabelSelector: labels.SelectorFromSet(map[string]string{
-			constants.ChartApplicationIdLabelKey: app.GetHelmApplicationId()})})
+			constants.ChartApplicationIdLabelKey: app.GetApplicationId()})})
 		if err != nil {
-			klog.Errorf("list app version of %s failed, error: %s", app.GetHelmApplicationId(), err)
+			klog.Errorf("list app version of %s failed, error: %s", app.GetApplicationId(), err)
 			return err
 		}
 
@@ -236,7 +236,7 @@ func (r *ReconcileHelmApplication) cleanupDanglingApp(ctx context.Context, app *
 		// Mark the app that the workspace to which it belongs has been deleted.
 		var appInStore v1alpha1.HelmApplication
 		err = r.Get(ctx,
-			types.NamespacedName{Name: fmt.Sprintf("%s%s", app.GetHelmApplicationId(), v1alpha1.HelmApplicationAppStoreSuffix)}, &appInStore)
+			types.NamespacedName{Name: fmt.Sprintf("%s%s", app.GetApplicationId(), v1alpha1.HelmApplicationAppStoreSuffix)}, &appInStore)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return err
@@ -251,7 +251,7 @@ func (r *ReconcileHelmApplication) cleanupDanglingApp(ctx context.Context, app *
 			patchedApp := client.MergeFrom(&appInStore)
 			err = r.Patch(ctx, appCopy, patchedApp)
 			if err != nil {
-				klog.Errorf("patch app: %s failed, error: %s", app.GetHelmApplicationId(), err)
+				klog.Errorf("patch app: %s failed, error: %s", app.GetApplicationId(), err)
 				return err
 			}
 		}
@@ -266,7 +266,7 @@ func (r *ReconcileHelmApplication) cleanupDanglingApp(ctx context.Context, app *
 		patchedApp := client.MergeFrom(app)
 		err = r.Patch(ctx, appCopy, patchedApp)
 		if err != nil {
-			klog.Errorf("patch app: %s failed, error: %s", app.GetHelmApplicationId(), err)
+			klog.Errorf("patch app: %s failed, error: %s", app.GetApplicationId(), err)
 			return err
 		}
 	}

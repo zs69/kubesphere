@@ -22,14 +22,16 @@ import (
 
 // OperatorApplicationVersionSpec defines the desired state of OperatorApplicationVersion
 type OperatorApplicationVersionSpec struct {
-	AppName         string `json:"name"`
-	Screenshots     string `json:"screenshots,omitempty"`
-	ScreenshotsZh   string `json:"screenshots_zh,omitempty"`
-	ChangeLog       string `json:"changeLog"`
-	ChangeLogZh     string `json:"changeLog_zh,omitempty"`
-	OperatorVersion string `json:"operatorVersion"`
-	AppVersion      string `json:"appVersion"`
-	Owner           string `json:"owner,omitempty"`
+	// operator maintainers
+	Maintainers     []*Maintainer `json:"maintainers,omitempty"`
+	AppName         string        `json:"name"`
+	Screenshots     string        `json:"screenshots,omitempty"`
+	ScreenshotsZh   string        `json:"screenshots_zh,omitempty"`
+	ChangeLog       string        `json:"changeLog"`
+	ChangeLogZh     string        `json:"changeLog_zh,omitempty"`
+	OperatorVersion string        `json:"operatorVersion"`
+	AppVersion      string        `json:"appVersion"`
+	Owner           string        `json:"owner,omitempty"`
 }
 
 // OperatorApplicationVersionStatus defines the observed state of OperatorApplicationVersion
