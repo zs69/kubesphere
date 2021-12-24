@@ -193,11 +193,48 @@ func newTestConfig() (*Config, error) {
 			Namespace:   "kubesphere-controls-system",
 		},
 		GPUOptions: &gpu.Options{
-			Kinds: []gpu.GPUKind{},
+			Kinds: []gpu.GPUKind{
+				{
+					ResourceName: "nvidia.com/gpu",
+					ResourceType: "GPU",
+					Default:      true,
+				},
+			},
 		},
 		LicenseOptions: &license.Options{},
 	}
 	return conf, nil
+}
+
+func newTestMap() map[string]bool {
+	var confMap = map[string]bool{
+		"alerting":            true,
+		"auditing":            true,
+		"authentication":      true,
+		"authorization":       true,
+		"devops":              true,
+		"events":              true,
+		"gateway":             true,
+		"gpu.monitoring":      false,
+		"kubeedge":            true,
+		"kubernetes":          true,
+		"license":             true,
+		"logging":             true,
+		"metering":            true,
+		"monitoring":          true,
+		"multicluster":        false,
+		"network":             true,
+		"network.ippool":      false,
+		"network.topology":    true,
+		"notification":        true,
+		"openpitrix":          true,
+		"openpitrix.appstore": true,
+		"redis":               true,
+		"s3":                  true,
+		"servicemesh":         true,
+		"sonarqube":           true,
+	}
+	return confMap
 }
 
 func saveTestConfig(t *testing.T, conf *Config) {
@@ -241,6 +278,26 @@ func TestGet(t *testing.T) {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(conf, conf2); diff != "" {
+		t.Fatal(diff)
+	}
+}
+
+func TestToMap(t *testing.T) {
+	conf, err := newTestConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	saveTestConfig(t, conf)
+	defer cleanTestConfig(t)
+
+	conf.RedisOptions.Password = "P@88w0rd"
+	os.Setenv("KUBESPHERE_REDIS_PASSWORD", "P@88w0rd")
+
+	conf2, err := TryLoadFromDisk()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(conf2.ToMap(), newTestMap()); diff != "" {
 		t.Fatal(diff)
 	}
 }

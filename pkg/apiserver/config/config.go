@@ -232,6 +232,19 @@ func (conf *Config) ToMap() map[string]bool {
 			continue
 		}
 
+		if name == "gpu" {
+			continue
+		}
+
+		if name == "monitoring" {
+			gpuMonitoringName := "gpu.monitoring"
+			if conf.MonitoringOptions != nil && conf.MonitoringOptions.EnableGPUMonitoring {
+				result[gpuMonitoringName] = true
+			} else {
+				result[gpuMonitoringName] = false
+			}
+		}
+
 		if c.Field(i).IsNil() {
 			result[name] = false
 		} else {
