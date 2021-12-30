@@ -55,6 +55,7 @@ func AddToContainer(c *restful.Container, client clientset.Interface, informerFa
 		To(handler.UpdateLicense).
 		Reads(licenseclient.License{}).
 		Doc("Create the license").
+		Param(webservice.QueryParameter("validate", "Validate license")).
 		Returns(http.StatusOK, api.StatusOK, licenseclient.License{}).
 		Metadata(restfulspec.KeyOpenAPITags, []string{LicenseTag}))
 

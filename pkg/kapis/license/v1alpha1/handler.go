@@ -17,6 +17,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"strconv"
 	"time"
 
 	restful "github.com/emicklei/go-restful"
@@ -76,9 +78,8 @@ func newLicenseHandler(client clientset.Interface, informerFactory informers.Inf
 	return &handler
 }
 
-// UpdateLicense update current license by user input.
-func (h *licenseHandler) UpdateLicense(req *restful.Request, resp *restful.Response) {
-	licenseResp := &client.License{
+func parseLicense(req *restful.Request) (licenseResp *client.License) {
+	licenseResp = &client.License{
 		Status: &licensetypes.LicenseStatus{
 			CurrentTime: time.Now().UTC(),
 			Violation: licensetypes.Violation{
@@ -86,36 +87,52 @@ func (h *licenseHandler) UpdateLicense(req *restful.Request, resp *restful.Respo
 			},
 		},
 	}
+
 	err := req.ReadEntity(licenseResp)
 	if err != nil {
-		api.HandleBadRequest(resp, nil, err)
+		if err == io.EOF {
+			licenseResp.Status.Violation.Type = licensetypes.EmptyLicense
+		} else {
+			licenseResp.Status.Violation.Type = licensetypes.FormatError
+			licenseResp.Status.Violation.Reason = err.Error()
+		}
 		return
 	}
 
 	if licenseResp.Data == nil {
-		api.HandleBadRequest(resp, nil, errors.New(licensetypes.EmptyLicense))
+		licenseResp.Status.Violation.Type = licensetypes.EmptyLicense
 		return
 	}
 
-	vio, err := licenseResp.Data.Check(cert.CertStore.Cert, "")
-	if err != nil {
-		klog.Errorf("check license failed, error: %s", err)
-		api.HandleError(resp, nil, err)
-		return
-	}
-
+	vio, _ := licenseResp.Data.Check(cert.CertStore.Cert, "")
 	if vio != nil {
-		licenseResp.Status.Violation = *vio
-		klog.V(2).Infof("check license failed, violation type: %s, reason: %s", vio.Type, vio.Reason)
 		if vio.Type == licensetypes.InvalidSignature || vio.Type == licensetypes.FormatError {
-			// Set status code to 400, then the console shows the alert message.
-			api.HandleBadRequest(resp, nil, errors.New(vio.Type))
+			licenseResp.Status.Violation = *vio
+			return
+		}
+	}
+
+	return
+}
+
+// UpdateLicense update current license by user input.
+func (h *licenseHandler) UpdateLicense(req *restful.Request, resp *restful.Response) {
+	licenseResp := parseLicense(req)
+
+	validate, _ := strconv.ParseBool(req.QueryParameter("validate"))
+	if validate {
+		// Return the violation info in the status. Then the console can display this info themselves.
+		resp.WriteAsJson(licenseResp)
+		return
+	} else {
+		if licenseResp.Status.Violation.Type != licensetypes.NoViolation {
+			api.HandleBadRequest(resp, nil, errors.New(licenseResp.Status.Violation.Type))
 			return
 		}
 	}
 
 	// update license
-	err = licenseResp.Data.SaveLicenseData(h.client.CoreV1().Secrets(constants.KubeSphereNamespace))
+	err := licenseResp.Data.SaveLicenseData(h.client.CoreV1().Secrets(constants.KubeSphereNamespace))
 	if err != nil {
 		klog.Errorf("update license failed, error: %s", err)
 		api.HandleInternalError(resp, nil, errors.New("update license failed"))
