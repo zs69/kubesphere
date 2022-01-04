@@ -443,9 +443,10 @@ type GetAppVersionFilesRequest struct {
 }
 
 type ActionRequest struct {
-	Action   string `json:"action"`
-	Message  string `json:"message,omitempty"`
-	Username string `json:"-"`
+	AppVersionTypes string `json:"app_version_types,omitempty"`
+	Action          string `json:"action"`
+	Message         string `json:"message,omitempty"`
+	Username        string `json:"-"`
 }
 
 type Attachment struct {
