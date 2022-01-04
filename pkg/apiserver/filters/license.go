@@ -80,7 +80,9 @@ func WithLicense(handler http.Handler, informer cache.SharedInformer, client k8s
 				if strings.HasPrefix(info.Path, "/kapis/license.kubesphere.io/") || strings.HasPrefix(info.Path, "/oauth/") ||
 					(verb == "delete" && strings.HasPrefix(info.Path, "/kapis/cluster.kubesphere.io/") ||
 						// The first login, user needs to change the password.
-						(verb == "patch" && strings.HasPrefix(info.Path, "/apis/iam.kubesphere.io/v1alpha2"))) {
+						(verb == "patch" && strings.HasPrefix(info.Path, "/apis/iam.kubesphere.io/")) ||
+						// This request is not a write operation, just transform the Jenkins file to JSON format.
+						(verb == "create" && strings.HasPrefix(info.Path, "/kapis/devops.kubesphere.io/v1alpha2/tojson"))) {
 					handler.ServeHTTP(w, req)
 				} else {
 					klog.V(4).Infof("forbidden path: %s, verb: %s, reason: %s", info.Path, info.Verb, vio.Type)
