@@ -101,6 +101,9 @@ type applicationOperator struct {
 	appClient        v1alpha13.HelmApplicationInterface
 	appVersionClient v1alpha13.HelmApplicationVersionInterface
 
+	operatorAppClient        v1alpha13.OperatorApplicationInterface
+	operatorAppVersionClient v1alpha13.OperatorApplicationVersionInterface
+
 	appLister                listers_v1alpha1.HelmApplicationLister
 	versionLister            listers_v1alpha1.HelmApplicationVersionLister
 	operatorAppLister        listers_v1alpha1.OperatorApplicationLister
@@ -121,6 +124,9 @@ func newApplicationOperator(cached reposcache.ReposCache, informers externalvers
 
 		appClient:        ksClient.ApplicationV1alpha1().HelmApplications(),
 		appVersionClient: ksClient.ApplicationV1alpha1().HelmApplicationVersions(),
+
+		operatorAppClient:        ksClient.ApplicationV1alpha1().OperatorApplications(),
+		operatorAppVersionClient: ksClient.ApplicationV1alpha1().OperatorApplicationVersions(),
 
 		appLister:                informers.Application().V1alpha1().HelmApplications().Lister(),
 		versionLister:            informers.Application().V1alpha1().HelmApplicationVersions().Lister(),
@@ -207,6 +213,20 @@ func (c *applicationOperator) ValidatePackage(request *ValidatePackageRequest) (
 
 func (c *applicationOperator) DoAppAction(appId string, request *ActionRequest) error {
 
+	// if operator app
+	if request.AppVersionTypes == OperatorAppVersionType {
+		operatorApp, err := c.getOperatorApplication(strings.TrimPrefix(appId, v1alpha1.OperatorApplicationIdPrefix))
+		if err != nil {
+			klog.Errorf("get operator app error: %s", err)
+			return err
+		}
+
+		if err = c.doOperatorAppAndVersionAction(operatorApp, request.Action, appId); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	app, err := c.getHelmApplication(appId)
 	if err != nil {
 		return err
@@ -255,6 +275,45 @@ func (c *applicationOperator) DoAppAction(appId string, request *ActionRequest) 
 	}
 
 	return nil
+}
+
+func (c *applicationOperator) doOperatorAppAndVersionAction(app *v1alpha1.OperatorApplication, action string, appId string) error {
+	var err error
+	var State string
+	switch action {
+	case ActionSuspend:
+		State = v1alpha1.StateSuspended
+	case ActionRecover:
+		State = v1alpha1.StateActive
+	default:
+		err = actionNotSupport
+	}
+	if err != nil {
+		klog.Errorf("action not support! %s", err)
+		return err
+	}
+	app.Status.State = State
+	app, err = c.operatorAppClient.UpdateStatus(context.TODO(), app, metav1.UpdateOptions{})
+	if err != nil {
+		klog.Errorf("update operator application state error: %s", err)
+		return err
+	}
+
+	versions, err := c.operatorAppVersionLister.List(labels.SelectorFromSet(map[string]string{constants.ChartApplicationIdLabelKey: appId}))
+	if err != nil {
+		klog.Errorf("list operator app versions error: %s", err)
+		return err
+	}
+	for i := range versions {
+		versions[i].Status.State = State
+		_, err = c.operatorAppVersionClient.UpdateStatus(context.TODO(), versions[i], metav1.UpdateOptions{})
+		if err != nil {
+			klog.Errorf("update operator app version error: %s", err)
+			continue
+		}
+	}
+
+	return err
 }
 
 func (c *applicationOperator) CreateApp(req *CreateAppRequest) (*CreateAppResponse, error) {

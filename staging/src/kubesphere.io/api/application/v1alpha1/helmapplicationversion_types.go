@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -230,4 +231,8 @@ func (in *HelmApplicationVersion) State() string {
 	}
 
 	return in.Status.State
+}
+
+func (in *HelmApplicationVersion) GetCreationTime() time.Time {
+	return in.CreationTimestamp.Time
 }

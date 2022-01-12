@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
-	"strings"
+	"time"
 
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -47,6 +47,15 @@ import (
 	"kubesphere.io/kubesphere/pkg/simple/client/openpitrix/helmrepoindex"
 	"kubesphere.io/kubesphere/pkg/utils/stringutils"
 )
+
+type AppVersionInterface interface {
+	GetSemver() string
+	GetTrueName() string
+	GetChartVersion() string
+	GetChartAppVersion() string
+	State() string
+	GetCreationTime() time.Time
+}
 
 func (c *applicationOperator) GetAppVersionPackage(appId, versionId string) (*GetAppVersionPackageResponse, error) {
 	var version *v1alpha1.HelmApplicationVersion
@@ -254,7 +263,9 @@ func (c *applicationOperator) ModifyAppVersion(id string, request *ModifyAppVers
 }
 
 func (c *applicationOperator) ListAppVersions(conditions *params.Conditions, orderBy string, reverse bool, limit, offset int) (*models.PageableResponse, error) {
-	versions, err := c.getAppVersionsByAppId(conditions.Match[AppId])
+	var versions AppVersionsInterface
+	var err error
+	versions, err = c.listAppVersions(conditions.Match[AppId])
 	if err != nil {
 		klog.Error(err)
 		return nil, err
@@ -262,9 +273,9 @@ func (c *applicationOperator) ListAppVersions(conditions *params.Conditions, ord
 
 	versions = filterAppVersions(versions, conditions)
 	if reverse {
-		sort.Sort(sort.Reverse(AppVersions(versions)))
+		sort.Sort(sort.Reverse(versions))
 	} else {
-		sort.Sort(AppVersions(versions))
+		sort.Sort(versions)
 	}
 
 	totalCount := len(versions)
@@ -272,20 +283,37 @@ func (c *applicationOperator) ListAppVersions(conditions *params.Conditions, ord
 	versions = versions[start:end]
 	items := make([]interface{}, 0, len(versions))
 
-	// operator app versions
-	operatorVersion, err := c.listOperatorAppVersionsByAppId(strings.TrimPrefix(conditions.Match[AppId], v1alpha1.OperatorApplicationIdPrefix))
-	if err != nil {
-		klog.Errorf("get operator app version error: %s", err)
-	}
-	if operatorVersion != nil {
-		items = append(items, convertOperatorAppVersion(operatorVersion))
-		return &models.PageableResponse{Items: items, TotalCount: totalCount}, nil
-	}
-
-	for i := range versions {
-		items = append(items, convertAppVersion(versions[i]))
+	for _, v := range versions {
+		if helmAppVersion, ok := v.(*v1alpha1.HelmApplicationVersion); ok {
+			items = append(items, convertAppVersion(helmAppVersion))
+		}
+		if operatorAppVersion, ok := v.(*v1alpha1.OperatorApplicationVersion); ok {
+			items = append(items, convertOperatorAppVersion(operatorAppVersion))
+		}
 	}
 	return &models.PageableResponse{Items: items, TotalCount: totalCount}, nil
+}
+
+func (c *applicationOperator) listAppVersions(appId string) (appVersions AppVersionsInterface, err error) {
+	helmVersions, err := c.getAppVersionsByAppId(appId)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	for i := range helmVersions {
+		appVersions = append(appVersions, helmVersions[i])
+	}
+
+	operatorAppVersions, err := c.getOperatorAppVersionsByAppId(appId)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	for i := range operatorAppVersions {
+		appVersions = append(appVersions, operatorAppVersions[i])
+	}
+
+	return
 }
 
 func (c *applicationOperator) listOperatorAppVersionsByAppId(oAppVersionName string) (ret *v1alpha1.OperatorApplicationVersion, err error) {
@@ -607,6 +635,17 @@ func (c *applicationOperator) getAppVersionsByAppId(appId string) (ret []*v1alph
 
 	// list app version from client-go
 	ret, err = c.versionLister.List(labels.SelectorFromSet(map[string]string{constants.ChartApplicationIdLabelKey: appId}))
+	if err != nil && !apierrors.IsNotFound(err) {
+		klog.Error(err)
+		return nil, err
+	}
+
+	return
+}
+
+func (c *applicationOperator) getOperatorAppVersionsByAppId(appId string) (ret []*v1alpha1.OperatorApplicationVersion, err error) {
+	// list operator app version from client-go
+	ret, err = c.operatorAppVersionLister.List(labels.SelectorFromSet(map[string]string{constants.ChartApplicationIdLabelKey: appId}))
 	if err != nil && !apierrors.IsNotFound(err) {
 		klog.Error(err)
 		return nil, err

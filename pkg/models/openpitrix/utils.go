@@ -563,16 +563,16 @@ func (c AppVersionReviews) Less(a, b int) bool {
 	return j.LessThan(i)
 }
 
-type AppVersions []*v1alpha1.HelmApplicationVersion
+type AppVersionsInterface []AppVersionInterface
 
 // Len returns the length.
-func (c AppVersions) Len() int { return len(c) }
+func (c AppVersionsInterface) Len() int { return len(c) }
 
 // Swap swaps the position of two items in the versions slice.
-func (c AppVersions) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+func (c AppVersionsInterface) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
 // Less returns true if the version of entry a is less than the version of entry b.
-func (c AppVersions) Less(a, b int) bool {
+func (c AppVersionsInterface) Less(a, b int) bool {
 	// Failed parse pushes to the back.
 	aVersion := c[a]
 	bVersion := c[b]
@@ -585,7 +585,7 @@ func (c AppVersions) Less(a, b int) bool {
 		return false
 	}
 	if i.Equal(j) {
-		return aVersion.CreationTimestamp.Before(&bVersion.CreationTimestamp)
+		return aVersion.GetCreationTime().Before(bVersion.GetCreationTime())
 	}
 	return i.LessThan(j)
 }
@@ -701,7 +701,7 @@ func filterAppReviews(versions []*v1alpha1.HelmApplicationVersion, conditions *p
 	return versions[:curr:curr]
 }
 
-func filterAppVersions(versions []*v1alpha1.HelmApplicationVersion, conditions *params.Conditions) []*v1alpha1.HelmApplicationVersion {
+func filterAppVersions(versions []AppVersionInterface, conditions *params.Conditions) AppVersionsInterface {
 	if conditions == nil || len(conditions.Match) == 0 || len(versions) == 0 {
 		return versions
 	}
@@ -709,8 +709,8 @@ func filterAppVersions(versions []*v1alpha1.HelmApplicationVersion, conditions *
 	curr := 0
 	for i := 0; i < len(versions); i++ {
 		if conditions.Match[Keyword] != "" {
-			if !(strings.Contains(strings.ToLower(versions[i].Spec.Version), strings.ToLower(conditions.Match[Keyword])) ||
-				strings.Contains(strings.ToLower(versions[i].Spec.AppVersion), strings.ToLower(conditions.Match[Keyword]))) {
+			if !(strings.Contains(strings.ToLower(versions[i].GetChartVersion()), strings.ToLower(conditions.Match[Keyword])) ||
+				strings.Contains(strings.ToLower(versions[i].GetChartAppVersion()), strings.ToLower(conditions.Match[Keyword]))) {
 				continue
 			}
 		}
@@ -937,7 +937,7 @@ func convertOperatorAppVersion(in *v1alpha1.OperatorApplicationVersion) *AppVers
 		return nil
 	}
 	out := &AppVersion{}
-	out.AppId = in.Name
+	out.AppId = in.GetOperatorApplicationId()
 	out.Active = true
 	out.VersionId = in.Spec.AppVersion
 	out.Screenshots = in.Spec.Screenshots
@@ -945,6 +945,13 @@ func convertOperatorAppVersion(in *v1alpha1.OperatorApplicationVersion) *AppVers
 	t := in.CreationTimestamp.Time
 	date := strfmt.DateTime(t)
 	out.CreateTime = &date
+	if in.Status.UpdateTime == nil {
+		out.UpdateTime = &date
+	} else {
+		updateDate := strfmt.DateTime(in.Status.UpdateTime.Time)
+		out.UpdateTime = &updateDate
+	}
+
 	out.Status = in.Status.State
 	out.Owner = in.Spec.AppName
 	out.Name = in.GetVersionName()
@@ -954,6 +961,7 @@ func convertOperatorAppVersion(in *v1alpha1.OperatorApplicationVersion) *AppVers
 		out.Maintainers = string(maintainers)
 	}
 
+	out.Status = in.State()
 	out.Owner = in.Spec.Owner
 	out.VersionId = in.Spec.AppName
 
@@ -987,20 +995,12 @@ func filterManifests(manifests []*v1alpha1.Manifest, conditions *params.Conditio
 	for i := 0; i < len(manifests); i++ {
 		keyword := strings.ToLower(conditions.Match[Keyword])
 		if keyword != "" {
-			fv := strings.Contains(strings.ToLower(manifests[i].GetManifestCluster()), keyword) ||
-				strings.Contains(strings.ToLower(manifests[i].Spec.AppVersion), keyword)
+			fv := strings.Contains(strings.ToLower(manifests[i].GetName()), keyword)
 			if !fv {
 				continue
 			}
 		}
 
-		if conditions.Match[Status] != "" {
-			states := strings.Split(conditions.Match[Status], "|")
-			fv := filterManifestByStates(manifests[i], states)
-			if !fv {
-				continue
-			}
-		}
 		if curr != i {
 			manifests[curr] = manifests[i]
 		}
@@ -1008,18 +1008,4 @@ func filterManifests(manifests []*v1alpha1.Manifest, conditions *params.Conditio
 	}
 
 	return manifests[:curr:curr]
-}
-
-func filterManifestByStates(rls *v1alpha1.Manifest, state []string) bool {
-	if len(state) == 0 {
-		return true
-	}
-	st := rls.Status.State
-	if st == "" {
-		st = v1alpha1.StatusCreating
-	}
-	if sliceutil.HasString(state, st) {
-		return true
-	}
-	return false
 }

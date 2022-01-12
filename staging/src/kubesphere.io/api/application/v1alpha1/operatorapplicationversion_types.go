@@ -17,7 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"kubesphere.io/api/constants"
 )
 
 // OperatorApplicationVersionSpec defines the desired state of OperatorApplicationVersion
@@ -36,7 +40,8 @@ type OperatorApplicationVersionSpec struct {
 
 // OperatorApplicationVersionStatus defines the observed state of OperatorApplicationVersion
 type OperatorApplicationVersionStatus struct {
-	State string `json:"state,omitempty"`
+	State      string       `json:"state,omitempty"`
+	UpdateTime *metav1.Time `json:"updateTime,omitempty"`
 }
 
 //+genclient
@@ -69,6 +74,38 @@ func init() {
 	SchemeBuilder.Register(&OperatorApplicationVersion{}, &OperatorApplicationVersionList{})
 }
 
+func (in *OperatorApplicationVersion) GetOperatorApplicationId() string {
+	return getValue(in.Labels, constants.ChartApplicationIdLabelKey)
+}
+
 func (in *OperatorApplicationVersion) GetVersionName() string {
 	return in.Spec.OperatorVersion
+}
+
+func (in *OperatorApplicationVersion) GetSemver() string {
+	return in.GetVersionName()
+}
+
+func (in *OperatorApplicationVersion) GetTrueName() string {
+	return in.Spec.AppName
+}
+
+func (in *OperatorApplicationVersion) GetChartVersion() string {
+	return in.Spec.AppVersion
+}
+
+func (in *OperatorApplicationVersion) GetChartAppVersion() string {
+	return in.Spec.AppVersion
+}
+
+func (in *OperatorApplicationVersion) State() string {
+	if in.Status.State == "" {
+		return StateActive
+	}
+
+	return in.Status.State
+}
+
+func (in *OperatorApplicationVersion) GetCreationTime() time.Time {
+	return in.CreationTimestamp.Time
 }
