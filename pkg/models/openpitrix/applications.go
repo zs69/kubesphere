@@ -398,12 +398,27 @@ func (c *applicationOperator) ListApps(conditions *params.Conditions, orderBy st
 		klog.Error(err)
 		return nil, err
 	}
+
+	operatorApps, err := c.listOperatorApps(conditions)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+
 	apps = filterApps(apps, conditions)
+	operatorApps = filterApps(operatorApps, conditions)
 
 	if reverse {
 		sort.Sort(sort.Reverse(apps))
+		sort.Sort(sort.Reverse(operatorApps))
 	} else {
 		sort.Sort(apps)
+		sort.Sort(operatorApps)
+	}
+
+	// In order to put the RadonDB application in the forefront, a separate query
+	for _, operatorApp := range operatorApps {
+		apps = append([]AppInterface{operatorApp}, apps...)
 	}
 
 	totalCount := len(apps)
@@ -431,9 +446,16 @@ func (c *applicationOperator) ListApps(conditions *params.Conditions, orderBy st
 	return &models.PageableResponse{Items: items, TotalCount: totalCount}, nil
 }
 
-func (c *applicationOperator) listOperatorApps() (ret []*v1alpha1.OperatorApplication, err error) {
-	ret, err = c.operatorAppLister.List(labels.Everything())
-	return
+func (c *applicationOperator) listOperatorApps(conditions *params.Conditions) (ret AppsInterface, err error) {
+	ls := map[string]string{}
+	if conditions.Match[CategoryId] != "" {
+		ls[constants.CategoryIdLabelKey] = conditions.Match[CategoryId]
+	}
+	apps, err := c.operatorAppLister.List(labels.SelectorFromSet(ls))
+	for i := range apps {
+		ret = append(ret, apps[i])
+	}
+	return ret, err
 }
 
 func (c *applicationOperator) DeleteApp(id string) error {
@@ -757,10 +779,6 @@ func (c *applicationOperator) listApps(conditions *params.Conditions) (AppsInter
 		if conditions.Match[CategoryId] != "" {
 			ls[constants.CategoryIdLabelKey] = conditions.Match[CategoryId]
 		}
-		operatorApps, err := c.operatorAppLister.List(labels.SelectorFromSet(ls))
-		if err != nil {
-			klog.Errorf("list operator apps error: %s", err)
-		}
 
 		appInRepo, exists := c.cachedRepos.ListApplicationsInBuiltinRepo(labels.SelectorFromSet(ls))
 		if !exists {
@@ -777,9 +795,6 @@ func (c *applicationOperator) listApps(conditions *params.Conditions) (AppsInter
 		}
 		for i := range appsList {
 			ret = append(ret, appsList[i])
-		}
-		for i := range operatorApps {
-			ret = append(ret, operatorApps[i])
 		}
 	} else {
 		if c.backingStoreClient == nil {
