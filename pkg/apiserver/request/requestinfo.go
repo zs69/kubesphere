@@ -162,6 +162,8 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 	if currentParts[0] == "clusters" {
 		if len(currentParts) > 1 {
 			requestInfo.Cluster = currentParts[1]
+			// resolve the real path behind the cluster dispatcher
+			requestInfo.Path = strings.Replace(requestInfo.Path, fmt.Sprintf("/clusters/%s", requestInfo.Cluster), "", 1)
 		}
 		if len(currentParts) > 2 {
 			currentParts = currentParts[2:]
