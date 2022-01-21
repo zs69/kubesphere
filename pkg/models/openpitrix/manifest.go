@@ -167,6 +167,7 @@ func (c *manifestOperator) ModifyManifest(request ModifyManifestRequest) error {
 
 	// update customResource
 	if manifest.Spec.Version != request.Version {
+		manifestCopy.Spec.Description = request.Description
 		manifestCopy.Spec.Version = request.Version
 		manifestCopy.Spec.CustomResource = request.CustomResource
 	}

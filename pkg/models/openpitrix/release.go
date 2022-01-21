@@ -95,7 +95,6 @@ type Application struct {
 type Manifest struct {
 	Cluster           string      `json:"cluster"`
 	Namespace         string      `json:"namespace"`
-	Kind              string      `json:"kind"`
 	Description       string      `json:"description,omitempty"`
 	AppName           string      `json:"app,omitempty"`
 	AppVersion        string      `json:"appVersion"`
