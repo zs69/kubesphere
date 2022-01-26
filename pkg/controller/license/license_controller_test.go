@@ -52,6 +52,14 @@ var _ = Describe("license_controller", func() {
 
 	Context("license is valid", func() {
 		BeforeEach(func() {
+			By("create 3 nodes")
+			for _, name := range []string{"node1", "node2", "node3"} {
+				err := k8sClient.Create(context.Background(), &v1.Node{ObjectMeta: v12.ObjectMeta{
+					Name: name,
+				}})
+				Expect(err).NotTo(HaveOccurred())
+			}
+
 			ns := v1.Namespace{}
 			err := k8sClient.Get(context.Background(), types.NamespacedName{Name: constants.KubeSphereNamespace}, &ns)
 			if apierrors.IsNotFound(err) {
@@ -59,6 +67,7 @@ var _ = Describe("license_controller", func() {
 			} else {
 				Expect(err).NotTo(HaveOccurred())
 			}
+			// create license data
 			err = k8sClient.Create(context.Background(), licenseSecret.DeepCopy())
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -68,15 +77,7 @@ var _ = Describe("license_controller", func() {
 				Name: licenseSecret.Name}})
 			Expect(err).NotTo(HaveOccurred())
 		})
-		It("license is valid, should success", func() {
-			By("create 3 nodes")
-			for _, name := range []string{"node1", "node2", "node3"} {
-				err := k8sClient.Create(context.Background(), &v1.Node{ObjectMeta: v12.ObjectMeta{
-					Name: name,
-				}})
-				Expect(err).NotTo(HaveOccurred())
-			}
-
+		It("should success", func() {
 			Eventually(func() bool {
 				secret := &v1.Secret{}
 				k8sClient.Get(context.Background(),
@@ -98,6 +99,13 @@ var _ = Describe("license_controller", func() {
 
 	Context("node count limit exceeded", func() {
 		BeforeEach(func() {
+			By("create one node")
+			for _, name := range []string{"node4"} {
+				err := k8sClient.Create(context.Background(), &v1.Node{ObjectMeta: v12.ObjectMeta{
+					Name: name,
+				}})
+				Expect(err).NotTo(HaveOccurred())
+			}
 			ns := v1.Namespace{}
 			err := k8sClient.Get(context.Background(), types.NamespacedName{Name: constants.KubeSphereNamespace}, &ns)
 			if apierrors.IsNotFound(err) {
@@ -115,15 +123,7 @@ var _ = Describe("license_controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("Should success", func() {
-			By("create one node")
-			for _, name := range []string{"node4"} {
-				err := k8sClient.Create(context.Background(), &v1.Node{ObjectMeta: v12.ObjectMeta{
-					Name: name,
-				}})
-				Expect(err).NotTo(HaveOccurred())
-			}
-
+		It("should success", func() {
 			Eventually(func() bool {
 				secret := &v1.Secret{}
 				k8sClient.Get(context.Background(),
@@ -151,6 +151,7 @@ var _ = Describe("license_controller", func() {
 			} else {
 				Expect(err).NotTo(HaveOccurred())
 			}
+
 			secret := licenseSecret.DeepCopy()
 			secret.Data = map[string][]byte{}
 			err = k8sClient.Create(context.Background(), secret)
@@ -163,7 +164,7 @@ var _ = Describe("license_controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("Should success", func() {
+		It("should success", func() {
 			Eventually(func() bool {
 				secret := &v1.Secret{}
 				k8sClient.Get(context.Background(),
