@@ -81,10 +81,10 @@ var promQLTemplates = map[string]string{
 	"cluster_gpu_utilization":            `round(avg(DCGM_FI_PROF_GR_ENGINE_ACTIVE) / 100, 0.00001) or round(avg(DCGM_FI_DEV_GPU_UTIL) / 100, 0.00001)`,
 	"cluster_gpu_usage":                  `round(sum(DCGM_FI_PROF_GR_ENGINE_ACTIVE) / 100, 0.00001) or round(sum(DCGM_FI_DEV_GPU_UTIL) / 100, 0.00001)`,
 	"cluster_gpu_total":                  `sum(kube_node_status_capacity{resource="nvidia_com_gpu"})`,
-	"cluster_gpu_memory_utilization":     `DCGM_FI_DEV_FB_USED/(DCGM_FI_DEV_FB_FREE + DCGM_FI_DEV_FB_USED)`,
-	"cluster_gpu_memory_usage":           `DCGM_FI_DEV_FB_USED * 1024 * 1024`,
-	"cluster_gpu_memory_available":       `DCGM_FI_DEV_FB_FREE * 1024 * 1024`,
-	"cluster_gpu_memory_total":           `(DCGM_FI_DEV_FB_FREE + DCGM_FI_DEV_FB_USED) * 1024 * 1024`,
+	"cluster_gpu_memory_utilization":     `sum(DCGM_FI_DEV_FB_USED) / sum(DCGM_FI_DEV_FB_FREE + DCGM_FI_DEV_FB_USED)`,
+	"cluster_gpu_memory_usage":           `sum(DCGM_FI_DEV_FB_USED) * 1024 * 1024`,
+	"cluster_gpu_memory_available":       `sum(DCGM_FI_DEV_FB_FREE) * 1024 * 1024`,
+	"cluster_gpu_memory_total":           `sum(DCGM_FI_DEV_FB_FREE + DCGM_FI_DEV_FB_USED) * 1024 * 1024`,
 
 	//node
 	"node_cpu_utilisation":        "node:node_cpu_utilisation:avg1m{$1}",
