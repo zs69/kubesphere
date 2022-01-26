@@ -21,6 +21,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"sync"
+	"time"
 
 	k8sinformers "k8s.io/client-go/informers"
 
@@ -296,10 +297,18 @@ func (lc *LicenseController) SetupWithManager(mgr ctrl.Manager) error {
 		go func() {
 			<-mgr.Elected()
 			go lc.cim.Run(lc.stopCh)
-			for range lc.eventChan {
-				klog.V(4).Infof("node has changed, sync license start")
-				lc.syncLicenseStatus(context.Background())
-				klog.V(4).Infof("sync license start")
+			ticker := time.NewTicker(5 * time.Minute)
+			for {
+				select {
+				case <-lc.eventChan:
+					klog.V(4).Infof("node has changed, sync license start")
+					lc.syncLicenseStatus(context.Background())
+					klog.V(4).Infof("sync license end")
+				case <-ticker.C:
+					klog.V(4).Infof("periodically sync license started")
+					lc.syncLicenseStatus(context.Background())
+					klog.V(4).Infof("sync license end")
+				}
 			}
 		}()
 	} else if role == "" {

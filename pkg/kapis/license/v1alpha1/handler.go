@@ -200,6 +200,18 @@ func (h *licenseHandler) GetLicense(req *restful.Request, resp *restful.Response
 		license.Status = &status
 	}
 
+	// Checks whether the license is timed out or signed by the correct private key.
+	// If these checks are not passed, the violation will overwrite the violation in the cache.
+	// The reason does not check the resources of the clusters is that collection nodes information from all the
+	// clusters is time-consuming.
+	// TODO: remove all the checks of ks-controller-manager, which should only collect cluster info and save it.
+	if license.Status.Violation.Type == licensetypes.NoViolation {
+		violation, _ := license.Data.Check(cert.CertStore.Cert, "")
+		if violation != nil {
+			license.Status.Violation = *violation
+		}
+	}
+
 	license.Status.CurrentTime = time.Now().UTC()
 	resp.WriteAsJson(license)
 }
