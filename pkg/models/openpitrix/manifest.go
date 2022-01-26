@@ -23,6 +23,8 @@ import (
 	"sort"
 	"strings"
 
+	"kubesphere.io/kubesphere/pkg/utils/clusterclient"
+
 	"kubesphere.io/kubesphere/pkg/apiserver/query"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -60,6 +62,7 @@ type manifestOperator struct {
 	operatorClient    typed_v1alpha1.OperatorApplicationInterface
 	operatorVerLister listers_v1alpha1.OperatorApplicationVersionLister
 	operatorLister    listers_v1alpha1.OperatorApplicationLister
+	clusterClients    clusterclient.ClusterClients
 }
 
 func newManifestOperator(k8sFactory informers.SharedInformerFactory, ksFactory externalversions.SharedInformerFactory, ksClient versioned.Interface) ManifestInterface {
@@ -71,6 +74,7 @@ func newManifestOperator(k8sFactory informers.SharedInformerFactory, ksFactory e
 		manifestLister:    ksFactory.Application().V1alpha1().Manifests().Lister(),
 		operatorVerLister: ksFactory.Application().V1alpha1().OperatorApplicationVersions().Lister(),
 		operatorLister:    ksFactory.Application().V1alpha1().OperatorApplications().Lister(),
+		clusterClients:    clusterclient.NewClusterClient(ksFactory.Cluster().V1alpha1().Clusters()),
 	}
 	return m
 }
