@@ -61,13 +61,17 @@ type ReleaseInterface interface {
 	UpgradeApplication(request UpgradeClusterRequest) error
 }
 
+type clusterClients struct {
+	clusterclient.ClusterClients
+}
+
 type releaseOperator struct {
 	informers        informers.SharedInformerFactory
 	rlsClient        typed_v1alpha1.HelmReleaseInterface
 	rlsLister        listers_v1alpha1.HelmReleaseLister
 	appVersionLister listers_v1alpha1.HelmApplicationVersionLister
 	cachedRepos      reposcache.ReposCache
-	clusterClients   clusterclient.ClusterClients
+	clusterClients
 }
 
 func newReleaseOperator(cached reposcache.ReposCache, k8sFactory informers.SharedInformerFactory, ksFactory externalversions.SharedInformerFactory, ksClient versioned.Interface) ReleaseInterface {
@@ -76,7 +80,7 @@ func newReleaseOperator(cached reposcache.ReposCache, k8sFactory informers.Share
 		rlsClient:        ksClient.ApplicationV1alpha1().HelmReleases(),
 		rlsLister:        ksFactory.Application().V1alpha1().HelmReleases().Lister(),
 		cachedRepos:      cached,
-		clusterClients:   clusterclient.NewClusterClient(ksFactory.Cluster().V1alpha1().Clusters()),
+		clusterClients:   clusterClients{clusterclient.NewClusterClient(ksFactory.Cluster().V1alpha1().Clusters())},
 		appVersionLister: ksFactory.Application().V1alpha1().HelmApplicationVersions().Lister(),
 	}
 
@@ -155,11 +159,16 @@ func (c *releaseOperator) UpgradeApplication(request UpgradeClusterRequest) erro
 }
 
 // create all helm release in host cluster
-func (c *releaseOperator) CreateApplication(workspace, clusterName, namespace string, request CreateClusterRequest) error {
+func (c *releaseOperator) CreateApplication(workspace, deployClusterName, namespace string, request CreateClusterRequest) error {
 	version, err := c.getAppVersion("", request.VersionId)
 
 	if err != nil {
 		klog.Errorf("get helm application version %s failed, error: %v", request.Name, err)
+		return err
+	}
+
+	clusterName, err := c.rewriteClusterName(deployClusterName)
+	if err != nil {
 		return err
 	}
 
@@ -187,6 +196,7 @@ func (c *releaseOperator) CreateApplication(workspace, clusterName, namespace st
 				constants.ChartApplicationIdLabelKey:        strings.TrimSuffix(request.AppId, v1alpha1.HelmApplicationAppStoreSuffix),
 				constants.WorkspaceLabelKey:                 request.Workspace,
 				constants.NamespaceLabelKey:                 namespace,
+				constants.ClusterNameLabelKey:               clusterName,
 			},
 		},
 		Spec: v1alpha1.HelmReleaseSpec{
@@ -203,8 +213,9 @@ func (c *releaseOperator) CreateApplication(workspace, clusterName, namespace st
 		},
 	}
 
-	if clusterName != "" {
-		rls.Labels[constants.ClusterNameLabelKey] = clusterName
+	if deployClusterName != "" {
+		// Save the raw cluster into the annotation, so the controller can deploy the release to the corresponding cluster.
+		rls.Annotations[v1alpha1.ClusterNameAnnotationKey] = deployClusterName
 	}
 
 	if repoId := version.GetHelmRepoId(); repoId != "" {
@@ -277,6 +288,13 @@ func (c *releaseOperator) ModifyApplication(request ModifyClusterAttributesReque
 }
 
 func (c *releaseOperator) ListApplications(workspace, clusterName, namespace string, conditions *params.Conditions, limit, offset int, orderBy string, reverse bool) (*models.PageableResponse, error) {
+
+	var err error
+	clusterName, err = c.rewriteClusterName(clusterName)
+	if err != nil {
+		return nil, err
+	}
+
 	appId := conditions.Match[AppId]
 	versionId := conditions.Match[VersionId]
 	ls := map[string]string{}
@@ -354,6 +372,11 @@ func (c *releaseOperator) DescribeApplication(workspace, clusterName, namespace,
 		return nil, err
 	}
 
+	clusterName, err = c.rewriteClusterName(clusterName)
+	if err != nil {
+		return nil, err
+	}
+
 	app := &Application{}
 
 	var clusterConfig string
@@ -398,6 +421,11 @@ func (c *releaseOperator) DeleteApplication(workspace, clusterName, namespace, i
 			return nil
 		}
 		klog.Errorf("get release %s/%s failed, err: %s", namespace, id, err)
+		return err
+	}
+
+	clusterName, err = c.rewriteClusterName(clusterName)
+	if err != nil {
 		return err
 	}
 
@@ -451,4 +479,24 @@ func (c *releaseOperator) getAppVersionWithData(repoId, id string) (ret *v1alpha
 		return nil, err
 	}
 	return
+}
+
+// rewriteClusterName if the cluster is a host cluster, set clusterName to empty.
+// If updating a cluster from standalone to a host cluster, we must set the clusterName to empty.
+// Or openpitrix can not find the release deployed in the standalone cluster.
+func (c *clusterClients) rewriteClusterName(clusterName string) (string, error) {
+	if c.ClusterClients == nil || clusterName == "" {
+		return clusterName, nil
+	} else {
+		cluster, err := c.Get(clusterName)
+		if err != nil {
+			klog.Errorf("get cluster %s failed, error: %v", clusterName, err)
+			return clusterName, err
+		}
+
+		if c.IsHostCluster(cluster) {
+			clusterName = ""
+		}
+		return clusterName, nil
+	}
 }

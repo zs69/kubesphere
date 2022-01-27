@@ -95,7 +95,7 @@ func init() {
 }
 
 func (in *Manifest) GetManifestCluster() string {
-	return getValue(in.Labels, constants.ClusterNameLabelKey)
+	return getValue(in.Annotations, ClusterNameAnnotationKey)
 }
 
 func (in *Manifest) GetManifestWorkspace() string {

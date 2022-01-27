@@ -142,7 +142,7 @@ func (in *HelmRelease) GetChartVersion() string {
 }
 
 func (in *HelmRelease) GetRlsCluster() string {
-	return getValue(in.Labels, constants.ClusterNameLabelKey)
+	return getValue(in.Annotations, ClusterNameAnnotationKey)
 }
 
 func (in *HelmRelease) GetWorkspace() string {

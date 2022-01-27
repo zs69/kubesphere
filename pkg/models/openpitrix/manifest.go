@@ -23,6 +23,8 @@ import (
 	"sort"
 	"strings"
 
+	"kubesphere.io/kubesphere/pkg/utils/clusterclient"
+
 	"kubesphere.io/kubesphere/pkg/apiserver/query"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -60,6 +62,7 @@ type manifestOperator struct {
 	operatorClient    typed_v1alpha1.OperatorApplicationInterface
 	operatorVerLister listers_v1alpha1.OperatorApplicationVersionLister
 	operatorLister    listers_v1alpha1.OperatorApplicationLister
+	clusterClients
 }
 
 func newManifestOperator(k8sFactory informers.SharedInformerFactory, ksFactory externalversions.SharedInformerFactory, ksClient versioned.Interface) ManifestInterface {
@@ -71,15 +74,19 @@ func newManifestOperator(k8sFactory informers.SharedInformerFactory, ksFactory e
 		manifestLister:    ksFactory.Application().V1alpha1().Manifests().Lister(),
 		operatorVerLister: ksFactory.Application().V1alpha1().OperatorApplicationVersions().Lister(),
 		operatorLister:    ksFactory.Application().V1alpha1().OperatorApplications().Lister(),
+		clusterClients:    clusterClients{clusterclient.NewClusterClient(ksFactory.Cluster().V1alpha1().Clusters())},
 	}
 	return m
 }
 
-func (c *manifestOperator) CreateManifest(workspace, clusterName, namespace string, request CreateManifestRequest) error {
+func (c *manifestOperator) CreateManifest(workspace, deployClusterName, namespace string, request CreateManifestRequest) error {
 	if len(request.Name) > 32 {
 		return errors.New("the cluster name cannot exceed 32 characters")
 	}
-
+	clusterName, err := c.rewriteClusterName(deployClusterName)
+	if err != nil {
+		return err
+	}
 	exists, err := c.manifestExists(workspace, clusterName, namespace, request.Name)
 
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -100,8 +107,9 @@ func (c *manifestOperator) CreateManifest(workspace, clusterName, namespace stri
 				constants.CreatorAnnotationKey: request.Username,
 			},
 			Labels: map[string]string{
-				constants.WorkspaceLabelKey: workspace,
-				constants.NamespaceLabelKey: namespace,
+				constants.WorkspaceLabelKey:   workspace,
+				constants.NamespaceLabelKey:   namespace,
+				constants.ClusterNameLabelKey: clusterName,
 			},
 		},
 		Spec: v1alpha1.ManifestSpec{
@@ -114,8 +122,9 @@ func (c *manifestOperator) CreateManifest(workspace, clusterName, namespace stri
 			RelatedResources: request.RelatedResources,
 		},
 	}
-	if clusterName != "" {
-		manifest.Labels[constants.ClusterNameLabelKey] = clusterName
+	if deployClusterName != "" {
+		// Save the raw cluster into the annotation, so the controller can deploy the release to the corresponding cluster.
+		manifest.Annotations[v1alpha1.ClusterNameAnnotationKey] = deployClusterName
 	}
 	manifest, err = c.manifestClient.Create(context.TODO(), manifest, metav1.CreateOptions{})
 
@@ -191,6 +200,10 @@ func (c *manifestOperator) ModifyManifest(request ModifyManifestRequest) error {
 
 func (c *manifestOperator) ListManifests(workspace, clusterName, namespace string, conditions *params.Conditions, limit, offset int, orderBy string, reverse bool) (*models.PageableResponse, error) {
 	ls := map[string]string{}
+	clusterName, err := c.rewriteClusterName(clusterName)
+	if err != nil {
+		return nil, err
+	}
 	if workspace != "" {
 		ls[constants.WorkspaceLabelKey] = workspace
 	}
