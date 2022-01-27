@@ -393,13 +393,18 @@ func buildLabelSelector(conditions *params.Conditions) map[string]string {
 }
 
 func (c *applicationOperator) ListApps(conditions *params.Conditions, orderBy string, reverse bool, limit, offset int) (*models.PageableResponse, error) {
-	apps, err := c.listApps(conditions)
-	if err != nil {
-		klog.Error(err)
-		return nil, err
+	repoId := conditions.Match[RepoId]
+	var err error
+	var operatorApps AppsInterface
+	if repoId == v1alpha1.AppStoreRepoId {
+		operatorApps, err = c.listOperatorApps(conditions)
+		if err != nil {
+			klog.Error(err)
+			return nil, err
+		}
 	}
 
-	operatorApps, err := c.listOperatorApps(conditions)
+	apps, err := c.listApps(conditions)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
