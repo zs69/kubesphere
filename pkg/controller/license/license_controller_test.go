@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	"kubesphere.io/kubesphere/pkg/license"
 
 	v1 "k8s.io/api/core/v1"
@@ -52,8 +54,8 @@ var _ = Describe("license_controller", func() {
 
 	Context("license is valid", func() {
 		BeforeEach(func() {
-			By("create 3 nodes")
-			for _, name := range []string{"node1", "node2", "node3"} {
+			By("create 1 nodes")
+			for _, name := range []string{"node1"} {
 				err := k8sClient.Create(context.Background(), &v1.Node{ObjectMeta: v12.ObjectMeta{
 					Name: name,
 				}})
@@ -97,13 +99,19 @@ var _ = Describe("license_controller", func() {
 		})
 	})
 
-	Context("node count limit exceeded", func() {
+	Context("core count limit exceeded", func() {
 		BeforeEach(func() {
 			By("create one node")
-			for _, name := range []string{"node4"} {
+			cpuQuantity := resource.NewQuantity(6, resource.DecimalSI)
+			for _, name := range []string{"node2"} {
 				err := k8sClient.Create(context.Background(), &v1.Node{ObjectMeta: v12.ObjectMeta{
 					Name: name,
-				}})
+				}, Status: v1.NodeStatus{
+					Capacity: map[v1.ResourceName]resource.Quantity{
+						v1.ResourceCPU: *cpuQuantity,
+					},
+				},
+				})
 				Expect(err).NotTo(HaveOccurred())
 			}
 			ns := v1.Namespace{}
@@ -135,7 +143,7 @@ var _ = Describe("license_controller", func() {
 					ls := licensetypes.LicenseStatus{}
 					err := json.Unmarshal([]byte(status), &ls)
 					Expect(err).NotTo(HaveOccurred())
-					return ls.Violation.Type == licensetypes.NodeCountLimitExceeded
+					return ls.Violation.Type == licensetypes.CoreCountLimitExceeded
 				}
 
 			}, timeout, interval).Should(BeTrue())

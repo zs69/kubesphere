@@ -169,18 +169,11 @@ func checkLicense(clusterStats *licensetype.LicenseStatus, secret *corev1.Secret
 		switch license.LicenseType {
 		// subscription mode, checks the cluster num and node num.
 		case licensetype.LicenseTypeSubscription:
-			if clusterStats.ClusterNum > license.MaxCluster {
+			if clusterStats.Host.CoreNum+clusterStats.Member.CoreNum > license.MaxCore {
 				return &licensetype.Violation{
-					Type:     licensetype.ClusterCountLimitExceeded,
-					Current:  clusterStats.ClusterNum,
-					Expected: license.MaxCluster,
-				}, nil
-			}
-			if clusterStats.Host.NodeNum+clusterStats.Member.NodeNum > license.MaxNode {
-				return &licensetype.Violation{
-					Type:     licensetype.NodeCountLimitExceeded,
-					Current:  clusterStats.Host.NodeNum + clusterStats.Member.NodeNum,
-					Expected: license.MaxNode,
+					Type:     licensetype.CoreCountLimitExceeded,
+					Expected: license.MaxCore,
+					Current:  clusterStats.Host.CoreNum + clusterStats.Member.CoreNum,
 				}, nil
 			}
 		// maintenance mode, just checks the core num.
