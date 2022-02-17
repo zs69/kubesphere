@@ -304,6 +304,11 @@ func (l *License) SaveLicenseData(secretInterface v12.SecretInterface) (err erro
 }
 
 func (l *License) Check(cert *x509.Certificate, cid string, checker ...Checker) (*Violation, error) {
+
+	if _, exists := DeprecatedLicense[l.LicenseId]; exists {
+		return &Violation{Type: EmptyLicense}, nil
+	}
+
 	if l.IsEmpty() {
 		return &Violation{Type: EmptyLicense}, nil
 	}
