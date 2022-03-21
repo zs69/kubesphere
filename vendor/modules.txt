@@ -138,7 +138,7 @@ github.com/containerd/containerd/remotes/docker
 github.com/containerd/containerd/remotes/docker/schema1
 github.com/containerd/containerd/sys
 github.com/containerd/containerd/version
-# github.com/containernetworking/cni v0.8.0 => github.com/containernetworking/cni v0.8.0
+# github.com/containernetworking/cni v1.0.1 => github.com/containernetworking/cni v0.8.0
 ## explicit
 github.com/containernetworking/cni/pkg/types
 github.com/containernetworking/cni/pkg/types/020
@@ -479,6 +479,20 @@ github.com/json-iterator/go
 # github.com/jszwec/csvutil v1.5.0 => github.com/jszwec/csvutil v1.5.0
 ## explicit
 github.com/jszwec/csvutil
+# github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.2.0
+## explicit
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned/fake
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned/scheme
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned/typed/k8s.cni.cncf.io/v1
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned/typed/k8s.cni.cncf.io/v1/fake
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/informers/externalversions
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/informers/externalversions/internalinterfaces
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/informers/externalversions/k8s.cni.cncf.io
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/informers/externalversions/k8s.cni.cncf.io/v1
+github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/listers/k8s.cni.cncf.io/v1
 # github.com/kelseyhightower/envconfig v1.4.0 => github.com/kelseyhightower/envconfig v1.4.0
 ## explicit
 # github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e => github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e

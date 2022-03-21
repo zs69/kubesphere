@@ -19,9 +19,11 @@ package resource
 import (
 	"errors"
 
+	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/multuscni"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/openpitrix/manifest"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/persistentvolume"
 
+	multuscniv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	snapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -121,6 +123,7 @@ func NewResourceGetter(factory informers.InformerFactory, cache cache.Cache) *Re
 	clusterResourceGetters[schema.GroupVersionResource{Group: "", Version: "v1", Resource: "nodes"}] = node.New(factory.KubernetesSharedInformerFactory())
 	clusterResourceGetters[schema.GroupVersionResource{Group: "", Version: "v1", Resource: "namespaces"}] = namespace.New(factory.KubernetesSharedInformerFactory())
 	clusterResourceGetters[schema.GroupVersionResource{Group: "apiextensions.k8s.io", Version: "v1", Resource: "customresourcedefinitions"}] = customresourcedefinition.New(factory.ApiExtensionSharedInformerFactory())
+	namespacedResourceGetters[multuscniv1.SchemeGroupVersion.WithResource("network-attachment-definitions")] = multuscni.New(factory.MultusCniSharedInformerFactory())
 
 	// kubesphere resources
 	namespacedResourceGetters[networkv1alpha1.SchemeGroupVersion.WithResource(networkv1alpha1.ResourcePluralIPPool)] = ippool.New(factory.KubeSphereSharedInformerFactory(), factory.KubernetesSharedInformerFactory())

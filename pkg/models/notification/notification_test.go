@@ -211,7 +211,7 @@ func prepare() Operator {
 
 	ksClient := fakeks.NewSimpleClientset()
 	k8sClient := fakek8s.NewSimpleClientset()
-	fakeInformerFactory := informers.NewInformerFactories(k8sClient, ksClient, nil, nil, nil, nil)
+	fakeInformerFactory := informers.NewInformerFactories(k8sClient, ksClient, nil, nil, nil, nil, nil)
 
 	for _, secret := range secrets {
 		_ = fakeInformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets().Informer().GetIndexer().Add(secret)

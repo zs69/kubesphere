@@ -109,7 +109,7 @@ func TestOpenPitrixRepo(t *testing.T) {
 func prepareRepoOperator() RepoInterface {
 	ksClient = fakeks.NewSimpleClientset()
 	k8sClient = fakek8s.NewSimpleClientset()
-	fakeInformerFactory = informers.NewInformerFactories(k8sClient, ksClient, nil, nil, nil, nil)
+	fakeInformerFactory = informers.NewInformerFactories(k8sClient, ksClient, nil, nil, nil, nil, nil)
 
 	return newRepoOperator(cachedReposData, fakeInformerFactory.KubeSphereSharedInformerFactory(), ksClient)
 }

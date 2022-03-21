@@ -17,6 +17,7 @@ limitations under the License.
 package k8s
 
 import (
+	multuscniClient "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned"
 	snapshotclient "github.com/kubernetes-csi/external-snapshotter/client/v4/clientset/versioned"
 	promresourcesclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	istioclient "istio.io/client-go/pkg/clientset/versioned"
@@ -49,13 +50,15 @@ type FakeClient struct {
 	MasterURL string
 
 	KubeConfig *rest.Config
+
+	multuscniClient multuscniClient.Interface
 }
 
 func NewFakeClientSets(k8sClient kubernetes.Interface, discoveryClient *discovery.DiscoveryClient,
 	kubeSphereClient kubesphere.Interface,
 	istioClient istioclient.Interface, snapshotClient snapshotclient.Interface,
 	apiextensionsclient apiextensionsclient.Interface, prometheusClient promresourcesclient.Interface,
-	masterURL string, kubeConfig *rest.Config) Client {
+	masterURL string, kubeConfig *rest.Config, multuscniClient multuscniClient.Interface) Client {
 	return &FakeClient{
 		K8sClient:          k8sClient,
 		DiscoveryClient:    discoveryClient,
@@ -66,6 +69,7 @@ func NewFakeClientSets(k8sClient kubernetes.Interface, discoveryClient *discover
 		prometheusClient:   prometheusClient,
 		MasterURL:          masterURL,
 		KubeConfig:         kubeConfig,
+		multuscniClient:    multuscniClient,
 	}
 }
 
@@ -103,4 +107,7 @@ func (n *FakeClient) Master() string {
 
 func (n *FakeClient) Config() *rest.Config {
 	return n.KubeConfig
+}
+func (n *FakeClient) MultusCNI() multuscniClient.Interface {
+	return n.multuscniClient
 }

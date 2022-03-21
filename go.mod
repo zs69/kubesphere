@@ -18,7 +18,7 @@ require (
 	github.com/bshuster-repo/logrus-logstash-hook v0.4.1 // indirect
 	github.com/bugsnag/bugsnag-go v1.5.0 // indirect
 	github.com/bugsnag/panicwrap v1.2.0 // indirect
-	github.com/containernetworking/cni v0.8.0
+	github.com/containernetworking/cni v1.0.1
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v1.7.1 // indirect
@@ -56,6 +56,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/json-iterator/go v1.1.11
 	github.com/jszwec/csvutil v1.5.0
+	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
 	github.com/kubernetes-csi/external-snapshotter/client/v4 v4.2.0
 	github.com/kubesphere/sonargo v0.0.2

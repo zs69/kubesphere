@@ -17,6 +17,7 @@ limitations under the License.
 package k8s
 
 import (
+	multuscniClient "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned"
 	snapshotclient "github.com/kubernetes-csi/external-snapshotter/client/v4/clientset/versioned"
 	promresourcesclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	istio "istio.io/client-go/pkg/clientset/versioned"
@@ -68,5 +69,9 @@ func (n nullClient) Master() string {
 }
 
 func (n nullClient) Config() *rest.Config {
+	return nil
+}
+
+func (n nullClient) MultusCNI() multuscniClient.Interface {
 	return nil
 }

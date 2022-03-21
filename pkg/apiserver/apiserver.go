@@ -568,6 +568,24 @@ func (s *APIServer) waitForResourceSync(ctx context.Context) error {
 		promFactory.WaitForCacheSync(stopCh)
 	}
 
+	multuscniInformerFactory := s.InformerFactory.MultusCniSharedInformerFactory()
+	multuscniGVRs := []schema.GroupVersionResource{
+		{Group: "k8s.cni.cncf.io", Version: "v1", Resource: "network-attachment-definitions"},
+	}
+
+	for _, gvr := range multuscniGVRs {
+		if !isResourceExists(gvr) {
+			klog.Warningf("resource %s not exists in the cluster", gvr)
+		} else {
+			_, err = multuscniInformerFactory.ForResource(gvr)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	multuscniInformerFactory.Start(stopCh)
+	multuscniInformerFactory.WaitForCacheSync(stopCh)
+
 	// controller runtime cache for resources
 	go s.RuntimeCache.Start(ctx)
 	s.RuntimeCache.WaitForCacheSync(ctx)

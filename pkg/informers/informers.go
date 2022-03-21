@@ -19,6 +19,8 @@ package informers
 import (
 	"time"
 
+	multuscniClient "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned"
+	multuscniinformers "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/informers/externalversions"
 	snapshotclient "github.com/kubernetes-csi/external-snapshotter/client/v4/clientset/versioned"
 	snapshotinformer "github.com/kubernetes-csi/external-snapshotter/client/v4/informers/externalversions"
 	prominformers "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions"
@@ -46,6 +48,7 @@ type InformerFactory interface {
 	SnapshotSharedInformerFactory() snapshotinformer.SharedInformerFactory
 	ApiExtensionSharedInformerFactory() apiextensionsinformers.SharedInformerFactory
 	PrometheusSharedInformerFactory() prominformers.SharedInformerFactory
+	MultusCniSharedInformerFactory() multuscniinformers.SharedInformerFactory
 
 	// Start shared informer factory one by one if they are not nil
 	Start(stopCh <-chan struct{})
@@ -58,11 +61,12 @@ type informerFactories struct {
 	snapshotInformerFactory      snapshotinformer.SharedInformerFactory
 	apiextensionsInformerFactory apiextensionsinformers.SharedInformerFactory
 	prometheusInformerFactory    prominformers.SharedInformerFactory
+	mutluscniInformerFactory     multuscniinformers.SharedInformerFactory
 }
 
 func NewInformerFactories(client kubernetes.Interface, ksClient versioned.Interface, istioClient istioclient.Interface,
 	snapshotClient snapshotclient.Interface, apiextensionsClient apiextensionsclient.Interface,
-	prometheusClient promresourcesclient.Interface) InformerFactory {
+	prometheusClient promresourcesclient.Interface, multuscniClient multuscniClient.Interface) InformerFactory {
 	factory := &informerFactories{}
 
 	if client != nil {
@@ -87,6 +91,10 @@ func NewInformerFactories(client kubernetes.Interface, ksClient versioned.Interf
 
 	if prometheusClient != nil {
 		factory.prometheusInformerFactory = prominformers.NewSharedInformerFactory(prometheusClient, defaultResync)
+	}
+
+	if multuscniClient != nil {
+		factory.mutluscniInformerFactory = multuscniinformers.NewSharedInformerFactory(multuscniClient, defaultResync)
 	}
 
 	return factory
@@ -114,6 +122,10 @@ func (f *informerFactories) ApiExtensionSharedInformerFactory() apiextensionsinf
 
 func (f *informerFactories) PrometheusSharedInformerFactory() prominformers.SharedInformerFactory {
 	return f.prometheusInformerFactory
+}
+
+func (f *informerFactories) MultusCniSharedInformerFactory() multuscniinformers.SharedInformerFactory {
+	return f.mutluscniInformerFactory
 }
 
 func (f *informerFactories) Start(stopCh <-chan struct{}) {

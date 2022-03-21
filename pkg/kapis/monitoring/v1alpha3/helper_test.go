@@ -371,7 +371,7 @@ func TestParseRequestParams(t *testing.T) {
 			istioClient := fakeistio.NewSimpleClientset()
 			snapshotClient := fakesnapshot.NewSimpleClientset()
 			apiextensionsClient := fakeapiextensions.NewSimpleClientset()
-			fakeInformerFactory := informers.NewInformerFactories(client, ksClient, istioClient, snapshotClient, apiextensionsClient, nil)
+			fakeInformerFactory := informers.NewInformerFactories(client, ksClient, istioClient, snapshotClient, apiextensionsClient, nil, nil)
 
 			fakeInformerFactory.KubeSphereSharedInformerFactory()
 

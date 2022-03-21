@@ -170,7 +170,7 @@ var (
 func prepareAppOperator() ApplicationInterface {
 	ksClient = fakeks.NewSimpleClientset()
 	k8sClient = fakek8s.NewSimpleClientset()
-	fakeInformerFactory = informers.NewInformerFactories(k8sClient, ksClient, nil, nil, nil, nil)
+	fakeInformerFactory = informers.NewInformerFactories(k8sClient, ksClient, nil, nil, nil, nil, nil)
 
 	return newApplicationOperator(cachedReposData, fakeInformerFactory.KubeSphereSharedInformerFactory(), ksClient, fake.NewFakeS3())
 }

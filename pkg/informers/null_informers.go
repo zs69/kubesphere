@@ -19,6 +19,9 @@ package informers
 import (
 	"time"
 
+	cnifake "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned/fake"
+	multuscniinformers "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/informers/externalversions"
+
 	snapshotinformer "github.com/kubernetes-csi/external-snapshotter/client/v4/informers/externalversions"
 	prominformers "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions"
 	promfake "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
@@ -35,6 +38,7 @@ type nullInformerFactory struct {
 	fakeK8sInformerFactory informers.SharedInformerFactory
 	fakeKsInformerFactory  ksinformers.SharedInformerFactory
 	fakePrometheusFactory  prominformers.SharedInformerFactory
+	fakeMultuscniFactory   multuscniinformers.SharedInformerFactory
 }
 
 func NewNullInformerFactory() InformerFactory {
@@ -47,10 +51,14 @@ func NewNullInformerFactory() InformerFactory {
 	fakePrometheusClient := promfake.NewSimpleClientset()
 	fakePrometheusFactory := prominformers.NewSharedInformerFactory(fakePrometheusClient, time.Minute*10)
 
+	fakeMultuscniClient := cnifake.NewSimpleClientset()
+	fakeMultuscniFactory := multuscniinformers.NewSharedInformerFactory(fakeMultuscniClient, time.Minute*10)
+
 	return &nullInformerFactory{
 		fakeK8sInformerFactory: fakeInformerFactory,
 		fakeKsInformerFactory:  fakeKsInformerFactory,
 		fakePrometheusFactory:  fakePrometheusFactory,
+		fakeMultuscniFactory:   fakeMultuscniFactory,
 	}
 }
 
@@ -76,6 +84,10 @@ func (n nullInformerFactory) ApiExtensionSharedInformerFactory() apiextensionsin
 
 func (n *nullInformerFactory) PrometheusSharedInformerFactory() prominformers.SharedInformerFactory {
 	return n.fakePrometheusFactory
+}
+
+func (n *nullInformerFactory) MultusCniSharedInformerFactory() multuscniinformers.SharedInformerFactory {
+	return n.fakeMultuscniFactory
 }
 
 func (n nullInformerFactory) Start(stopCh <-chan struct{}) {

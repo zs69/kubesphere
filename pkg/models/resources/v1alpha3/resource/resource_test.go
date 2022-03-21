@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	fakemultuscni "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned/fake"
 	fakesnapshot "github.com/kubernetes-csi/external-snapshotter/client/v4/clientset/versioned/fake"
 	fakeistio "istio.io/client-go/pkg/clientset/versioned/fake"
 	corev1 "k8s.io/api/core/v1"
@@ -109,8 +110,9 @@ func prepare() *ResourceGetter {
 	k8sClient := fakek8s.NewSimpleClientset()
 	istioClient := fakeistio.NewSimpleClientset()
 	snapshotClient := fakesnapshot.NewSimpleClientset()
+	multuscniClient := fakemultuscni.NewSimpleClientset()
 	apiextensionsClient := fakeapiextensions.NewSimpleClientset()
-	fakeInformerFactory := informers.NewInformerFactories(k8sClient, ksClient, istioClient, snapshotClient, apiextensionsClient, nil)
+	fakeInformerFactory := informers.NewInformerFactories(k8sClient, ksClient, istioClient, snapshotClient, apiextensionsClient, nil, multuscniClient)
 
 	for _, namespace := range namespaces {
 		fakeInformerFactory.KubernetesSharedInformerFactory().Core().V1().

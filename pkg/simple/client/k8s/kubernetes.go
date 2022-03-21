@@ -19,6 +19,7 @@ package k8s
 import (
 	"strings"
 
+	multuscniClient "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned"
 	snapshotclient "github.com/kubernetes-csi/external-snapshotter/client/v4/clientset/versioned"
 	promresourcesclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	istioclient "istio.io/client-go/pkg/clientset/versioned"
@@ -39,6 +40,7 @@ type Client interface {
 	ApiExtensions() apiextensionsclient.Interface
 	Discovery() discovery.DiscoveryInterface
 	Prometheus() promresourcesclient.Interface
+	MultusCNI() multuscniClient.Interface
 	Master() string
 	Config() *rest.Config
 }
@@ -64,6 +66,8 @@ type kubernetesClient struct {
 	master string
 
 	config *rest.Config
+
+	multuscni multuscniClient.Interface
 }
 
 // NewKubernetesClientOrDie creates KubernetesClient and panic if there is an error
@@ -86,6 +90,7 @@ func NewKubernetesClientOrDie(options *KubernetesOptions) Client {
 		prometheus:      promresourcesclient.NewForConfigOrDie(config),
 		master:          config.Host,
 		config:          config,
+		multuscni:       multuscniClient.NewForConfigOrDie(config),
 	}
 
 	if options.Master != "" {
@@ -147,6 +152,11 @@ func NewKubernetesClient(options *KubernetesOptions) (Client, error) {
 		return nil, err
 	}
 
+	k.multuscni, err = multuscniClient.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
 	k.master = options.Master
 	k.config = config
 
@@ -188,4 +198,8 @@ func (k *kubernetesClient) Master() string {
 
 func (k *kubernetesClient) Config() *rest.Config {
 	return k.config
+}
+
+func (k *kubernetesClient) MultusCNI() multuscniClient.Interface {
+	return k.multuscni
 }
