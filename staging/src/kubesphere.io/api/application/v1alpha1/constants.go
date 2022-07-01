@@ -70,6 +70,7 @@ const (
 	StatusFailed   = "Failed"
 	StatusError    = "Error"
 	StatusUnknown  = "Unknown"
+	StatusDeleted  = "Deleted"
 
 	OperatorApplicationIdPrefix = "app-"
 )
