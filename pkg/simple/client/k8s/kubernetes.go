@@ -24,7 +24,6 @@ import (
 	promresourcesclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	istioclient "istio.io/client-go/pkg/clientset/versioned"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -38,7 +37,6 @@ type Client interface {
 	Istio() istioclient.Interface
 	Snapshot() snapshotclient.Interface
 	ApiExtensions() apiextensionsclient.Interface
-	Discovery() discovery.DiscoveryInterface
 	Prometheus() promresourcesclient.Interface
 	MultusCNI() multuscniClient.Interface
 	Master() string
@@ -48,9 +46,6 @@ type Client interface {
 type kubernetesClient struct {
 	// kubernetes client interface
 	k8s kubernetes.Interface
-
-	// discovery client
-	discoveryClient *discovery.DiscoveryClient
 
 	// generated clientset
 	ks kubesphere.Interface
@@ -81,16 +76,15 @@ func NewKubernetesClientOrDie(options *KubernetesOptions) Client {
 	config.Burst = options.Burst
 
 	k := &kubernetesClient{
-		k8s:             kubernetes.NewForConfigOrDie(config),
-		discoveryClient: discovery.NewDiscoveryClientForConfigOrDie(config),
-		ks:              kubesphere.NewForConfigOrDie(config),
-		istio:           istioclient.NewForConfigOrDie(config),
-		snapshot:        snapshotclient.NewForConfigOrDie(config),
-		apiextensions:   apiextensionsclient.NewForConfigOrDie(config),
-		prometheus:      promresourcesclient.NewForConfigOrDie(config),
-		master:          config.Host,
-		config:          config,
-		multuscni:       multuscniClient.NewForConfigOrDie(config),
+		k8s:           kubernetes.NewForConfigOrDie(config),
+		ks:            kubesphere.NewForConfigOrDie(config),
+		istio:         istioclient.NewForConfigOrDie(config),
+		snapshot:      snapshotclient.NewForConfigOrDie(config),
+		apiextensions: apiextensionsclient.NewForConfigOrDie(config),
+		prometheus:    promresourcesclient.NewForConfigOrDie(config),
+		master:        config.Host,
+		config:        config,
+		multuscni:     multuscniClient.NewForConfigOrDie(config),
 	}
 
 	if options.Master != "" {
@@ -117,11 +111,6 @@ func NewKubernetesClient(options *KubernetesOptions) (Client, error) {
 
 	var k kubernetesClient
 	k.k8s, err = kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	k.discoveryClient, err = discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
 		return nil, err
 	}
@@ -165,10 +154,6 @@ func NewKubernetesClient(options *KubernetesOptions) (Client, error) {
 
 func (k *kubernetesClient) Kubernetes() kubernetes.Interface {
 	return k.k8s
-}
-
-func (k *kubernetesClient) Discovery() discovery.DiscoveryInterface {
-	return k.discoveryClient
 }
 
 func (k *kubernetesClient) KubeSphere() kubesphere.Interface {

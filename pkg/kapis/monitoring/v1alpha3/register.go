@@ -15,26 +15,25 @@
  limitations under the License.
 
 */
+
 package v1alpha3
 
 import (
 	"net/http"
 
-	monitoringdashboardv1alpha2 "kubesphere.io/monitoring-dashboard/api/v1alpha2"
-
-	openpitrixoptions "kubesphere.io/kubesphere/pkg/simple/client/openpitrix"
-
-	"kubesphere.io/kubesphere/pkg/client/clientset/versioned"
-
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
+	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
+
+	monitoringdashboardv1alpha2 "kubesphere.io/monitoring-dashboard/api/v1alpha2"
 
 	"kubesphere.io/kubesphere/pkg/apiserver/runtime"
 	"kubesphere.io/kubesphere/pkg/constants"
 	"kubesphere.io/kubesphere/pkg/informers"
 	model "kubesphere.io/kubesphere/pkg/models/monitoring"
+	"kubesphere.io/kubesphere/pkg/models/openpitrix"
 	"kubesphere.io/kubesphere/pkg/simple/client/monitoring"
 )
 
@@ -45,10 +44,10 @@ const (
 
 var GroupVersion = schema.GroupVersion{Group: groupName, Version: "v1alpha3"}
 
-func AddToContainer(c *restful.Container, k8sClient kubernetes.Interface, monitoringClient monitoring.Interface, metricsClient monitoring.Interface, factory informers.InformerFactory, ksClient versioned.Interface, opOptions *openpitrixoptions.Options, enableGPUMonitoring bool) error {
+func AddToContainer(c *restful.Container, k8sClient kubernetes.Interface, monitoringClient monitoring.Interface, metricsClient monitoring.Interface, factory informers.InformerFactory, opClient openpitrix.Interface, enableGPUMonitoring bool, rtClient runtimeclient.Client) error {
 	ws := runtime.NewWebService(GroupVersion)
 
-	h := NewHandler(k8sClient, monitoringClient, metricsClient, factory, ksClient, nil, nil, opOptions, enableGPUMonitoring)
+	h := NewHandler(k8sClient, monitoringClient, metricsClient, factory, nil, nil, opClient, enableGPUMonitoring, rtClient)
 
 	ws.Route(ws.GET("/kubesphere").
 		To(h.handleKubeSphereMetricsQuery).
@@ -553,6 +552,16 @@ func AddToContainer(c *restful.Container, k8sClient kubernetes.Interface, monito
 		Metadata(restfulspec.KeyOpenAPITags, []string{constants.DashboardTag}).
 		Writes(monitoringdashboardv1alpha2.ClusterDashboard{}).
 		Returns(http.StatusOK, respOK, monitoringdashboardv1alpha2.ClusterDashboard{})).
+		Produces(restful.MIME_JSON)
+
+	ws.Route(ws.POST("/namespaces/{namespace}/dashboards/{grafanaDashboardName}/template").
+		To(h.handleGrafanaDashboardImport).
+		Doc("Convert Grafana templates to KubeSphere dashboards.").
+		Param(ws.PathParameter("grafanaDashboardName", "The name of the Grafana template to be converted").DataType("string").Required(true)).
+		Param(ws.PathParameter("namespace", "The name of the project").DataType("string").Required(true)).
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.DashboardTag}).
+		Writes(monitoringdashboardv1alpha2.Dashboard{}).
+		Returns(http.StatusOK, respOK, monitoringdashboardv1alpha2.Dashboard{})).
 		Produces(restful.MIME_JSON)
 
 	c.Add(ws)

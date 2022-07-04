@@ -28,7 +28,7 @@ const (
 )
 
 var promQLTemplates = map[string]string{
-	//cluster
+	// cluster
 	"cluster_cpu_utilisation":            ":node_cpu_utilisation:avg1m",
 	"cluster_cpu_usage":                  `round(:node_cpu_utilisation:avg1m * sum(node:node_num_cpu:sum), 0.001)`,
 	"cluster_cpu_total":                  "sum(node:node_num_cpu:sum)",
@@ -65,7 +65,7 @@ var promQLTemplates = map[string]string{
 	"cluster_daemonset_count":            `sum(kube_daemonset_labels)`,
 	"cluster_deployment_count":           `sum(kube_deployment_labels)`,
 	"cluster_endpoint_count":             `sum(kube_endpoint_labels)`,
-	"cluster_hpa_count":                  `sum(kube_hpa_labels)`,
+	"cluster_hpa_count":                  `sum(kube_horizontalpodautoscaler_labels)`,
 	"cluster_job_count":                  `sum(kube_job_labels)`,
 	"cluster_statefulset_count":          `sum(kube_statefulset_labels)`,
 	"cluster_replicaset_count":           `count(kube_replicaset_labels)`,
@@ -86,7 +86,7 @@ var promQLTemplates = map[string]string{
 	"cluster_gpu_memory_available":       `sum(DCGM_FI_DEV_FB_FREE) * 1024 * 1024`,
 	"cluster_gpu_memory_total":           `sum(DCGM_FI_DEV_FB_FREE + DCGM_FI_DEV_FB_USED) * 1024 * 1024`,
 
-	//node
+	// node
 	"node_cpu_utilisation":        "node:node_cpu_utilisation:avg1m{$1}",
 	"node_cpu_total":              "node:node_num_cpu:sum{$1}",
 	"node_memory_utilisation":     "node:node_memory_utilisation:{$1}",
@@ -129,6 +129,9 @@ var promQLTemplates = map[string]string{
 	"node_gpu_temp":               `round(DCGM_FI_DEV_GPU_TEMP* on(namespace , pod) group_left(node) (node_namespace_pod:kube_pod_info:{$1}), 0.001)`,
 	"node_gpu_power_usage":        `round(DCGM_FI_DEV_POWER_USAGE* on(namespace , pod) group_left(node) (node_namespace_pod:kube_pod_info:{$1}), 0.001)`,
 
+	"node_device_size_usage":       `sum by(device, node, host_ip, role) (node_filesystem_size_bytes{device!~"/dev/loop\\d+",device=~"/dev/.*",job="node-exporter"} * on(namespace, pod) group_left(node, host_ip, role) node_namespace_pod:kube_pod_info:{$1}) - sum by(device, node, host_ip, role) (node_filesystem_avail_bytes{device!~"/dev/loop\\d+",device=~"/dev/.*",job="node-exporter"} * on(namespace, pod) group_left(node, host_ip, role) node_namespace_pod:kube_pod_info:{$1})`,
+	"node_device_size_utilisation": `1 - sum by(device, node, host_ip, role) (node_filesystem_avail_bytes{device!~"/dev/loop\\d+",device=~"/dev/.*",job="node-exporter"} * on(namespace, pod) group_left(node, host_ip, role) node_namespace_pod:kube_pod_info:{$1}) / sum by(device, node, host_ip, role) (node_filesystem_size_bytes{device!~"/dev/loop\\d+",device=~"/dev/.*",job="node-exporter"} * on(namespace, pod) group_left(node, host_ip, role) node_namespace_pod:kube_pod_info:{$1})`,
+
 	// workspace
 	"workspace_cpu_usage":                  `round(sum by (workspace) (namespace:container_cpu_usage_seconds_total:sum_rate{namespace!="", $1}), 0.001)`,
 	"workspace_memory_usage":               `sum by (workspace) (namespace:container_memory_usage_bytes:sum{namespace!="", $1})`,
@@ -145,7 +148,7 @@ var promQLTemplates = map[string]string{
 	"workspace_daemonset_count":            `sum by (workspace) (kube_daemonset_labels{namespace!=""} * on (namespace) group_left(workspace)(kube_namespace_labels{$1}))`,
 	"workspace_deployment_count":           `sum by (workspace) (kube_deployment_labels{namespace!=""} * on (namespace) group_left(workspace)(kube_namespace_labels{$1}))`,
 	"workspace_endpoint_count":             `sum by (workspace) (kube_endpoint_labels{namespace!=""} * on (namespace) group_left(workspace)(kube_namespace_labels{$1}))`,
-	"workspace_hpa_count":                  `sum by (workspace) (kube_hpa_labels{namespace!=""} * on (namespace) group_left(workspace)(kube_namespace_labels{$1}))`,
+	"workspace_hpa_count":                  `sum by (workspace) (kube_horizontalpodautoscaler_labels{namespace!=""} * on (namespace) group_left(workspace)(kube_namespace_labels{$1}))`,
 	"workspace_job_count":                  `sum by (workspace) (kube_job_labels{namespace!=""} * on (namespace) group_left(workspace)(kube_namespace_labels{$1}))`,
 	"workspace_statefulset_count":          `sum by (workspace) (kube_statefulset_labels{namespace!=""} * on (namespace) group_left(workspace)(kube_namespace_labels{$1}))`,
 	"workspace_replicaset_count":           `count by (workspace) (kube_replicaset_labels{namespace!=""} * on (namespace) group_left(workspace)(kube_namespace_labels{$1}))`,
@@ -155,7 +158,7 @@ var promQLTemplates = map[string]string{
 	"workspace_gpu_usage":                  `round((sum by(workspace) (label_replace(DCGM_FI_PROF_GR_ENGINE_ACTIVE{exported_namespace!=""},"namespace","$1","exported_namespace","(.+)") * on(namespace) group_left(workspace) (kube_namespace_labels{$1})) or  sum by(workspace) (label_replace(DCGM_FI_DEV_GPU_UTIL{exported_namespace!=""},"namespace","$1","exported_namespace","(.+)") * on(namespace) group_left(workspace) (kube_namespace_labels{$1})) ) / 100,0.001)`,
 	"workspace_gpu_memory_usage":           `(sum by (workspace) (label_replace(DCGM_FI_DEV_FB_USED{exported_namespace!=""},"namespace","$1","exported_namespace","(.+)") * on(namespace) group_left(workspace) (kube_namespace_labels{$1}))) * 1024 * 1024`,
 
-	//namespace
+	// namespace
 	"namespace_cpu_usage":                  `round(namespace:container_cpu_usage_seconds_total:sum_rate{namespace!="", $1}, 0.001)`,
 	"namespace_memory_usage":               `namespace:container_memory_usage_bytes:sum{namespace!="", $1}`,
 	"namespace_memory_usage_wo_cache":      `namespace:container_memory_usage_bytes_wo_cache:sum{namespace!="", $1}`,
@@ -174,7 +177,7 @@ var promQLTemplates = map[string]string{
 	"namespace_daemonset_count":            `sum by (namespace) (kube_daemonset_labels{namespace!=""} * on (namespace) group_left(workspace) kube_namespace_labels{$1})`,
 	"namespace_deployment_count":           `sum by (namespace) (kube_deployment_labels{namespace!=""} * on (namespace) group_left(workspace) kube_namespace_labels{$1})`,
 	"namespace_endpoint_count":             `sum by (namespace) (kube_endpoint_labels{namespace!=""} * on (namespace) group_left(workspace) kube_namespace_labels{$1})`,
-	"namespace_hpa_count":                  `sum by (namespace) (kube_hpa_labels{namespace!=""} * on (namespace) group_left(workspace) kube_namespace_labels{$1})`,
+	"namespace_hpa_count":                  `sum by (namespace) (kube_horizontalpodautoscaler_labels{namespace!=""} * on (namespace) group_left(workspace) kube_namespace_labels{$1})`,
 	"namespace_job_count":                  `sum by (namespace) (kube_job_labels{namespace!=""} * on (namespace) group_left(workspace) kube_namespace_labels{$1})`,
 	"namespace_statefulset_count":          `sum by (namespace) (kube_statefulset_labels{namespace!=""} * on (namespace) group_left(workspace) kube_namespace_labels{$1})`,
 	"namespace_replicaset_count":           `count by (namespace) (kube_replicaset_labels{namespace!=""} * on (namespace) group_left(workspace) kube_namespace_labels{$1})`,
@@ -237,6 +240,8 @@ var promQLTemplates = map[string]string{
 	"container_memory_usage_wo_cache": `sum by (namespace, pod, container) (container_memory_working_set_bytes{job="kubelet", container!="POD", container!="", image!="", $1})`,
 	"container_gpu_usage":             `round((sum by(namespace, pod, container, device, gpu) (label_replace(label_replace(label_replace(DCGM_FI_PROF_GR_ENGINE_ACTIVE{$1},"namespace","$1","exported_namespace","(.+)"),"pod","$1","exported_pod","(.+)"),"container","$1","exported_container","(.+)")) or sum by(namespace, pod, container, device, gpu) (label_replace(label_replace(label_replace(DCGM_FI_DEV_GPU_UTIL{$1},"namespace","$1","exported_namespace","(.+)"),"pod","$1","exported_pod","(.+)"),"container","$1","exported_container","(.+)")) )/100 , 0.001)`,
 	"container_gpu_memory_usage":      `(sum by(namespace, pod, container) (label_replace(label_replace(label_replace(DCGM_FI_DEV_FB_USED{$1},"namespace","$1","exported_namespace","(.+)"),"pod","$1","exported_pod","(.+)"),"container","$1","exported_container","(.+)") )) * 1024 * 1024`,
+	"container_processes_usage":       `sum by (namespace, pod, container) (container_processes{job="kubelet", container!="POD", container!="", image!="", $1})`,
+	"container_threads_usage":         `sum by (namespace, pod, container) (container_threads {job="kubelet", container!="POD", container!="", image!="", $1})`,
 
 	// pvc
 	"pvc_inodes_available":   `max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_inodes_free) * on (namespace, persistentvolumeclaim) group_left (storageclass) kube_persistentvolumeclaim_info{$1}`,
@@ -259,7 +264,7 @@ var promQLTemplates = map[string]string{
 	"etcd_server_proposals_applied_rate":         `avg(etcd:etcd_server_proposals_applied:sum_irate)`,
 	"etcd_server_proposals_committed_rate":       `avg(etcd:etcd_server_proposals_committed:sum_irate)`,
 	"etcd_server_proposals_pending_count":        `avg(etcd:etcd_server_proposals_pending:sum)`,
-	"etcd_mvcc_db_size":                          `avg(etcd:etcd_debugging_mvcc_db_total_size:sum)`,
+	"etcd_mvcc_db_size":                          `avg(etcd:etcd_mvcc_db_total_size:sum)`,
 	"etcd_network_client_grpc_received_bytes":    `sum(etcd:etcd_network_client_grpc_received_bytes:sum_irate)`,
 	"etcd_network_client_grpc_sent_bytes":        `sum(etcd:etcd_network_client_grpc_sent_bytes:sum_irate)`,
 	"etcd_grpc_call_rate":                        `sum(etcd:grpc_server_started:sum_irate)`,
@@ -575,12 +580,12 @@ func makeIngressMetricExpr(tmpl string, o monitoring.QueryOptions) string {
 	return strings.Replace(tmpl, "$3", duration, -1)
 }
 
-//wrappedExpr converts `"$1"`  to `$labelReplace`
+// wrappedExpr converts `"$1"`  to `$labelReplace`
 func wrappedExpr(tmpl string) string {
 	return strings.Replace(tmpl, "\"$1\"", "$labelReplace", -1)
 }
 
-//wrappedExpr converts `$labelReplace` back to `"$1"`
+// wrappedExpr converts `$labelReplace` back to `"$1"`
 func unWrappedExpr(tmpl string) string {
 	return strings.Replace(tmpl, "$labelReplace", "\"$1\"", -1)
 }

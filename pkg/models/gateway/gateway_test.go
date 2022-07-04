@@ -92,7 +92,7 @@ func Test_gatewayOperator_GetGateways(t *testing.T) {
 				},
 			},
 			args: args{
-				namespace: "projct1",
+				namespace: "project1",
 			},
 		},
 		{
@@ -105,7 +105,7 @@ func Test_gatewayOperator_GetGateways(t *testing.T) {
 				},
 			},
 			args: args{
-				namespace: "projct1",
+				namespace: "project1",
 			},
 		},
 		{
@@ -169,7 +169,7 @@ func Test_gatewayOperator_GetGateways(t *testing.T) {
 						Namespace: "kubesphere-controls-system",
 					},
 					Spec: v1alpha1.GatewaySpec{
-						Conroller: v1alpha1.ControllerSpec{
+						Controller: v1alpha1.ControllerSpec{
 							Scope: v1alpha1.Scope{
 								Enabled:   true,
 								Namespace: "project6",
@@ -336,17 +336,17 @@ func Test_gatewayOperator_CreateGateway(t *testing.T) {
 				},
 			},
 			args: args{
-				namespace: "projct1",
+				namespace: "project1",
 				obj: &v1alpha1.Gateway{
 					TypeMeta: v1.TypeMeta{
 						Kind:       "Gateway",
 						APIVersion: "gateway.kubesphere.io/v1alpha1",
 					},
 					Spec: v1alpha1.GatewaySpec{
-						Conroller: v1alpha1.ControllerSpec{
+						Controller: v1alpha1.ControllerSpec{
 							Scope: v1alpha1.Scope{
 								Enabled:   true,
-								Namespace: "projct1",
+								Namespace: "project1",
 							},
 						},
 					},
@@ -367,17 +367,17 @@ func Test_gatewayOperator_CreateGateway(t *testing.T) {
 				},
 			},
 			args: args{
-				namespace: "projct2",
+				namespace: "project2",
 				obj: &v1alpha1.Gateway{
 					TypeMeta: v1.TypeMeta{
 						Kind:       "Gateway",
 						APIVersion: "gateway.kubesphere.io/v1alpha1",
 					},
 					Spec: v1alpha1.GatewaySpec{
-						Conroller: v1alpha1.ControllerSpec{
+						Controller: v1alpha1.ControllerSpec{
 							Scope: v1alpha1.Scope{
 								Enabled:   true,
-								Namespace: "projct2",
+								Namespace: "project2",
 							},
 						},
 					},
@@ -506,7 +506,7 @@ func Test_gatewayOperator_UpdateGateway(t *testing.T) {
 			ResourceVersion: "1",
 		},
 		Spec: v1alpha1.GatewaySpec{
-			Conroller: v1alpha1.ControllerSpec{
+			Controller: v1alpha1.ControllerSpec{
 				Scope: v1alpha1.Scope{
 					Enabled:   true,
 					Namespace: "project3",
@@ -593,7 +593,7 @@ func Test_gatewayOperator_UpgradeGateway(t *testing.T) {
 				},
 			},
 			args: args{
-				namespace: "projct1",
+				namespace: "project1",
 			},
 			wantErr: true,
 		},
@@ -615,7 +615,7 @@ func Test_gatewayOperator_UpgradeGateway(t *testing.T) {
 					ResourceVersion: "1",
 				},
 				Spec: v1alpha1.GatewaySpec{
-					Conroller: v1alpha1.ControllerSpec{
+					Controller: v1alpha1.ControllerSpec{
 						Scope: v1alpha1.Scope{
 							Enabled:   true,
 							Namespace: "project2",
@@ -691,7 +691,7 @@ func Test_gatewayOperator_ListGateways(t *testing.T) {
 				Namespace: "kubesphere-controls-system",
 			},
 			Spec: v1alpha1.GatewaySpec{
-				Conroller: v1alpha1.ControllerSpec{
+				Controller: v1alpha1.ControllerSpec{
 					Scope: v1alpha1.Scope{
 						Enabled:   true,
 						Namespace: "project2",

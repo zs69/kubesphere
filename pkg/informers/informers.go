@@ -17,6 +17,7 @@ limitations under the License.
 package informers
 
 import (
+	"reflect"
 	"time"
 
 	multuscniClient "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/client/clientset/versioned"
@@ -52,6 +53,11 @@ type InformerFactory interface {
 
 	// Start shared informer factory one by one if they are not nil
 	Start(stopCh <-chan struct{})
+}
+
+type GenericInformerFactory interface {
+	Start(stopCh <-chan struct{})
+	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 }
 
 type informerFactories struct {
