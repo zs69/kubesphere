@@ -19,10 +19,6 @@ package resource
 import (
 	"errors"
 
-	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/multuscni"
-	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/openpitrix/manifest"
-	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/persistentvolume"
-
 	multuscniv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	snapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -72,10 +68,13 @@ import (
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/ippool"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/job"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/loginrecord"
+	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/multuscni"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/namespace"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/networkpolicy"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/node"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/notification"
+	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/openpitrix/manifest"
+	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/persistentvolume"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/persistentvolumeclaim"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/pod"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/role"
@@ -86,6 +85,8 @@ import (
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/statefulset"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/user"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/volumesnapshot"
+	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/volumesnapshotclass"
+	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/volumesnapshotcontent"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/workspace"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/workspacerole"
 	"kubesphere.io/kubesphere/pkg/models/resources/v1alpha3/workspacerolebinding"
@@ -118,6 +119,8 @@ func NewResourceGetter(factory informers.InformerFactory, cache cache.Cache) *Re
 	clusterResourceGetters[schema.GroupVersionResource{Group: "", Version: "v1", Resource: "persistentvolumes"}] = persistentvolume.New(factory.KubernetesSharedInformerFactory())
 	namespacedResourceGetters[schema.GroupVersionResource{Group: "", Version: "v1", Resource: "persistentvolumeclaims"}] = persistentvolumeclaim.New(factory.KubernetesSharedInformerFactory(), factory.SnapshotSharedInformerFactory())
 	namespacedResourceGetters[snapshotv1.SchemeGroupVersion.WithResource("volumesnapshots")] = volumesnapshot.New(factory.SnapshotSharedInformerFactory())
+	clusterResourceGetters[snapshotv1.SchemeGroupVersion.WithResource("volumesnapshotclasses")] = volumesnapshotclass.New(factory.SnapshotSharedInformerFactory())
+	clusterResourceGetters[snapshotv1.SchemeGroupVersion.WithResource("volumesnapshotcontents")] = volumesnapshotcontent.New(factory.SnapshotSharedInformerFactory())
 	namespacedResourceGetters[rbacv1.SchemeGroupVersion.WithResource(iamv1alpha2.ResourcesPluralRoleBinding)] = rolebinding.New(factory.KubernetesSharedInformerFactory())
 	namespacedResourceGetters[rbacv1.SchemeGroupVersion.WithResource(iamv1alpha2.ResourcesPluralRole)] = role.New(factory.KubernetesSharedInformerFactory())
 	clusterResourceGetters[schema.GroupVersionResource{Group: "", Version: "v1", Resource: "nodes"}] = node.New(factory.KubernetesSharedInformerFactory())

@@ -20,6 +20,11 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"net/http"
+	"strings"
+
+	openpitrixv1 "kubesphere.io/kubesphere/pkg/kapis/openpitrix/v1"
+	"kubesphere.io/kubesphere/pkg/utils/clusterclient"
 
 	"kubesphere.io/kubesphere/pkg/apiserver/authentication/token"
 
@@ -37,9 +42,6 @@ import (
 	"kubesphere.io/kubesphere/pkg/simple/client/alerting"
 	auditingclient "kubesphere.io/kubesphere/pkg/simple/client/auditing/elasticsearch"
 	"kubesphere.io/kubesphere/pkg/simple/client/cache"
-
-	"net/http"
-	"strings"
 
 	"kubesphere.io/kubesphere/pkg/simple/client/devops/jenkins"
 	eventsclient "kubesphere.io/kubesphere/pkg/simple/client/events/elasticsearch"
@@ -60,6 +62,9 @@ type ServerRunOptions struct {
 
 	//
 	DebugMode bool
+
+	// Enable gops or not.
+	GOPSEnabled bool
 }
 
 func NewServerRunOptions() *ServerRunOptions {
@@ -74,6 +79,8 @@ func NewServerRunOptions() *ServerRunOptions {
 func (s *ServerRunOptions) Flags() (fss cliflag.NamedFlagSets) {
 	fs := fss.FlagSet("generic")
 	fs.BoolVar(&s.DebugMode, "debug", false, "Don't enable this if you don't know what it means.")
+	fs.BoolVar(&s.GOPSEnabled, "gops", false, "Whether to enable gops or not. When enabled this option, "+
+		"ks-apiserver will listen on a random port on 127.0.0.1, then you can use the gops tool to list and diagnose the ks-apiserver currently running.")
 	s.GenericServerRunOptions.AddFlags(fs, s.GenericServerRunOptions)
 	s.KubernetesOptions.AddFlags(fss.FlagSet("kubernetes"), s.KubernetesOptions)
 	s.AuthenticationOptions.AddFlags(fss.FlagSet("authentication"), s.AuthenticationOptions)
@@ -218,6 +225,13 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 		}
 		apiServer.NotificationClient = nc
 	}
+
+	if s.Config.MultiClusterOptions.Enable {
+		cc := clusterclient.NewClusterClient(informerFactory.KubeSphereSharedInformerFactory().Cluster().V1alpha1().Clusters())
+		apiServer.ClusterClient = cc
+	}
+
+	apiServer.OpenpitrixClient = openpitrixv1.NewOpenpitrixClient(informerFactory, apiServer.KubernetesClient.KubeSphere(), s.OpenPitrixOptions, apiServer.ClusterClient, stopCh)
 
 	server := &http.Server{
 		Addr: fmt.Sprintf(":%d", s.GenericServerRunOptions.InsecurePort),

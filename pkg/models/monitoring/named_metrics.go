@@ -132,6 +132,9 @@ var NodeMetrics = []string{
 	"node_pod_abnormal_ratio",
 	"node_pleg_quantile",
 
+	"node_device_size_usage",
+	"node_device_size_utilisation",
+
 	// meter
 	"meter_node_cpu_usage",
 	"meter_node_memory_usage_wo_cache",
@@ -301,6 +304,8 @@ var ContainerMetrics = []string{
 	// gpu
 	"container_gpu_usage",
 	"container_gpu_memory_usage",
+	"container_processes_usage",
+	"container_threads_usage",
 }
 
 var PVCMetrics = []string{
