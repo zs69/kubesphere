@@ -28,10 +28,12 @@ import (
 
 	"kubesphere.io/kubesphere/pkg/api"
 	notificationv2beta2 "kubesphere.io/kubesphere/pkg/api/notification/v2beta2"
+	"kubesphere.io/kubesphere/pkg/apiserver/query"
 	"kubesphere.io/kubesphere/pkg/apiserver/runtime"
 	kubesphere "kubesphere.io/kubesphere/pkg/client/clientset/versioned"
 	"kubesphere.io/kubesphere/pkg/constants"
 	"kubesphere.io/kubesphere/pkg/informers"
+	"kubesphere.io/kubesphere/pkg/server/errors"
 	nm "kubesphere.io/kubesphere/pkg/simple/client/notification"
 	notificationclient "kubesphere.io/kubesphere/pkg/simple/client/notification"
 )
@@ -61,6 +63,105 @@ func AddToContainer(
 		Param(ws.PathParameter("user", "user name")).
 		Returns(http.StatusOK, api.StatusOK, http.Response{}.Body)).
 		Doc("Provide validation for notification-manager information")
+
+	// apis for global notification config, receiver, and secret
+	ws.Route(ws.GET("/{resources}").
+		To(h.ListResource).
+		Doc("list the notification configs or receivers").
+		Metadata(KeyOpenAPITags, []string{constants.NotificationTag}).
+		Param(ws.PathParameter("resources", "known values include configs, receivers, secrets, routers, silences")).
+		Param(ws.QueryParameter(query.ParameterName, "name used for filtering").Required(false)).
+		Param(ws.QueryParameter(query.ParameterLabelSelector, "label selector used for filtering").Required(false)).
+		Param(ws.QueryParameter("type", "config or receiver type, known values include dingtalk, email, feishu, slack, webhook, wechat").Required(false)).
+		Param(ws.QueryParameter(query.ParameterPage, "page").Required(false).DataFormat("page=%d").DefaultValue("page=1")).
+		Param(ws.QueryParameter(query.ParameterLimit, "limit").Required(false)).
+		Param(ws.QueryParameter(query.ParameterAscending, "sort parameters, e.g. ascending=false").Required(false).DefaultValue("ascending=false")).
+		Param(ws.QueryParameter(query.ParameterOrderBy, "sort parameters, e.g. orderBy=createTime")).
+		Returns(http.StatusOK, api.StatusOK, api.ListResult{Items: []interface{}{}}))
+
+	ws.Route(ws.GET("/{resources}/{name}").
+		To(h.GetResource).
+		Doc("get the specified notification config or receiver").
+		Metadata(KeyOpenAPITags, []string{constants.NotificationTag}).
+		Param(ws.PathParameter("resources", "known values include configs, receivers, secrets, routers, silences")).
+		Param(ws.PathParameter(query.ParameterName, "the name of the resource")).
+		Param(ws.QueryParameter("type", "config or receiver type, known values include dingtalk, feishu, email, slack, webhook, wechat").Required(false)).
+		Returns(http.StatusOK, api.StatusOK, nil))
+
+	ws.Route(ws.POST("/{resources}").
+		To(h.CreateResource).
+		Doc("create a notification config or receiver").
+		Metadata(KeyOpenAPITags, []string{constants.NotificationTag}).
+		Param(ws.PathParameter("resources", "known values include configs, receivers, secrets, routers, silences")).
+		Returns(http.StatusOK, api.StatusOK, nil))
+
+	ws.Route(ws.PUT("/{resources}/{name}").
+		To(h.UpdateResource).
+		Doc("update the specified notification config or receiver").
+		Metadata(KeyOpenAPITags, []string{constants.NotificationTag}).
+		Param(ws.PathParameter("resources", "known values include configs, receivers, secrets, routers, silences")).
+		Param(ws.PathParameter(query.ParameterName, "the name of the resource")).
+		Returns(http.StatusOK, api.StatusOK, nil))
+
+	ws.Route(ws.DELETE("/{resources}/{name}").
+		To(h.DeleteResource).
+		Doc("delete the specified notification config or receiver").
+		Metadata(KeyOpenAPITags, []string{constants.NotificationTag}).
+		Param(ws.PathParameter("resources", "known values include configs, receivers, secrets, routers, silences")).
+		Param(ws.PathParameter(query.ParameterName, "the name of the resource")).
+		Returns(http.StatusOK, api.StatusOK, errors.None))
+
+	// apis for tenant notification config and receiver
+	ws.Route(ws.GET("/users/{user}/{resources}").
+		To(h.ListResource).
+		Doc("list the notification configs or receivers").
+		Metadata(KeyOpenAPITags, []string{constants.NotificationTag}).
+		Param(ws.PathParameter("user", "user name")).
+		Param(ws.PathParameter("resources", "known values include configs, receivers, secrets, silences")).
+		Param(ws.QueryParameter(query.ParameterName, "name used for filtering").Required(false)).
+		Param(ws.QueryParameter(query.ParameterLabelSelector, "label selector used for filtering").Required(false)).
+		Param(ws.QueryParameter("type", "config or receiver type, known values include dingtalk, email, feishu, slack, webhook, wechat").Required(false)).
+		Param(ws.QueryParameter(query.ParameterPage, "page").Required(false).DataFormat("page=%d").DefaultValue("page=1")).
+		Param(ws.QueryParameter(query.ParameterLimit, "limit").Required(false)).
+		Param(ws.QueryParameter(query.ParameterAscending, "sort parameters, e.g. ascending=false").Required(false).DefaultValue("ascending=false")).
+		Param(ws.QueryParameter(query.ParameterOrderBy, "sort parameters, e.g. orderBy=createTime")).
+		Returns(http.StatusOK, api.StatusOK, api.ListResult{Items: []interface{}{}}))
+
+	ws.Route(ws.GET("/users/{user}/{resources}/{name}").
+		To(h.GetResource).
+		Doc("get the specified notification config or receiver").
+		Metadata(KeyOpenAPITags, []string{constants.NotificationTag}).
+		Param(ws.PathParameter("user", "user name")).
+		Param(ws.PathParameter("resources", "known values include configs, receivers, secrets, silences")).
+		Param(ws.PathParameter(query.ParameterName, "the name of the resource")).
+		Param(ws.QueryParameter("type", "config or receiver type, known values include dingtalk, email, feishu, slack, webhook, wechat").Required(false)).
+		Returns(http.StatusOK, api.StatusOK, nil))
+
+	ws.Route(ws.POST("/users/{user}/{resources}").
+		To(h.CreateResource).
+		Doc("create the specified notification config or receiver").
+		Metadata(KeyOpenAPITags, []string{constants.NotificationTag}).
+		Param(ws.PathParameter("user", "user name")).
+		Param(ws.PathParameter("resources", "known values include configs, receivers, secrets, silences")).
+		Returns(http.StatusOK, api.StatusOK, nil))
+
+	ws.Route(ws.PUT("/users/{user}/{resources}/{name}").
+		To(h.UpdateResource).
+		Doc("update the specified notification config or receiver").
+		Metadata(KeyOpenAPITags, []string{constants.NotificationTag}).
+		Param(ws.PathParameter("user", "user name")).
+		Param(ws.PathParameter("resources", "known values include configs, receivers, secrets, silences")).
+		Param(ws.PathParameter(query.ParameterName, "the name of the resource")).
+		Returns(http.StatusOK, api.StatusOK, nil))
+
+	ws.Route(ws.DELETE("/users/{user}/{resources}/{name}").
+		To(h.DeleteResource).
+		Doc("delete the specified notification config or receiver").
+		Metadata(KeyOpenAPITags, []string{constants.NotificationTag}).
+		Param(ws.PathParameter("user", "user name")).
+		Param(ws.PathParameter("resources", "known values include configs, receivers, secrets, silences")).
+		Param(ws.PathParameter(query.ParameterName, "the name of the resource")).
+		Returns(http.StatusOK, api.StatusOK, errors.None))
 
 	ws.Route(ws.GET("/notifications/search").
 		To(h.SearchNotification).
