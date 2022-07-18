@@ -7,11 +7,15 @@ module kubesphere.io/api
 go 1.13
 
 require (
-	github.com/go-openapi/spec v0.19.7
+	github.com/go-logr/logr v0.4.0
+	github.com/go-openapi/spec v0.19.8
 	github.com/onsi/gomega v1.15.0
 	github.com/projectcalico/libcalico-go v1.7.2-0.20191014160346-2382c6cdd056
+	github.com/prometheus/common v0.37.0
+	github.com/prometheus/prometheus v1.8.2-0.20200907175821-8219b442c864
 	github.com/robfig/cron/v3 v3.0.1
-	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	istio.io/api v0.0.0-20201113182140-d4b7e3fc2b44
 	k8s.io/api v0.21.2
 	k8s.io/apiextensions-apiserver v0.21.2
