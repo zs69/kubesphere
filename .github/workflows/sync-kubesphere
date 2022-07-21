@@ -1,0 +1,58 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Sync kubesphere
+
+on:
+  schedule:
+    # This is a UTC time
+    - cron: "0 16 * * *"
+
+  workflow_dispatch:
+
+env:
+  MASTER_BRANCH: master
+  RELEASE_BRANCH: release-3.3
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  Sync-kubesphere-master-branch:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: master
+          
+      - name: Sync kubesphere master branch
+        run: |
+          git config --global user.email kubesphere@kubesphere.io
+          git config --global user.name kubesphere
+          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/kubesphere/qkcp
+          git remote add kubesphere https://github.com/kubesphere/kubesphere.git
+          git fetch kubesphere  
+          git rebase kubesphere/$MASTER_BRANCH
+          rm -rf .github
+          git add .
+          git commit -m "Sync kubesphere $MASTER_BRANCH branch"
+          git push origin $MASTER_BRANCH:$MASTER_BRANCH --force
+          
+  Sync-kubesphere-release-branch:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: release-3.3
+          
+      - name: Sync kubesphere master branch
+        run: |
+          git config --global user.email kubesphere@kubesphere.io
+          git config --global user.name kubesphere
+          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/kubesphere/qkcp
+          git remote add kubesphere https://github.com/kubesphere/kubesphere.git
+          git fetch kubesphere  
+          git rebase kubesphere/$RELEASE_BRANCH
+          rm -rf .github
+          git add .
+          git commit -m "Sync kubesphere $RELEASE_BRANCH branch"
+          git push origin $RELEASE_BRANCH:$RELEASE_BRANCH --force
