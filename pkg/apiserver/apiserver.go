@@ -41,12 +41,11 @@ import (
 	clusterv1alpha1 "kubesphere.io/api/cluster/v1alpha1"
 	iamv1alpha2 "kubesphere.io/api/iam/v1alpha2"
 	notificationv2beta1 "kubesphere.io/api/notification/v2beta1"
+	notificationv2beta2 "kubesphere.io/api/notification/v2beta2"
 	tenantv1alpha1 "kubesphere.io/api/tenant/v1alpha1"
 	typesv1beta1 "kubesphere.io/api/types/v1beta1"
 	runtimecache "sigs.k8s.io/controller-runtime/pkg/cache"
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
-
-	licensev1alpha1 "kubesphere.io/kubesphere/pkg/kapis/license/v1alpha1"
 
 	audit "kubesphere.io/kubesphere/pkg/apiserver/auditing"
 	"kubesphere.io/kubesphere/pkg/apiserver/authentication/authenticators/basic"
@@ -76,6 +75,7 @@ import (
 	gatewayv1alpha1 "kubesphere.io/kubesphere/pkg/kapis/gateway/v1alpha1"
 	iamapi "kubesphere.io/kubesphere/pkg/kapis/iam/v1alpha2"
 	kubeedgev1alpha1 "kubesphere.io/kubesphere/pkg/kapis/kubeedge/v1alpha1"
+	licensev1alpha1 "kubesphere.io/kubesphere/pkg/kapis/license/v1alpha1"
 	meteringv1alpha1 "kubesphere.io/kubesphere/pkg/kapis/metering/v1alpha1"
 	monitoringv1alpha3 "kubesphere.io/kubesphere/pkg/kapis/monitoring/v1alpha3"
 	networkv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/network/v1alpha2"
@@ -515,6 +515,13 @@ func (s *APIServer) waitForResourceSync(ctx context.Context) error {
 		{Group: "notification.kubesphere.io", Version: "v2beta1"}: {
 			notificationv2beta1.ResourcesPluralConfig,
 			notificationv2beta1.ResourcesPluralReceiver,
+		},
+		{Group: "notification.kubesphere.io", Version: "v2beta2"}: {
+			notificationv2beta2.ResourcesPluralNotificationManager,
+			notificationv2beta2.ResourcesPluralConfig,
+			notificationv2beta2.ResourcesPluralReceiver,
+			notificationv2beta2.ResourcesPluralRouter,
+			notificationv2beta2.ResourcesPluralSilence,
 		},
 	}
 

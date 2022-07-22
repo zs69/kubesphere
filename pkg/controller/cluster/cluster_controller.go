@@ -97,7 +97,7 @@ const (
 	configzMultiCluster = "multicluster"
 
 	// probe cluster timeout
-	probeClusterTimeout = 3 * time.Second
+	probeClusterTimeout   = 3 * time.Second
 	NotificationCleanup   = "notification.kubesphere.io/cleanup"
 	notificationAPIFormat = "%s/apis/notification.kubesphere.io/v2beta2/%s/%s"
 	secretAPIFormat       = "%s/api/v1/namespaces/%s/secrets/%s"
