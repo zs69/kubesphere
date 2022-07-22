@@ -31,6 +31,7 @@ import (
 
 	"kubesphere.io/kubesphere/pkg/apiserver/authentication"
 	controllerconfig "kubesphere.io/kubesphere/pkg/apiserver/config"
+	"kubesphere.io/kubesphere/pkg/simple/client/alerting"
 	"kubesphere.io/kubesphere/pkg/simple/client/devops/jenkins"
 	"kubesphere.io/kubesphere/pkg/simple/client/gateway"
 	"kubesphere.io/kubesphere/pkg/simple/client/k8s"
@@ -55,6 +56,7 @@ type KubeSphereControllerManagerOptions struct {
 	ServiceMeshOptions    *servicemesh.Options
 	GatewayOptions        *gateway.Options
 	MonitoringOptions     *prometheus.Options
+	AlertingOptions       *alerting.Options
 	LeaderElect           bool
 	LeaderElection        *leaderelection.LeaderElectionConfig
 	WebhookCertDir        string
@@ -94,6 +96,7 @@ func NewKubeSphereControllerManagerOptions() *KubeSphereControllerManagerOptions
 		ServiceMeshOptions:    servicemesh.NewServiceMeshOptions(),
 		AuthenticationOptions: authentication.NewOptions(),
 		GatewayOptions:        gateway.NewGatewayOptions(),
+		AlertingOptions:       alerting.NewAlertingOptions(),
 		LeaderElection: &leaderelection.LeaderElectionConfig{
 			LeaseDuration: 30 * time.Second,
 			RenewDeadline: 15 * time.Second,
@@ -121,6 +124,7 @@ func (s *KubeSphereControllerManagerOptions) Flags(allControllerNameSelectors []
 	s.MultiClusterOptions.AddFlags(fss.FlagSet("multicluster"), s.MultiClusterOptions)
 	s.ServiceMeshOptions.AddFlags(fss.FlagSet("servicemesh"), s.ServiceMeshOptions)
 	s.GatewayOptions.AddFlags(fss.FlagSet("gateway"), s.GatewayOptions)
+	s.AlertingOptions.AddFlags(fss.FlagSet("alerting"), s.AlertingOptions)
 	fs := fss.FlagSet("leaderelection")
 	s.bindLeaderElectionFlags(s.LeaderElection, fs)
 
@@ -166,6 +170,7 @@ func (o *KubeSphereControllerManagerOptions) Validate(allControllerNameSelectors
 	errs = append(errs, o.NetworkOptions.Validate()...)
 	errs = append(errs, o.LdapOptions.Validate()...)
 	errs = append(errs, o.MultiClusterOptions.Validate()...)
+	errs = append(errs, o.AlertingOptions.Validate()...)
 
 	// genetic option: application-selector
 	if len(o.ApplicationSelector) != 0 {
