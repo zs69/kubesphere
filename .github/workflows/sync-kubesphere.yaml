@@ -30,10 +30,12 @@ jobs:
           git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/kubesphere/qkcp
           git remote add kubesphere https://github.com/kubesphere/kubesphere.git
           git fetch kubesphere  
-          git rebase kubesphere/$MASTER_BRANCH
+          git checkout -b ks-master kubesphere/$MASTER_BRANCH
           rm -rf .github
           git add .
           git commit -m "Sync kubesphere $MASTER_BRANCH branch"
+          git checkout master
+          git rebase ks-master
           git push origin $MASTER_BRANCH:$MASTER_BRANCH --force
           
   Sync-kubesphere-release-branch:
@@ -51,8 +53,10 @@ jobs:
           git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/kubesphere/qkcp
           git remote add kubesphere https://github.com/kubesphere/kubesphere.git
           git fetch kubesphere  
-          git rebase kubesphere/$RELEASE_BRANCH
+          git checkout -b ks-release kubesphere/$RELEASE_BRANCH
           rm -rf .github
           git add .
           git commit -m "Sync kubesphere $RELEASE_BRANCH branch"
+          git checkout $RELEASE_BRANCH
+          git rebase ks-release
           git push origin $RELEASE_BRANCH:$RELEASE_BRANCH --force
