@@ -25,6 +25,8 @@ import (
 	"net/http"
 	"reflect"
 
+	"k8s.io/apimachinery/pkg/types"
+
 	"github.com/emicklei/go-restful"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -50,6 +52,7 @@ import (
 
 const (
 	Secret              = "secrets"
+	ConfigMap           = "configmaps"
 	VerificationAPIPath = "/api/v2/verify"
 
 	V2beta1 = "v2beta1"
@@ -68,6 +71,7 @@ type Operator interface {
 	Create(user, resource string, obj runtime.Object) (runtime.Object, error)
 	Delete(user, resource, name string) error
 	Update(user, resource, name string, obj runtime.Object) (runtime.Object, error)
+	Patch(user, resource, name string, data []byte) (runtime.Object, error)
 
 	Verify(request *restful.Request, response *restful.Response)
 
@@ -128,32 +132,18 @@ func (o *operator) List(user, resource, subresource string, q *query.Query) (*ap
 
 func (o *operator) list(user, resource, version, subresource string, q *query.Query) (*api.ListResult, error) {
 
-	if user != "" && resource == v2beta2.ResourcesPluralRouter {
-		return nil, errors.NewForbidden(v2beta2.Resource(v2beta2.ResourcesPluralRouter), "",
-			fmt.Errorf("tenant can not list router"))
-	}
-
-	if len(q.LabelSelector) > 0 {
-		q.LabelSelector = q.LabelSelector + ","
-	}
-
-	filter := ""
-	// If user is nil, it will list all global object.
-	if user == "" {
-		if isConfig(o.GetObject(resource, version)) {
-			filter = "type=default"
-		} else {
-			filter = "type=global"
+	if user != "" {
+		if resource == v2beta2.ResourcesPluralRouter ||
+			resource == v2beta2.ResourcesPluralNotificationManager {
+			return nil, errors.NewForbidden(v2beta2.Resource(resource), "",
+				fmt.Errorf("tenant can not list %s", resource))
 		}
-	} else {
-		// If the user is not nil, only return the object belong to this user.
-		filter = "type=tenant,user=" + user
 	}
 
-	q.LabelSelector = q.LabelSelector + filter
+	q.LabelSelector = o.generateLabelSelector(q, user, resource, version)
 
 	ns := ""
-	if resource == Secret {
+	if resource == Secret || resource == ConfigMap {
 		ns = constants.NotificationSecretNamespace
 	}
 
@@ -163,7 +153,8 @@ func (o *operator) list(user, resource, version, subresource string, q *query.Qu
 		return nil, err
 	}
 
-	if subresource == "" || resource == Secret {
+	if subresource == "" ||
+		(resource != v2beta2.ResourcesPluralConfig && resource != v2beta2.ResourcesPluralReceiver) {
 		return res, nil
 	}
 
@@ -182,6 +173,34 @@ func (o *operator) list(user, resource, version, subresource string, q *query.Qu
 	return results, nil
 }
 
+func (o *operator) generateLabelSelector(q *query.Query, user, resource, version string) string {
+
+	if resource == v2beta2.ResourcesPluralNotificationManager {
+		return q.LabelSelector
+	}
+
+	labelSelector := q.LabelSelector
+	if len(labelSelector) > 0 {
+		labelSelector = q.LabelSelector + ","
+	}
+
+	filter := ""
+	// If user is nil, it will list all global object.
+	if user == "" {
+		if isConfig(o.GetObject(resource, version)) {
+			filter = "type=default"
+		} else {
+			filter = "type=global"
+		}
+	} else {
+		// If the user is not nil, only return the object belong to this user.
+		filter = "type=tenant,user=" + user
+	}
+
+	labelSelector = labelSelector + filter
+	return labelSelector
+}
+
 // GetV2beta1 get the specified object of version v2beta1, if you want to get a global object, the user must be nil.
 // If you want to get a tenant object, the user must equal to the tenant specified in labels of the object.
 func (o *operator) GetV2beta1(user, resource, name, subresource string) (runtime.Object, error) {
@@ -196,13 +215,16 @@ func (o *operator) Get(user, resource, name, subresource string) (runtime.Object
 
 func (o *operator) get(user, resource, version, name, subresource string) (runtime.Object, error) {
 
-	if user != "" && resource == v2beta2.ResourcesPluralRouter {
-		return nil, errors.NewForbidden(v2beta2.Resource(v2beta2.ResourcesPluralRouter), "",
-			fmt.Errorf("tenant can not get router"))
+	if user != "" {
+		if resource == v2beta2.ResourcesPluralRouter ||
+			resource == v2beta2.ResourcesPluralNotificationManager {
+			return nil, errors.NewForbidden(v2beta2.Resource(resource), "",
+				fmt.Errorf("tenant can not get %s", resource))
+		}
 	}
 
 	ns := ""
-	if resource == Secret {
+	if resource == Secret || resource == ConfigMap {
 		ns = constants.NotificationSecretNamespace
 	}
 
@@ -217,7 +239,8 @@ func (o *operator) get(user, resource, version, name, subresource string) (runti
 		return nil, err
 	}
 
-	if subresource == "" || resource == Secret {
+	if subresource == "" ||
+		(resource != v2beta2.ResourcesPluralConfig && resource != v2beta2.ResourcesPluralReceiver) {
 		return obj, nil
 	}
 
@@ -247,16 +270,21 @@ func (o *operator) Create(user, resource string, obj runtime.Object) (runtime.Ob
 
 func (o *operator) create(user, resource, version string, obj runtime.Object) (runtime.Object, error) {
 
+	if user != "" {
+		if resource == v2beta2.ResourcesPluralRouter ||
+			resource == v2beta2.ResourcesPluralNotificationManager {
+			return nil, errors.NewForbidden(v2beta2.Resource(resource), "",
+				fmt.Errorf("tenant can not create %s", resource))
+		}
+	}
+
 	if err := appendLabel(user, resource, obj); err != nil {
 		return nil, err
 	}
 
-	if user != "" && resource == v2beta2.ResourcesPluralRouter {
-		return nil, errors.NewForbidden(v2beta2.Resource(v2beta2.ResourcesPluralRouter), "",
-			fmt.Errorf("tenant can not create router"))
-	}
-
 	switch resource {
+	case v2beta2.ResourcesPluralNotificationManager:
+		return o.ksClient.NotificationV2beta2().NotificationManagers().Create(context.Background(), obj.(*v2beta2.NotificationManager), v1.CreateOptions{})
 	case v2beta2.ResourcesPluralConfig:
 		if version == V2beta1 {
 			return o.ksClient.NotificationV2beta1().Configs().Create(context.Background(), obj.(*v2beta1.Config), v1.CreateOptions{})
@@ -273,8 +301,10 @@ func (o *operator) create(user, resource, version string, obj runtime.Object) (r
 		return o.ksClient.NotificationV2beta2().Routers().Create(context.Background(), obj.(*v2beta2.Router), v1.CreateOptions{})
 	case v2beta2.ResourcesPluralSilence:
 		return o.ksClient.NotificationV2beta2().Silences().Create(context.Background(), obj.(*v2beta2.Silence), v1.CreateOptions{})
-	case "secrets":
+	case Secret:
 		return o.k8sClient.CoreV1().Secrets(constants.NotificationSecretNamespace).Create(context.Background(), obj.(*corev1.Secret), v1.CreateOptions{})
+	case ConfigMap:
+		return o.k8sClient.CoreV1().ConfigMaps(constants.NotificationSecretNamespace).Create(context.Background(), obj.(*corev1.ConfigMap), v1.CreateOptions{})
 	default:
 		return nil, errors.NewInternalError(nil)
 	}
@@ -294,22 +324,22 @@ func (o *operator) Delete(user, resource, name string) error {
 
 func (o *operator) delete(user, resource, name string) error {
 
-	if user != "" && resource == v2beta2.ResourcesPluralRouter {
-		return errors.NewForbidden(v2beta2.Resource(v2beta2.ResourcesPluralRouter), "",
-			fmt.Errorf("tenant can not delete router"))
-	}
-
-	if obj, err := o.Get(user, resource, name, ""); err != nil {
-		klog.Error(err)
-		return err
-	} else {
-		if err := authorizer(user, obj); err != nil {
-			klog.Error(err)
-			return err
+	if user != "" {
+		if resource == v2beta2.ResourcesPluralRouter ||
+			resource == v2beta2.ResourcesPluralNotificationManager {
+			return errors.NewForbidden(v2beta2.Resource(resource), "",
+				fmt.Errorf("tenant can not delete %s", resource))
 		}
 	}
 
+	if _, err := o.Get(user, resource, name, ""); err != nil {
+		klog.Error(err)
+		return err
+	}
+
 	switch resource {
+	case v2beta2.ResourcesPluralNotificationManager:
+		return o.ksClient.NotificationV2beta2().NotificationManagers().Delete(context.Background(), name, v1.DeleteOptions{})
 	case v2beta2.ResourcesPluralConfig:
 		return o.ksClient.NotificationV2beta2().Configs().Delete(context.Background(), name, v1.DeleteOptions{})
 	case v2beta2.ResourcesPluralReceiver:
@@ -318,8 +348,10 @@ func (o *operator) delete(user, resource, name string) error {
 		return o.ksClient.NotificationV2beta2().Routers().Delete(context.Background(), name, v1.DeleteOptions{})
 	case v2beta2.ResourcesPluralSilence:
 		return o.ksClient.NotificationV2beta2().Silences().Delete(context.Background(), name, v1.DeleteOptions{})
-	case "secrets":
+	case Secret:
 		return o.k8sClient.CoreV1().Secrets(constants.NotificationSecretNamespace).Delete(context.Background(), name, v1.DeleteOptions{})
+	case ConfigMap:
+		return o.k8sClient.CoreV1().ConfigMaps(constants.NotificationSecretNamespace).Delete(context.Background(), name, v1.DeleteOptions{})
 	default:
 		return errors.NewInternalError(nil)
 	}
@@ -339,26 +371,36 @@ func (o *operator) Update(user, resource, name string, obj runtime.Object) (runt
 
 func (o *operator) update(user, resource, version, name string, obj runtime.Object) (runtime.Object, error) {
 
-	if user != "" && resource == v2beta2.ResourcesPluralRouter {
-		return nil, errors.NewForbidden(v2beta2.Resource(v2beta2.ResourcesPluralRouter), "",
-			fmt.Errorf("tenant can not update router"))
+	if user != "" {
+		if resource == v2beta2.ResourcesPluralRouter ||
+			resource == v2beta2.ResourcesPluralNotificationManager {
+			return nil, errors.NewForbidden(v2beta2.Resource(resource), "",
+				fmt.Errorf("tenant can not update %s", resource))
+		}
+	}
+
+	accessor, err := meta.Accessor(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	if accessor.GetName() != name {
+		return nil, fmt.Errorf("incorrcet parameter, resource name is not equal to the name in body")
+	}
+
+	_, err = o.Get(user, resource, name, "")
+	if err != nil {
+		klog.Error(err)
+		return nil, err
 	}
 
 	if err := appendLabel(user, resource, obj); err != nil {
 		return nil, err
 	}
 
-	if old, err := o.Get(user, resource, name, ""); err != nil {
-		klog.Error(err)
-		return nil, err
-	} else {
-		if err := authorizer(user, old); err != nil {
-			klog.Error(err)
-			return nil, err
-		}
-	}
-
 	switch resource {
+	case v2beta2.ResourcesPluralNotificationManager:
+		return o.ksClient.NotificationV2beta2().NotificationManagers().Update(context.Background(), obj.(*v2beta2.NotificationManager), v1.UpdateOptions{})
 	case v2beta2.ResourcesPluralConfig:
 		if version == V2beta1 {
 			return o.ksClient.NotificationV2beta1().Configs().Update(context.Background(), obj.(*v2beta1.Config), v1.UpdateOptions{})
@@ -375,8 +417,48 @@ func (o *operator) update(user, resource, version, name string, obj runtime.Obje
 		return o.ksClient.NotificationV2beta2().Routers().Update(context.Background(), obj.(*v2beta2.Router), v1.UpdateOptions{})
 	case v2beta2.ResourcesPluralSilence:
 		return o.ksClient.NotificationV2beta2().Silences().Update(context.Background(), obj.(*v2beta2.Silence), v1.UpdateOptions{})
-	case "secrets":
+	case Secret:
 		return o.k8sClient.CoreV1().Secrets(constants.NotificationSecretNamespace).Update(context.Background(), obj.(*corev1.Secret), v1.UpdateOptions{})
+	case ConfigMap:
+		return o.k8sClient.CoreV1().ConfigMaps(constants.NotificationSecretNamespace).Update(context.Background(), obj.(*corev1.ConfigMap), v1.UpdateOptions{})
+	default:
+		return nil, errors.NewInternalError(nil)
+	}
+}
+
+// Patch an object, only a global object will be patched if the user is nil.
+// If the user is not nil, a tenant object whose tenant label matches the user will be patched.
+func (o *operator) Patch(user, resource, name string, data []byte) (runtime.Object, error) {
+
+	if user != "" {
+		if resource == v2beta2.ResourcesPluralRouter ||
+			resource == v2beta2.ResourcesPluralNotificationManager {
+			return nil, errors.NewForbidden(v2beta2.Resource(resource), "",
+				fmt.Errorf("tenant can not update %s", resource))
+		}
+	}
+
+	_, err := o.Get(user, resource, name, "")
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+
+	switch resource {
+	case v2beta2.ResourcesPluralNotificationManager:
+		return o.ksClient.NotificationV2beta2().NotificationManagers().Patch(context.Background(), name, types.MergePatchType, data, v1.PatchOptions{})
+	case v2beta2.ResourcesPluralConfig:
+		return o.ksClient.NotificationV2beta2().Configs().Patch(context.Background(), name, types.MergePatchType, data, v1.PatchOptions{})
+	case v2beta2.ResourcesPluralReceiver:
+		return o.ksClient.NotificationV2beta2().Receivers().Patch(context.Background(), name, types.MergePatchType, data, v1.PatchOptions{})
+	case v2beta2.ResourcesPluralRouter:
+		return o.ksClient.NotificationV2beta2().Routers().Patch(context.Background(), name, types.MergePatchType, data, v1.PatchOptions{})
+	case v2beta2.ResourcesPluralSilence:
+		return o.ksClient.NotificationV2beta2().Silences().Patch(context.Background(), name, types.MergePatchType, data, v1.PatchOptions{})
+	case Secret:
+		return o.k8sClient.CoreV1().Secrets(constants.NotificationSecretNamespace).Patch(context.Background(), name, types.MergePatchType, data, v1.PatchOptions{})
+	case ConfigMap:
+		return o.k8sClient.CoreV1().ConfigMaps(constants.NotificationSecretNamespace).Patch(context.Background(), name, types.MergePatchType, data, v1.PatchOptions{})
 	default:
 		return nil, errors.NewInternalError(nil)
 	}
@@ -385,6 +467,8 @@ func (o *operator) update(user, resource, version, name string, obj runtime.Obje
 func (o *operator) GetObject(resource, version string) runtime.Object {
 
 	switch resource {
+	case v2beta2.ResourcesPluralNotificationManager:
+		return &v2beta2.NotificationManager{}
 	case v2beta2.ResourcesPluralConfig:
 		if version == V2beta1 {
 			return &v2beta1.Config{}
@@ -409,6 +493,8 @@ func (o *operator) GetObject(resource, version string) runtime.Object {
 		return &v2beta2.Silence{}
 	case Secret:
 		return &corev1.Secret{}
+	case ConfigMap:
+		return &corev1.ConfigMap{}
 	default:
 		return nil
 	}
@@ -586,6 +672,11 @@ func isConfig(obj runtime.Object) bool {
 
 // Is the object is a global object.
 func isGlobal(obj runtime.Object) bool {
+
+	if _, ok := obj.(*v2beta2.NotificationManager); ok {
+		return true
+	}
+
 	accessor, err := meta.Accessor(obj)
 	if err != nil {
 		klog.Errorln(err)
@@ -612,7 +703,7 @@ func appendLabel(user, resource string, obj runtime.Object) error {
 		labels = make(map[string]string)
 	}
 
-	if resource == Secret {
+	if resource == Secret || resource == ConfigMap {
 		labels[constants.NotificationManagedLabel] = "true"
 	}
 
