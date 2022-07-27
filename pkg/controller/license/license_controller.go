@@ -127,6 +127,13 @@ func (lc *LicenseController) collectClusterInfo(ctx context.Context) (licenseSta
 		licenseStatus.ClusterNum = 1
 	}
 
+	ns := corev1.Namespace{}
+	if err = lc.Client.Get(ctx, types.NamespacedName{Name: constants.KubeSystemNamespace}, &ns); err != nil {
+		return
+	} else {
+		licenseStatus.ClusterId = string(ns.ObjectMeta.UID)
+	}
+
 	// Start to calculate core num and node num.
 	for _, node := range cn {
 		coreNum := 0
@@ -161,7 +168,7 @@ func checkLicense(clusterStats *licensetype.LicenseStatus, secret *corev1.Secret
 	if err != nil {
 		violation.Type = licensetype.FormatError
 	} else {
-		violation, err = license.Check(cert.CertStore.Cert, "")
+		violation, err = license.Check(cert.CertStore.Cert, clusterStats.ClusterId)
 	}
 
 	if violation == nil {

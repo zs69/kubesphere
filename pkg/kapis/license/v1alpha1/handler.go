@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"time"
 
+	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+
 	restful "github.com/emicklei/go-restful"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -56,6 +58,8 @@ type licenseHandler struct {
 
 	cim          *clusterinfo.ClusterInfoManager
 	multiCluster bool
+	nsGetter     typedv1.NamespaceInterface
+	clusterID    string
 }
 
 func newLicenseHandler(client clientset.Interface, informerFactory informers.InformerFactory, opts *multicluster.Options) licensesInterface {
@@ -64,7 +68,8 @@ func newLicenseHandler(client clientset.Interface, informerFactory informers.Inf
 		klog.Errorf("init cert failed, error: %s", err)
 	}
 	handler := licenseHandler{
-		client: client,
+		client:   client,
+		nsGetter: client.CoreV1().Namespaces(),
 	}
 
 	if opts != nil && opts.Enable {
@@ -78,7 +83,7 @@ func newLicenseHandler(client clientset.Interface, informerFactory informers.Inf
 	return &handler
 }
 
-func parseLicense(req *restful.Request) (licenseResp *client.License) {
+func parseAndValidate(req *restful.Request, cid string) (licenseResp *client.License) {
 	licenseResp = &client.License{
 		Status: &licensetypes.LicenseStatus{
 			CurrentTime: time.Now().UTC(),
@@ -104,9 +109,10 @@ func parseLicense(req *restful.Request) (licenseResp *client.License) {
 		return
 	}
 
-	vio, _ := licenseResp.Data.Check(cert.CertStore.Cert, "")
+	vio, _ := licenseResp.Data.Check(cert.CertStore.Cert, cid)
 	if vio != nil {
-		if vio.Type == licensetypes.InvalidSignature || vio.Type == licensetypes.FormatError {
+		if vio.Type == licensetypes.InvalidSignature || vio.Type == licensetypes.FormatError ||
+			vio.Type == licensetypes.ClusterNotMatch {
 			licenseResp.Status.Violation = *vio
 			return
 		}
@@ -117,7 +123,14 @@ func parseLicense(req *restful.Request) (licenseResp *client.License) {
 
 // UpdateLicense update current license by user input.
 func (h *licenseHandler) UpdateLicense(req *restful.Request, resp *restful.Response) {
-	licenseResp := parseLicense(req)
+	cid, err := h.getClusterID(context.Background())
+	if err != nil {
+		klog.Errorf("get cluster id failed, error: %s", err)
+		api.HandleInternalError(resp, nil, errors.New("get cluster id failed"))
+		return
+	}
+
+	licenseResp := parseAndValidate(req, cid)
 
 	validate, _ := strconv.ParseBool(req.QueryParameter("validate"))
 	if validate {
@@ -132,7 +145,7 @@ func (h *licenseHandler) UpdateLicense(req *restful.Request, resp *restful.Respo
 	}
 
 	// update license
-	err := licenseResp.Data.SaveLicenseData(h.client.CoreV1().Secrets(constants.KubeSphereNamespace))
+	err = licenseResp.Data.SaveLicenseData(h.client.CoreV1().Secrets(constants.KubeSphereNamespace))
 	if err != nil {
 		klog.Errorf("update license failed, error: %s", err)
 		api.HandleInternalError(resp, nil, errors.New("update license failed"))
@@ -141,6 +154,19 @@ func (h *licenseHandler) UpdateLicense(req *restful.Request, resp *restful.Respo
 		klog.V(2).Infof("license updated")
 		resp.WriteAsJson(licenseResp)
 	}
+}
+
+func (h *licenseHandler) getClusterID(ctx context.Context) (string, error) {
+	if len(h.clusterID) > 0 {
+		return h.clusterID, nil
+	}
+	ns, err := h.nsGetter.Get(ctx, constants.KubeSystemNamespace, metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	h.clusterID = string(ns.ObjectMeta.UID)
+	return string(ns.ObjectMeta.UID), nil
 }
 
 func (h *licenseHandler) GetLicense(req *restful.Request, resp *restful.Response) {
@@ -152,13 +178,12 @@ func (h *licenseHandler) GetLicense(req *restful.Request, resp *restful.Response
 		},
 	}
 	ctx := context.Background()
+
 	secret, err := h.client.CoreV1().Secrets(constants.KubeSphereNamespace).
 		Get(ctx, licensetypes.LicenseName, metav1.GetOptions{})
-	if err != nil {
-		if !apierrors.IsNotFound(err) {
-			klog.Errorf("get license failed, error: %s", err)
-			api.HandleError(resp, nil, err)
-		}
+	if err != nil && !apierrors.IsNotFound(err) {
+		klog.Errorf("get license failed, error: %s", err)
+		api.HandleError(resp, nil, err)
 	}
 
 	// Build the data filed.
@@ -206,11 +231,19 @@ func (h *licenseHandler) GetLicense(req *restful.Request, resp *restful.Response
 	// clusters is time-consuming.
 	// TODO: remove all the checks of ks-controller-manager, which should only collect cluster info and save it.
 	if license.Status.Violation.Type == licensetypes.NoViolation {
-		violation, _ := license.Data.Check(cert.CertStore.Cert, "")
+		violation, _ := license.Data.Check(cert.CertStore.Cert, license.Status.ClusterId)
 		if violation != nil {
 			license.Status.Violation = *violation
 		}
 	}
+
+	cid, err := h.getClusterID(ctx)
+	if err != nil {
+		klog.Errorf("get cluster id failed, error: %s", err)
+		api.HandleError(resp, nil, err)
+		return
+	}
+	license.Status.ClusterId = cid
 
 	license.Status.CurrentTime = time.Now().UTC()
 	resp.WriteAsJson(license)

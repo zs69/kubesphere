@@ -52,6 +52,7 @@ const (
 	CoreCountLimitExceeded    = "Core count limit exceeded"
 	ClusterCountLimitExceeded = "Cluster count limit exceeded"
 	InvalidLicenseType        = "Invalid type"
+	ClusterNotMatch           = "Cluster not match"
 
 	LicenseName = "ks-license"
 	LicenseKey  = "license"
@@ -98,6 +99,7 @@ type ClusterInfo struct {
 type LicenseStatus struct {
 	// The current time of server.
 	CurrentTime time.Time   `json:"currentTime"`
+	ClusterId   string      `json:"clusterId"`
 	Host        ClusterInfo `json:"host,omitempty"`
 	Member      ClusterInfo `json:"member,omitempty"`
 	ClusterNum  int         `json:"clusterNum,omitempty"`
@@ -315,6 +317,10 @@ func (l *License) Check(cert *x509.Certificate, cid string, checker ...Checker) 
 
 	if _, vio := l.Verify(cert); vio != nil {
 		return vio, nil
+	}
+
+	if len(cid) > 0 && len(l.ClusterId) > 0 && cid != l.ClusterId {
+		return &Violation{Type: ClusterNotMatch}, nil
 	}
 
 	if expired, vio := l.IsExpired(); expired {
