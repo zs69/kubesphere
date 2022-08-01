@@ -20,6 +20,7 @@ import (
 	promresourcesv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -67,6 +68,10 @@ func (r *GlobalRuleGroupReconciler) Reconcile(ctx context.Context, req reconcile
 	promruleLabelSet := labels.Set{
 		PrometheusRuleResourceLabelKeyRuleLevel: string(ruleLevel),
 	}
+	// label selector for PrometheusRule
+	// prometheusrules that have not been synced to host cluster do not have the owner cluster label.
+	notExistLabelKeyOwnerCluster, _ := labels.NewRequirement(PrometheusRuleResourceLabelKeyOwnerCluster, selection.DoesNotExist, []string{})
+	promruleLabelSelector := labels.SelectorFromSet(promruleLabelSet).Add(*notExistLabelKeyOwnerCluster)
 
 	enforceFuncs := createEnforceRuleFuncs(nil, enforceRuleLabels)
 
@@ -79,7 +84,7 @@ func (r *GlobalRuleGroupReconciler) Reconcile(ctx context.Context, req reconcile
 		err = r.Client.DeleteAllOf(ctx, &promresourcesv1.PrometheusRule{}, &client.DeleteAllOfOptions{
 			ListOptions: client.ListOptions{
 				Namespace:     promruleNamespace,
-				LabelSelector: labels.SelectorFromSet(promruleLabelSet),
+				LabelSelector: promruleLabelSelector,
 			},
 		})
 		return reconcile.Result{}, err
@@ -95,7 +100,7 @@ func (r *GlobalRuleGroupReconciler) Reconcile(ctx context.Context, req reconcile
 	var current promresourcesv1.PrometheusRuleList
 	err = r.Client.List(ctx, &current, &client.ListOptions{
 		Namespace:     promruleNamespace,
-		LabelSelector: labels.SelectorFromSet(promruleLabelSet),
+		LabelSelector: promruleLabelSelector,
 	})
 	if err != nil {
 		return reconcile.Result{}, err

@@ -574,6 +574,10 @@ func addAllControllers(mgr manager.Manager, client k8s.Client, informerFactory i
 			globalrulegroupReconciler := &alerting.GlobalRuleGroupReconciler{}
 			addControllerWithSetup(mgr, "globalrulegroup", globalrulegroupReconciler)
 		}
+		if cmOptions.MultiClusterOptions.ClusterRole == "host" {
+			prometheusRuleReconcilers := &alerting.GlobalPrometheusRuleReconcilers{}
+			addControllerWithSetup(mgr, "prometheusrules", prometheusRuleReconcilers)
+		}
 	}
 
 	// log all controllers process result

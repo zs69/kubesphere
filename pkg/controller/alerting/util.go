@@ -343,3 +343,47 @@ func bulkUpdatePrometheusRuleResources(client client.Client, ctx context.Context
 
 	return nil
 }
+
+func syncPrometheusRule(sourceClusterName string, sourceRule, targetRule *promresourcesv1.PrometheusRule) error {
+	sourceRule = sourceRule.DeepCopy()
+
+	targetRule.Labels = sourceRule.Labels
+	if targetRule.Labels == nil {
+		targetRule.Labels = make(map[string]string)
+	}
+	targetRule.Labels[PrometheusRuleResourceLabelKeyOwnerCluster] = sourceClusterName
+
+	// labels added to rule.labels
+	enforceRuleLabels := map[string]string{
+		RuleLabelKeyCluster: sourceClusterName,
+	}
+	// matchers enforced to rule.expr
+	enforceRuleMatchers := []*promlabels.Matcher{{
+		Type:  promlabels.MatchEqual,
+		Name:  RuleLabelKeyCluster,
+		Value: sourceClusterName,
+	}}
+
+	enforceFuncs := createEnforceRuleFuncs(enforceRuleMatchers, enforceRuleLabels)
+
+	groups := sourceRule.Spec.Groups
+	for i := range groups {
+		group := groups[i]
+		for j := range group.Rules {
+			for _, f := range enforceFuncs {
+				if f == nil {
+					continue
+				}
+				err := f(&group.Rules[j])
+				if err != nil {
+					return err
+				}
+			}
+		}
+		groups[i] = group
+	}
+
+	targetRule.Spec.Groups = groups
+
+	return nil
+}
