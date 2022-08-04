@@ -28,12 +28,12 @@ type FakeAlertingV2beta1 struct {
 	*testing.Fake
 }
 
-func (c *FakeAlertingV2beta1) ClusterRuleGroups(namespace string) v2beta1.ClusterRuleGroupInterface {
-	return &FakeClusterRuleGroups{c, namespace}
+func (c *FakeAlertingV2beta1) ClusterRuleGroups() v2beta1.ClusterRuleGroupInterface {
+	return &FakeClusterRuleGroups{c}
 }
 
-func (c *FakeAlertingV2beta1) GlobalRuleGroups(namespace string) v2beta1.GlobalRuleGroupInterface {
-	return &FakeGlobalRuleGroups{c, namespace}
+func (c *FakeAlertingV2beta1) GlobalRuleGroups() v2beta1.GlobalRuleGroupInterface {
+	return &FakeGlobalRuleGroups{c}
 }
 
 func (c *FakeAlertingV2beta1) RuleGroups(namespace string) v2beta1.RuleGroupInterface {

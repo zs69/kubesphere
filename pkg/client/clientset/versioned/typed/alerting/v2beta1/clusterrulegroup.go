@@ -33,7 +33,7 @@ import (
 // ClusterRuleGroupsGetter has a method to return a ClusterRuleGroupInterface.
 // A group's client should implement this interface.
 type ClusterRuleGroupsGetter interface {
-	ClusterRuleGroups(namespace string) ClusterRuleGroupInterface
+	ClusterRuleGroups() ClusterRuleGroupInterface
 }
 
 // ClusterRuleGroupInterface has methods to work with ClusterRuleGroup resources.
@@ -53,14 +53,12 @@ type ClusterRuleGroupInterface interface {
 // clusterRuleGroups implements ClusterRuleGroupInterface
 type clusterRuleGroups struct {
 	client rest.Interface
-	ns     string
 }
 
 // newClusterRuleGroups returns a ClusterRuleGroups
-func newClusterRuleGroups(c *AlertingV2beta1Client, namespace string) *clusterRuleGroups {
+func newClusterRuleGroups(c *AlertingV2beta1Client) *clusterRuleGroups {
 	return &clusterRuleGroups{
 		client: c.RESTClient(),
-		ns:     namespace,
 	}
 }
 
@@ -68,7 +66,6 @@ func newClusterRuleGroups(c *AlertingV2beta1Client, namespace string) *clusterRu
 func (c *clusterRuleGroups) Get(ctx context.Context, name string, options v1.GetOptions) (result *v2beta1.ClusterRuleGroup, err error) {
 	result = &v2beta1.ClusterRuleGroup{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("clusterrulegroups").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
@@ -85,7 +82,6 @@ func (c *clusterRuleGroups) List(ctx context.Context, opts v1.ListOptions) (resu
 	}
 	result = &v2beta1.ClusterRuleGroupList{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("clusterrulegroups").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -102,7 +98,6 @@ func (c *clusterRuleGroups) Watch(ctx context.Context, opts v1.ListOptions) (wat
 	}
 	opts.Watch = true
 	return c.client.Get().
-		Namespace(c.ns).
 		Resource("clusterrulegroups").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -113,7 +108,6 @@ func (c *clusterRuleGroups) Watch(ctx context.Context, opts v1.ListOptions) (wat
 func (c *clusterRuleGroups) Create(ctx context.Context, clusterRuleGroup *v2beta1.ClusterRuleGroup, opts v1.CreateOptions) (result *v2beta1.ClusterRuleGroup, err error) {
 	result = &v2beta1.ClusterRuleGroup{}
 	err = c.client.Post().
-		Namespace(c.ns).
 		Resource("clusterrulegroups").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(clusterRuleGroup).
@@ -126,7 +120,6 @@ func (c *clusterRuleGroups) Create(ctx context.Context, clusterRuleGroup *v2beta
 func (c *clusterRuleGroups) Update(ctx context.Context, clusterRuleGroup *v2beta1.ClusterRuleGroup, opts v1.UpdateOptions) (result *v2beta1.ClusterRuleGroup, err error) {
 	result = &v2beta1.ClusterRuleGroup{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("clusterrulegroups").
 		Name(clusterRuleGroup.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
@@ -141,7 +134,6 @@ func (c *clusterRuleGroups) Update(ctx context.Context, clusterRuleGroup *v2beta
 func (c *clusterRuleGroups) UpdateStatus(ctx context.Context, clusterRuleGroup *v2beta1.ClusterRuleGroup, opts v1.UpdateOptions) (result *v2beta1.ClusterRuleGroup, err error) {
 	result = &v2beta1.ClusterRuleGroup{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("clusterrulegroups").
 		Name(clusterRuleGroup.Name).
 		SubResource("status").
@@ -155,7 +147,6 @@ func (c *clusterRuleGroups) UpdateStatus(ctx context.Context, clusterRuleGroup *
 // Delete takes name of the clusterRuleGroup and deletes it. Returns an error if one occurs.
 func (c *clusterRuleGroups) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("clusterrulegroups").
 		Name(name).
 		Body(&opts).
@@ -170,7 +161,6 @@ func (c *clusterRuleGroups) DeleteCollection(ctx context.Context, opts v1.Delete
 		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("clusterrulegroups").
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -183,7 +173,6 @@ func (c *clusterRuleGroups) DeleteCollection(ctx context.Context, opts v1.Delete
 func (c *clusterRuleGroups) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v2beta1.ClusterRuleGroup, err error) {
 	result = &v2beta1.ClusterRuleGroup{}
 	err = c.client.Patch(pt).
-		Namespace(c.ns).
 		Resource("clusterrulegroups").
 		Name(name).
 		SubResource(subresources...).

@@ -22,17 +22,9 @@ package v2beta1
 // ClusterRuleGroupLister.
 type ClusterRuleGroupListerExpansion interface{}
 
-// ClusterRuleGroupNamespaceListerExpansion allows custom methods to be added to
-// ClusterRuleGroupNamespaceLister.
-type ClusterRuleGroupNamespaceListerExpansion interface{}
-
 // GlobalRuleGroupListerExpansion allows custom methods to be added to
 // GlobalRuleGroupLister.
 type GlobalRuleGroupListerExpansion interface{}
-
-// GlobalRuleGroupNamespaceListerExpansion allows custom methods to be added to
-// GlobalRuleGroupNamespaceLister.
-type GlobalRuleGroupNamespaceListerExpansion interface{}
 
 // RuleGroupListerExpansion allows custom methods to be added to
 // RuleGroupLister.

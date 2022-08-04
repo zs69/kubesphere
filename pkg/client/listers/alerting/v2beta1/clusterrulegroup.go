@@ -31,8 +31,9 @@ type ClusterRuleGroupLister interface {
 	// List lists all ClusterRuleGroups in the indexer.
 	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v2beta1.ClusterRuleGroup, err error)
-	// ClusterRuleGroups returns an object that can list and get ClusterRuleGroups.
-	ClusterRuleGroups(namespace string) ClusterRuleGroupNamespaceLister
+	// Get retrieves the ClusterRuleGroup from the index for a given name.
+	// Objects returned here must be treated as read-only.
+	Get(name string) (*v2beta1.ClusterRuleGroup, error)
 	ClusterRuleGroupListerExpansion
 }
 
@@ -54,41 +55,9 @@ func (s *clusterRuleGroupLister) List(selector labels.Selector) (ret []*v2beta1.
 	return ret, err
 }
 
-// ClusterRuleGroups returns an object that can list and get ClusterRuleGroups.
-func (s *clusterRuleGroupLister) ClusterRuleGroups(namespace string) ClusterRuleGroupNamespaceLister {
-	return clusterRuleGroupNamespaceLister{indexer: s.indexer, namespace: namespace}
-}
-
-// ClusterRuleGroupNamespaceLister helps list and get ClusterRuleGroups.
-// All objects returned here must be treated as read-only.
-type ClusterRuleGroupNamespaceLister interface {
-	// List lists all ClusterRuleGroups in the indexer for a given namespace.
-	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v2beta1.ClusterRuleGroup, err error)
-	// Get retrieves the ClusterRuleGroup from the indexer for a given namespace and name.
-	// Objects returned here must be treated as read-only.
-	Get(name string) (*v2beta1.ClusterRuleGroup, error)
-	ClusterRuleGroupNamespaceListerExpansion
-}
-
-// clusterRuleGroupNamespaceLister implements the ClusterRuleGroupNamespaceLister
-// interface.
-type clusterRuleGroupNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ClusterRuleGroups in the indexer for a given namespace.
-func (s clusterRuleGroupNamespaceLister) List(selector labels.Selector) (ret []*v2beta1.ClusterRuleGroup, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v2beta1.ClusterRuleGroup))
-	})
-	return ret, err
-}
-
-// Get retrieves the ClusterRuleGroup from the indexer for a given namespace and name.
-func (s clusterRuleGroupNamespaceLister) Get(name string) (*v2beta1.ClusterRuleGroup, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
+// Get retrieves the ClusterRuleGroup from the index for a given name.
+func (s *clusterRuleGroupLister) Get(name string) (*v2beta1.ClusterRuleGroup, error) {
+	obj, exists, err := s.indexer.GetByKey(name)
 	if err != nil {
 		return nil, err
 	}
