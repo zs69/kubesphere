@@ -959,6 +959,150 @@
         }
       }
     },
+    "/kapis/cluster.kubesphere.io/v1alpha1/labels": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Multi-cluster"
+        ],
+        "summary": "List labels.",
+        "operationId": "listLabelGroups",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/map[string]%7C%7Cv1alpha1.LabelValue"
+            }
+          }
+        }
+      },
+      "put": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Multi-cluster"
+        ],
+        "summary": "Binding clusters.",
+        "operationId": "bindingClusters",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/v1alpha1.BindingClustersRequest"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          }
+        }
+      },
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Multi-cluster"
+        ],
+        "summary": "Create cluster labels.",
+        "operationId": "createLabels",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/v1alpha1.CreateLabelRequest"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/api.ListResult"
+            }
+          }
+        }
+      },
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Multi-cluster"
+        ],
+        "summary": "Delete cluster labels.",
+        "operationId": "deleteLabels",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          }
+        }
+      }
+    },
+    "/kapis/cluster.kubesphere.io/v1alpha1/labels/{label}": {
+      "put": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Multi-cluster"
+        ],
+        "summary": "Update a label.",
+        "operationId": "updateLabel",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Name of the label.",
+            "name": "label",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.CreateLabelRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.Label"
+            }
+          }
+        }
+      }
+    },
     "/kapis/devops.kubesphere.io/v1alpha2/{path}": {
       "get": {
         "produces": [
@@ -14757,6 +14901,15 @@
         }
       }
     },
+    "map[string]||v1alpha1.LabelValue": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/v1alpha1.LabelValue"
+        }
+      }
+    },
     "metering.AppStatistic": {
       "required": [
         "cpu_usage",
@@ -14906,14 +15059,14 @@
     },
     "metering.OpenPitrixStatistic": {
       "required": [
+        "cpu_usage",
+        "memory_usage_wo_cache",
         "net_bytes_transmitted",
         "net_bytes_received",
         "pvc_bytes_total",
         "deployments",
         "statefulsets",
-        "daemonsets",
-        "cpu_usage",
-        "memory_usage_wo_cache"
+        "daemonsets"
       ],
       "properties": {
         "cpu_usage": {
@@ -21279,6 +21432,26 @@
         }
       }
     },
+    "v1alpha1.BindingClustersRequest": {
+      "required": [
+        "labels",
+        "clusters"
+      ],
+      "properties": {
+        "clusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1alpha1.ClusterInfo": {
       "properties": {
         "coreNum": {
@@ -21312,6 +21485,20 @@
           "format": "date-time"
         },
         "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.CreateLabelRequest": {
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
           "type": "string"
         },
         "value": {
@@ -21608,6 +21795,64 @@
           "type": "string"
         },
         "syncTime": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.Label": {
+      "required": [
+        "spec"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1alpha1.LabelSpec"
+        }
+      }
+    },
+    "v1alpha1.LabelSpec": {
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "backgroundColor": {
+          "type": "string"
+        },
+        "clusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.LabelValue": {
+      "required": [
+        "value",
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "value": {
           "type": "string"
         }
       }
@@ -22344,10 +22589,10 @@
     },
     "v1alpha2.Node": {
       "required": [
+        "labelMinor",
+        "label",
         "rank",
         "id",
-        "label",
-        "labelMinor",
         "controls"
       ],
       "properties": {
@@ -22455,10 +22700,10 @@
     },
     "v1alpha2.NodeSummary": {
       "required": [
+        "id",
         "label",
         "labelMinor",
-        "rank",
-        "id"
+        "rank"
       ],
       "properties": {
         "adjacency": {

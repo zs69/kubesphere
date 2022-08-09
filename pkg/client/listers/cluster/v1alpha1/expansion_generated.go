@@ -21,3 +21,7 @@ package v1alpha1
 // ClusterListerExpansion allows custom methods to be added to
 // ClusterLister.
 type ClusterListerExpansion interface{}
+
+// LabelListerExpansion allows custom methods to be added to
+// LabelLister.
+type LabelListerExpansion interface{}

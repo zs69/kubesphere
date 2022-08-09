@@ -27,6 +27,7 @@ import (
 type ClusterV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ClustersGetter
+	LabelsGetter
 }
 
 // ClusterV1alpha1Client is used to interact with features provided by the cluster.kubesphere.io group.
@@ -36,6 +37,10 @@ type ClusterV1alpha1Client struct {
 
 func (c *ClusterV1alpha1Client) Clusters() ClusterInterface {
 	return newClusters(c)
+}
+
+func (c *ClusterV1alpha1Client) Labels() LabelInterface {
+	return newLabels(c)
 }
 
 // NewForConfig creates a new ClusterV1alpha1Client for the given config.

@@ -67,6 +67,7 @@ type handler struct {
 	serviceLister   v1.ServiceLister
 	clusterLister   clusterlister.ClusterLister
 	configMapLister v1.ConfigMapLister
+	labelLister     clusterlister.LabelLister
 
 	proxyService string
 	proxyAddress string
@@ -85,6 +86,7 @@ func newHandler(ksclient kubesphere.Interface, k8sInformers k8sinformers.SharedI
 		serviceLister:   k8sInformers.Core().V1().Services().Lister(),
 		clusterLister:   ksInformers.Cluster().V1alpha1().Clusters().Lister(),
 		configMapLister: k8sInformers.Core().V1().ConfigMaps().Lister(),
+		labelLister:     ksInformers.Cluster().V1alpha1().Labels().Lister(),
 
 		proxyService: proxyService,
 		proxyAddress: proxyAddress,

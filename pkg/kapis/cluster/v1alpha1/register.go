@@ -24,7 +24,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sinformers "k8s.io/client-go/informers"
 
+	clusterv1alpha1 "kubesphere.io/api/cluster/v1alpha1"
+
 	"kubesphere.io/kubesphere/pkg/api"
+	apiv1alpha1 "kubesphere.io/kubesphere/pkg/api/cluster/v1alpha1"
 	"kubesphere.io/kubesphere/pkg/apiserver/runtime"
 	kubesphere "kubesphere.io/kubesphere/pkg/client/clientset/versioned"
 	"kubesphere.io/kubesphere/pkg/client/informers/externalversions"
@@ -68,6 +71,41 @@ func AddToContainer(container *restful.Container,
 		Param(webservice.PathParameter("cluster", "Name of the cluster.").Required(true)).
 		To(h.updateKubeConfig).
 		Returns(http.StatusOK, api.StatusOK, nil).
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.MultiClusterTag}))
+
+	webservice.Route(webservice.POST("/labels").
+		Doc("Create cluster labels.").
+		Reads([]apiv1alpha1.CreateLabelRequest{}).
+		To(h.createLabels).
+		Returns(http.StatusOK, api.StatusOK, api.ListResult{}).
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.MultiClusterTag}))
+
+	webservice.Route(webservice.DELETE("/labels").
+		Doc("Delete cluster labels.").
+		Reads([]string{}).
+		To(h.deleteLabels).
+		Returns(http.StatusOK, api.StatusOK, nil).
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.MultiClusterTag}))
+
+	webservice.Route(webservice.PUT("/labels/{label}").
+		Doc("Update a label.").
+		Param(webservice.PathParameter("label", "Name of the label.").Required(true)).
+		Reads(apiv1alpha1.CreateLabelRequest{}).
+		To(h.updateLabel).
+		Returns(http.StatusOK, api.StatusOK, clusterv1alpha1.Label{}).
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.MultiClusterTag}))
+
+	webservice.Route(webservice.PUT("/labels").
+		Doc("Binding clusters.").
+		Reads([]apiv1alpha1.BindingClustersRequest{}).
+		To(h.bindingClusters).
+		Returns(http.StatusOK, api.StatusOK, nil).
+		Metadata(restfulspec.KeyOpenAPITags, []string{constants.MultiClusterTag}))
+
+	webservice.Route(webservice.GET("/labels").
+		Doc("List labels.").
+		To(h.listLabelGroups).
+		Returns(http.StatusOK, api.StatusOK, map[string][]apiv1alpha1.LabelValue{}).
 		Metadata(restfulspec.KeyOpenAPITags, []string{constants.MultiClusterTag}))
 
 	container.Add(webservice)

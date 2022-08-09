@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// Clusters returns a ClusterInformer.
 	Clusters() ClusterInformer
+	// Labels returns a LabelInformer.
+	Labels() LabelInformer
 }
 
 type version struct {
@@ -42,4 +44,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // Clusters returns a ClusterInformer.
 func (v *version) Clusters() ClusterInformer {
 	return &clusterInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
+}
+
+// Labels returns a LabelInformer.
+func (v *version) Labels() LabelInformer {
+	return &labelInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
