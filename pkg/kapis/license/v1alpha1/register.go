@@ -22,7 +22,7 @@ import (
 
 	clientset "k8s.io/client-go/kubernetes"
 
-	restful "github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
@@ -48,7 +48,6 @@ func AddToContainer(c *restful.Container, client clientset.Interface, informerFa
 		To(handler.GetLicense).
 		Doc("Get the license").
 		Metadata(restfulspec.KeyOpenAPITags, []string{LicenseTag}).
-		Returns(http.StatusOK, api.StatusOK, licenseclient.License{}).
 		Returns(http.StatusOK, api.StatusOK, licenseclient.License{}))
 
 	webservice.Route(webservice.POST("/licenses/").

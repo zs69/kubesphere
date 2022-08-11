@@ -33,6 +33,7 @@ import (
 	"github.com/pkg/errors"
 	promfake "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 	urlruntime "k8s.io/apimachinery/pkg/util/runtime"
+	k8sfake "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/klog"
 
 	"kubesphere.io/kubesphere/pkg/apiserver/runtime"
@@ -133,7 +134,7 @@ func generateSwaggerJson() []byte {
 	urlruntime.Must(terminalv1alpha2.AddToContainer(container, clientsets.Kubernetes(), nil, nil, nil))
 	urlruntime.Must(metricsv1alpha2.AddToContainer(nil, container, clientsets.Kubernetes(), nil))
 	urlruntime.Must(networkv1alpha2.AddToContainer(container, ""))
-	urlruntime.Must(licensev1alpha1.AddToContainer(container, clientsets.Kubernetes(), informerFactory, nil))
+	urlruntime.Must(licensev1alpha1.AddToContainer(container, k8sfake.NewSimpleClientset(), informerFactory, nil))
 	alertingOptions := &alerting.Options{}
 	alertingClient, _ := alerting.NewRuleClient(alertingOptions)
 	urlruntime.Must(alertingv2alpha1.AddToContainer(container, informerFactory, promfake.NewSimpleClientset(), alertingClient, alertingOptions))

@@ -28,10 +28,12 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	versioned "kubesphere.io/kubesphere/pkg/client/clientset/versioned"
+	alerting "kubesphere.io/kubesphere/pkg/client/informers/externalversions/alerting"
 	application "kubesphere.io/kubesphere/pkg/client/informers/externalversions/application"
 	auditing "kubesphere.io/kubesphere/pkg/client/informers/externalversions/auditing"
 	cluster "kubesphere.io/kubesphere/pkg/client/informers/externalversions/cluster"
 	devops "kubesphere.io/kubesphere/pkg/client/informers/externalversions/devops"
+	gateway "kubesphere.io/kubesphere/pkg/client/informers/externalversions/gateway"
 	iam "kubesphere.io/kubesphere/pkg/client/informers/externalversions/iam"
 	internalinterfaces "kubesphere.io/kubesphere/pkg/client/informers/externalversions/internalinterfaces"
 	network "kubesphere.io/kubesphere/pkg/client/informers/externalversions/network"
@@ -183,10 +185,12 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
+	Alerting() alerting.Interface
 	Application() application.Interface
 	Auditing() auditing.Interface
 	Cluster() cluster.Interface
 	Devops() devops.Interface
+	Gateway() gateway.Interface
 	Iam() iam.Interface
 	Network() network.Interface
 	Notification() notification.Interface
@@ -195,6 +199,10 @@ type SharedInformerFactory interface {
 	Storage() storage.Interface
 	Tenant() tenant.Interface
 	Types() types.Interface
+}
+
+func (f *sharedInformerFactory) Alerting() alerting.Interface {
+	return alerting.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Application() application.Interface {
@@ -211,6 +219,10 @@ func (f *sharedInformerFactory) Cluster() cluster.Interface {
 
 func (f *sharedInformerFactory) Devops() devops.Interface {
 	return devops.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Gateway() gateway.Interface {
+	return gateway.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Iam() iam.Interface {

@@ -25,6 +25,8 @@ import (
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/testing"
 	clientset "kubesphere.io/kubesphere/pkg/client/clientset/versioned"
+	alertingv2beta1 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/alerting/v2beta1"
+	fakealertingv2beta1 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/alerting/v2beta1/fake"
 	applicationv1alpha1 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/application/v1alpha1"
 	fakeapplicationv1alpha1 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/application/v1alpha1/fake"
 	auditingv1alpha1 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/auditing/v1alpha1"
@@ -35,6 +37,8 @@ import (
 	fakedevopsv1alpha1 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/devops/v1alpha1/fake"
 	devopsv1alpha3 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/devops/v1alpha3"
 	fakedevopsv1alpha3 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/devops/v1alpha3/fake"
+	gatewayv1alpha1 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/gateway/v1alpha1"
+	fakegatewayv1alpha1 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/gateway/v1alpha1/fake"
 	iamv1alpha2 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/iam/v1alpha2"
 	fakeiamv1alpha2 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/iam/v1alpha2/fake"
 	networkv1alpha1 "kubesphere.io/kubesphere/pkg/client/clientset/versioned/typed/network/v1alpha1"
@@ -106,6 +110,11 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 
 var _ clientset.Interface = &Clientset{}
 
+// AlertingV2beta1 retrieves the AlertingV2beta1Client
+func (c *Clientset) AlertingV2beta1() alertingv2beta1.AlertingV2beta1Interface {
+	return &fakealertingv2beta1.FakeAlertingV2beta1{Fake: &c.Fake}
+}
+
 // ApplicationV1alpha1 retrieves the ApplicationV1alpha1Client
 func (c *Clientset) ApplicationV1alpha1() applicationv1alpha1.ApplicationV1alpha1Interface {
 	return &fakeapplicationv1alpha1.FakeApplicationV1alpha1{Fake: &c.Fake}
@@ -129,6 +138,11 @@ func (c *Clientset) DevopsV1alpha1() devopsv1alpha1.DevopsV1alpha1Interface {
 // DevopsV1alpha3 retrieves the DevopsV1alpha3Client
 func (c *Clientset) DevopsV1alpha3() devopsv1alpha3.DevopsV1alpha3Interface {
 	return &fakedevopsv1alpha3.FakeDevopsV1alpha3{Fake: &c.Fake}
+}
+
+// GatewayV1alpha1 retrieves the GatewayV1alpha1Client
+func (c *Clientset) GatewayV1alpha1() gatewayv1alpha1.GatewayV1alpha1Interface {
+	return &fakegatewayv1alpha1.FakeGatewayV1alpha1{Fake: &c.Fake}
 }
 
 // IamV1alpha2 retrieves the IamV1alpha2Client

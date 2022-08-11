@@ -3784,6 +3784,105 @@
         }
       }
     },
+    "/kapis/license.kubesphere.io/v1alpha1/licenses": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "license resource"
+        ],
+        "summary": "Create the license",
+        "operationId": "UpdateLicense",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/client.License"
+            }
+          },
+          {
+            "type": "string",
+            "description": "Validate license",
+            "name": "validate",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/client.License"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/license.kubesphere.io/v1alpha1/licenses/{name}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "license resource"
+        ],
+        "summary": "Get the license",
+        "operationId": "GetLicense",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/client.License"
+            }
+          }
+        }
+      },
+      "put": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "license resource"
+        ],
+        "summary": "Update the license",
+        "operationId": "UpdateLicense",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/client.License"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/client.License"
+            }
+          }
+        }
+      },
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "license resource"
+        ],
+        "summary": "Delete the license",
+        "operationId": "DeleteLicense",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/kapis/monitoring.kubesphere.io/v1alpha3/cluster": {
       "get": {
         "produces": [
@@ -8034,6 +8133,49 @@
         }
       }
     },
+    "/kapis/openpitrix.io/v1/workspaces/{workspace}/clusters/{cluster}/manifests/{manifest}": {
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Resources"
+        ],
+        "summary": "Delete the specified manifest",
+        "operationId": "DeleteManifest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "the name of the cluster.",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the workspaces of the project",
+            "name": "workspace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the id of the manifest",
+            "name": "manifest",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/errors.Error"
+            }
+          }
+        }
+      }
+    },
     "/kapis/openpitrix.io/v1/workspaces/{workspace}/clusters/{cluster}/namespaces/{namespace}/applications": {
       "get": {
         "produces": [
@@ -8326,6 +8468,244 @@
         }
       }
     },
+    "/kapis/openpitrix.io/v1/workspaces/{workspace}/clusters/{cluster}/namespaces/{namespace}/manifests": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Resources"
+        ],
+        "summary": "List all manifests within the specified namespace",
+        "operationId": "ListManifests",
+        "parameters": [
+          {
+            "type": "string",
+            "format": "key=value,key~value",
+            "description": "query conditions, connect multiple conditions with commas, equal symbol for exact query, wave symbol for fuzzy query e.g. name~a",
+            "name": "conditions",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "the workspace of the project.",
+            "name": "workspace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the name of the cluster.",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the name of the project",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "format": "limit=%d,page=%d",
+            "default": "limit=10,page=1",
+            "description": "paging query, e.g. limit=100,page=1",
+            "name": "paging",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/models.PageableResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "OpenPitrix Resources"
+        ],
+        "summary": "Deploy a new manifest",
+        "operationId": "CreateManifest",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/openpitrix.CreateManifestRequest"
+            }
+          },
+          {
+            "type": "string",
+            "description": "the name of the cluster.",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the name of the project",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/errors.Error"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/openpitrix.io/v1/workspaces/{workspace}/clusters/{cluster}/namespaces/{namespace}/manifests/{manifest}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Resources"
+        ],
+        "summary": "Describe the specified manifest of the namespace",
+        "operationId": "DescribeManifest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "the name of the cluster.",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the name of the project",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the id of the manifest",
+            "name": "manifest",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/openpitrix.Manifest"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json",
+          "application/json-patch+json",
+          "application/merge-patch+json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Resources"
+        ],
+        "summary": "Modify manifests",
+        "operationId": "ModifyManifest",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/openpitrix.ModifyManifestRequest"
+            }
+          },
+          {
+            "type": "string",
+            "description": "the name of the cluster.",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the name of the project",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the id of the manifest",
+            "name": "manifest",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/errors.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Resources"
+        ],
+        "summary": "Delete the specified manifest",
+        "operationId": "DeleteManifest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "the name of the cluster.",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the name of the project",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the id of the manifest",
+            "name": "manifest",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/errors.Error"
+            }
+          }
+        }
+      }
+    },
     "/kapis/openpitrix.io/v1/workspaces/{workspace}/namespaces/{namespace}/applications": {
       "get": {
         "produces": [
@@ -8562,6 +8942,209 @@
             "type": "string",
             "description": "the id of the application",
             "name": "application",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/errors.Error"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/openpitrix.io/v1/workspaces/{workspace}/namespaces/{namespace}/manifests": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Resources"
+        ],
+        "summary": "List all manifests within the specified cluster",
+        "operationId": "ListManifests",
+        "parameters": [
+          {
+            "type": "string",
+            "format": "key=value,key~value",
+            "description": "query conditions, connect multiple conditions with commas, equal symbol for exact query, wave symbol for fuzzy query e.g. name~a",
+            "name": "conditions",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "the cluster of the project.",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "format": "limit=%d,page=%d",
+            "default": "limit=10,page=1",
+            "description": "paging query, e.g. limit=100,page=1",
+            "name": "paging",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/models.PageableResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "OpenPitrix Resources"
+        ],
+        "summary": "Deploy a new manifest",
+        "operationId": "CreateManifest",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/openpitrix.CreateManifestRequest"
+            }
+          },
+          {
+            "type": "string",
+            "description": "the name of the project",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/errors.Error"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/openpitrix.io/v1/workspaces/{workspace}/namespaces/{namespace}/manifests/{manifest}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Resources"
+        ],
+        "summary": "Describe the specified manifest of the namespace",
+        "operationId": "DescribeManifest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "the name of the project",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the id of the manifest",
+            "name": "manifests",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/openpitrix.Manifest"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json",
+          "application/json-patch+json",
+          "application/merge-patch+json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Resources"
+        ],
+        "summary": "Modify manifest",
+        "operationId": "ModifyManifest",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/openpitrix.ModifyClusterAttributesRequest"
+            }
+          },
+          {
+            "type": "string",
+            "description": "the name of the project",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the id of the manifest",
+            "name": "manifest",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/errors.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Resources"
+        ],
+        "summary": "Delete the specified manifest",
+        "operationId": "DeleteManifest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "the name of the project",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the workspace of the project",
+            "name": "workspace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "the id of the manifest",
+            "name": "manifest",
             "in": "path",
             "required": true
           }
@@ -13943,6 +14526,20 @@
         }
       }
     },
+    "client.License": {
+      "required": [
+        "data",
+        "status"
+      ],
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/v1alpha1.License"
+        },
+        "status": {
+          "$ref": "#/definitions/v1alpha1.LicenseStatus"
+        }
+      }
+    },
     "errors.Error": {
       "required": [
         "message"
@@ -14309,14 +14906,14 @@
     },
     "metering.OpenPitrixStatistic": {
       "required": [
-        "memory_usage_wo_cache",
         "net_bytes_transmitted",
         "net_bytes_received",
         "pvc_bytes_total",
         "deployments",
         "statefulsets",
         "daemonsets",
-        "cpu_usage"
+        "cpu_usage",
+        "memory_usage_wo_cache"
       ],
       "properties": {
         "cpu_usage": {
@@ -14830,6 +15427,9 @@
         "abstraction": {
           "type": "string"
         },
+        "abstraction_zh": {
+          "type": "string"
+        },
         "active": {
           "type": "boolean"
         },
@@ -14870,6 +15470,9 @@
         "description": {
           "type": "string"
         },
+        "description_zh": {
+          "type": "string"
+        },
         "home": {
           "type": "string"
         },
@@ -14901,6 +15504,9 @@
           "type": "string"
         },
         "screenshots": {
+          "type": "string"
+        },
+        "screenshots_zh": {
           "type": "string"
         },
         "sources": {
@@ -14938,6 +15544,9 @@
         "description": {
           "type": "string"
         },
+        "description_zh": {
+          "type": "string"
+        },
         "home": {
           "type": "string"
         },
@@ -14969,6 +15578,9 @@
           "type": "string"
         },
         "screenshots": {
+          "type": "string"
+        },
+        "screenshots_zh": {
           "type": "string"
         },
         "sequence": {
@@ -15065,6 +15677,9 @@
           "type": "string"
         },
         "version_type": {
+          "type": "string"
+        },
+        "workspace": {
           "type": "string"
         }
       }
@@ -15363,6 +15978,42 @@
         }
       }
     },
+    "openpitrix.CreateManifestRequest": {
+      "required": [
+        "name",
+        "description",
+        "version",
+        "appVersion",
+        "customResource"
+      ],
+      "properties": {
+        "appVersion": {
+          "type": "string"
+        },
+        "customResource": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "relatedResources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.RelatedResource"
+          }
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "workspace": {
+          "type": "string"
+        }
+      }
+    },
     "openpitrix.CreateRepoRequest": {
       "required": [
         "providers",
@@ -15440,6 +16091,52 @@
         }
       }
     },
+    "openpitrix.Manifest": {
+      "required": [
+        "cluster",
+        "namespace",
+        "appVersion",
+        "customResource",
+        "version",
+        "name",
+        "resourceState",
+        "creationTimestamp"
+      ],
+      "properties": {
+        "app": {
+          "type": "string"
+        },
+        "appVersion": {
+          "type": "string"
+        },
+        "cluster": {
+          "type": "string"
+        },
+        "creationTimestamp": {
+          "type": "string"
+        },
+        "customResource": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "description": "clusterName",
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "resourceState": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
     "openpitrix.ModifyAppVersionRequest": {
       "properties": {
         "description": {
@@ -15496,6 +16193,42 @@
           "type": "string"
         },
         "namespace": {
+          "type": "string"
+        }
+      }
+    },
+    "openpitrix.ModifyManifestRequest": {
+      "required": [
+        "name",
+        "description",
+        "version",
+        "operatorVersion",
+        "customResource"
+      ],
+      "properties": {
+        "customResource": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "operatorVersion": {
+          "type": "string"
+        },
+        "relatedResources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.RelatedResource"
+          }
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "workspace": {
           "type": "string"
         }
       }
@@ -20546,6 +21279,46 @@
         }
       }
     },
+    "v1alpha1.ClusterInfo": {
+      "properties": {
+        "coreNum": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "cpuNum": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "nodeNum": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1alpha1.Constraint": {
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "notAfter": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "notBefore": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
     "v1alpha1.HelmApplication": {
       "properties": {
         "apiVersion": {
@@ -20835,6 +21608,189 @@
           "type": "string"
         },
         "syncTime": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.License": {
+      "required": [
+        "licenseType",
+        "signature"
+      ],
+      "properties": {
+        "apiEndpoint": {
+          "type": "string"
+        },
+        "apiKey": {
+          "type": "string"
+        },
+        "apiSecret": {
+          "type": "string"
+        },
+        "clusterId": {
+          "type": "string"
+        },
+        "componentConstraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.Constraint"
+          }
+        },
+        "endVersion": {
+          "type": "string"
+        },
+        "gracePeriod": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "issueAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "issuer": {
+          "$ref": "#/definitions/v1alpha1.User"
+        },
+        "licenseId": {
+          "type": "string"
+        },
+        "licenseType": {
+          "type": "string"
+        },
+        "maintenanceEnd": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "maxCluster": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxCore": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxCpu": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxNode": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxVm": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "notAfter": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "notBefore": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "signature": {
+          "type": "string"
+        },
+        "startVersion": {
+          "type": "string"
+        },
+        "subject": {
+          "$ref": "#/definitions/v1alpha1.User"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1alpha1.LicenseStatus": {
+      "required": [
+        "currentTime",
+        "clusterId",
+        "violation"
+      ],
+      "properties": {
+        "clusterId": {
+          "type": "string"
+        },
+        "clusterNum": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "currentTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "host": {
+          "$ref": "#/definitions/v1alpha1.ClusterInfo"
+        },
+        "member": {
+          "$ref": "#/definitions/v1alpha1.ClusterInfo"
+        },
+        "violation": {
+          "$ref": "#/definitions/v1alpha1.Violation"
+        }
+      }
+    },
+    "v1alpha1.RelatedResource": {
+      "required": [
+        "name",
+        "data"
+      ],
+      "properties": {
+        "data": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.User": {
+      "required": [
+        "co"
+      ],
+      "properties": {
+        "co": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.Violation": {
+      "required": [
+        "component",
+        "type"
+      ],
+      "properties": {
+        "component": {
+          "type": "string"
+        },
+        "current": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expected": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "type": {
           "type": "string"
         }
       }
@@ -21388,10 +22344,10 @@
     },
     "v1alpha2.Node": {
       "required": [
-        "labelMinor",
+        "rank",
         "id",
         "label",
-        "rank",
+        "labelMinor",
         "controls"
       ],
       "properties": {
@@ -21499,10 +22455,10 @@
     },
     "v1alpha2.NodeSummary": {
       "required": [
-        "id",
         "label",
         "labelMinor",
-        "rank"
+        "rank",
+        "id"
       ],
       "properties": {
         "adjacency": {
