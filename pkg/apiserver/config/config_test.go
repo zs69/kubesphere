@@ -50,6 +50,7 @@ import (
 	"kubesphere.io/kubesphere/pkg/simple/client/multicluster"
 	"kubesphere.io/kubesphere/pkg/simple/client/network"
 	"kubesphere.io/kubesphere/pkg/simple/client/notification"
+	"kubesphere.io/kubesphere/pkg/simple/client/observability"
 	"kubesphere.io/kubesphere/pkg/simple/client/openpitrix"
 	"kubesphere.io/kubesphere/pkg/simple/client/s3"
 	"kubesphere.io/kubesphere/pkg/simple/client/servicemesh"
@@ -131,6 +132,11 @@ func newTestConfig() (*Config, error) {
 		},
 		MonitoringOptions: &prometheus.Options{
 			Endpoint: "http://prometheus.kubesphere-monitoring-system.svc",
+		},
+		ObservabilityOptions: &observability.Options{
+			Monitoring: &observability.MonitoringOptions{
+				Endpoint: "http://whizard.kubesphere-monitoring-system.svc",
+			},
 		},
 		LoggingOptions: &logging.Options{
 			Host:        "http://elasticsearch-logging.kubesphere-logging-system.svc:9200",
@@ -236,6 +242,7 @@ func newTestMap() map[string]bool {
 		"network.ippool":      false,
 		"network.topology":    true,
 		"notification":        true,
+		"observability":       true,
 		"openpitrix":          true,
 		"openpitrix.appstore": true,
 		"redis":               true,
