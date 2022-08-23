@@ -128,7 +128,7 @@ func (r *ManifestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// check weather the custom resource still exists
 	if !r.IsCustomResourceExisted(ctx, cli, manifest) {
-		if manifest.Status.ResourceState != v1alpha1.StatusDeleted {
+		if !r.manifestUnsustainable(manifest) {
 			return ctrl.Result{}, r.updateManifestState(ctx, manifest, "", v1alpha1.StatusDeleted)
 		}
 		return ctrl.Result{RequeueAfter: r.getNextReconcileTime(manifest)}, nil
@@ -194,6 +194,7 @@ func (r *ManifestReconciler) updateManifest(ctx context.Context, cli client.Clie
 		return ctrl.Result{}, err
 	}
 
+	manifest.Status.State = v1alpha1.StatusUpdated
 	manifest.Status.Version = manifest.Spec.Version
 	manifest.Status.LastUpdate = &metav1.Time{Time: time.Now()}
 	err = r.Status().Update(ctx, manifest)
@@ -419,6 +420,18 @@ func (r *ManifestReconciler) checkResourceStatus(ctx context.Context, cli client
 		klog.Errorf("update manifest status error: %s", err)
 	}
 	return ctrl.Result{RequeueAfter: r.getNextReconcileTime(manifest)}, err
+}
+
+// manifestUnsustainable
+// when the manifest is in the state of Error, Failed, and Deleted, it is considered as non-continuable.
+// when a manifest became unsustainable, we should keep the last state for troubleshooting.
+func (r *ManifestReconciler) manifestUnsustainable(manifest *v1alpha1.Manifest) bool {
+	switch manifest.Status.State {
+	case v1alpha1.StatusError, v1alpha1.StatusFailed, v1alpha1.StatusDeleted:
+		return true
+	default:
+		return false
+	}
 }
 
 func getUnstructuredObj(manifest *v1alpha1.Manifest) (objSlice []*unstructured.Unstructured, err error) {
