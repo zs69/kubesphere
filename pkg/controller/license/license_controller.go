@@ -23,6 +23,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	k8sinformers "k8s.io/client-go/informers"
 
 	ksinformers "kubesphere.io/kubesphere/pkg/client/informers/externalversions"
@@ -65,8 +67,9 @@ type LicenseController struct {
 	eventChan chan *clusterinfo.ClusterNodeEvent
 	cim       *clusterinfo.ClusterInfoManager
 
-	k8s k8sinformers.SharedInformerFactory
-	ks  ksinformers.SharedInformerFactory
+	k8s             k8sinformers.SharedInformerFactory
+	ks              ksinformers.SharedInformerFactory
+	lastLicenseType licensetype.LicenseType
 }
 
 // NewLicenseController create a controller the watch the nodes info and license info.
@@ -157,10 +160,12 @@ func (lc *LicenseController) collectClusterInfo(ctx context.Context) (licenseSta
 	return
 }
 
-func checkLicense(clusterStats *licensetype.LicenseStatus, secret *corev1.Secret) (violation *licensetype.Violation, err error) {
+func (lc *LicenseController) checkLicense(clusterStats *licensetype.LicenseStatus, secret *corev1.Secret) (violation *licensetype.Violation, err error) {
 	var license *licensetype.License
 	if len(secret.Data[licensetype.LicenseKey]) == 0 {
 		violation = &licensetype.Violation{Type: licensetype.EmptyLicense}
+		lc.lastLicenseType = ""
+		LicenseValidityPeriod.Reset()
 		return
 	}
 
@@ -169,6 +174,27 @@ func checkLicense(clusterStats *licensetype.LicenseStatus, secret *corev1.Secret
 		violation.Type = licensetype.FormatError
 	} else {
 		violation, err = license.Check(cert.CertStore.Cert, clusterStats.ClusterId)
+	}
+
+	lastLicenseType := lc.lastLicenseType
+
+	if lastLicenseType != license.LicenseType {
+		// License type changed, delete the previous metric.
+		LicenseValidityPeriod.DeleteLabelValues(string(lastLicenseType))
+		lc.lastLicenseType = license.LicenseType
+	}
+
+	now := time.Now().UTC()
+	// Add metrics.
+	switch {
+	case license.NotAfter != nil:
+		remaining := license.NotAfter.Sub(now) / time.Second
+		LicenseValidityPeriod.With(prometheus.Labels{"type": string(license.LicenseType)}).Set(float64(remaining))
+	case license.MaintenanceEnd != nil:
+		remaining := license.MaintenanceEnd.Sub(now) / time.Second
+		LicenseValidityPeriod.With(prometheus.Labels{"type": string(license.LicenseType)}).Set(float64(remaining))
+	default:
+		LicenseValidityPeriod.Reset()
 	}
 
 	if violation == nil {
@@ -226,6 +252,7 @@ func (lc *LicenseController) syncLicenseStatus(ctx context.Context) error {
 
 	if apierrors.IsNotFound(err) {
 		klog.Errorf("license not found")
+		LicenseValidityPeriod.Reset()
 		return nil
 	}
 
@@ -233,7 +260,7 @@ func (lc *LicenseController) syncLicenseStatus(ctx context.Context) error {
 	cs, err := lc.collectClusterInfo(ctx)
 	if err == nil {
 		klog.V(4).Infof("check the license whether is valid or not")
-		vio, err := checkLicense(&cs, secret)
+		vio, err := lc.checkLicense(&cs, secret)
 		if err != nil {
 			klog.Errorf("check license error: %s", err)
 		}

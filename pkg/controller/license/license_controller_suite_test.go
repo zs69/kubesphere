@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"kubesphere.io/kubesphere/pkg/controller"
+
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sinformers "k8s.io/client-go/informers"
 	k8sfake "k8s.io/client-go/kubernetes/fake"
@@ -61,6 +63,7 @@ func TestLicenseController(t *testing.T) {
 
 var _ = BeforeSuite(func(done Done) {
 	logf.SetLogger(klogr.New())
+	controller.Register()
 
 	By("bootstrapping test environment")
 	t := true
