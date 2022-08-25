@@ -73,4 +73,5 @@ const (
 	StatusDeleted  = "Deleted"
 
 	OperatorApplicationIdPrefix = "app-"
+	AppLicenseRequired          = "app.kubesphere.io/license"
 )

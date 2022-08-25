@@ -209,6 +209,8 @@ type App struct {
 	UpdateTime *strfmt.DateTime `json:"update_time,omitempty"`
 
 	ClusterTotal *int `json:"cluster_total,omitempty"`
+
+	LicenseRequired string `json:"licenseRequired,omitempty"`
 }
 type AppVersionReviewPhase struct {
 

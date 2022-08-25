@@ -372,6 +372,7 @@ func convertApp(app *v1alpha1.HelmApplication, versions []*v1alpha1.HelmApplicat
 
 	out.ClusterTotal = &rlsCount
 	out.Owner = app.GetCreator()
+	out.LicenseRequired = app.Annotations[v1alpha1.AppLicenseRequired]
 
 	return out
 }
@@ -513,6 +514,17 @@ type AppsInterface []AppInterface
 func (l AppsInterface) Len() int      { return len(l) }
 func (l AppsInterface) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 func (l AppsInterface) Less(i, j int) bool {
+	v1 := l[i].GetAnnotations()[v1alpha1.AppLicenseRequired]
+	v2 := l[j].GetAnnotations()[v1alpha1.AppLicenseRequired]
+
+	switch {
+	// An app that needs license permission has a higher priority.
+	case v1 != "" && v2 == "":
+		return false
+	case v1 == "" && v2 != "":
+		return true
+	}
+
 	t1 := l[i].GetCreationTime().UnixNano()
 	t2 := l[j].GetCreationTime().UnixNano()
 	if t1 < t2 {
