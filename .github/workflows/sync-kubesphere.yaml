@@ -31,12 +31,7 @@ jobs:
           git remote add kubesphere https://github.com/kubesphere/kubesphere.git
           git fetch kubesphere  
           git checkout -b ks-master kubesphere/$MASTER_BRANCH
-          rm -rf .github
-          git add .
-          git commit -m "Sync kubesphere $MASTER_BRANCH branch"
-          git checkout master
-          git rebase ks-master
-          git push origin $MASTER_BRANCH:$MASTER_BRANCH --force
+          git push origin ks-master:$MASTER_BRANCH --force
           
   Sync-kubesphere-release-branch:
     runs-on: ubuntu-latest
@@ -54,9 +49,4 @@ jobs:
           git remote add kubesphere https://github.com/kubesphere/kubesphere.git
           git fetch kubesphere  
           git checkout -b ks-release kubesphere/$RELEASE_BRANCH
-          rm -rf .github
-          git add .
-          git commit -m "Sync kubesphere $RELEASE_BRANCH branch"
-          git checkout $RELEASE_BRANCH
-          git rebase ks-release
-          git push origin $RELEASE_BRANCH:$RELEASE_BRANCH --force
+          git push origin ks-release:$RELEASE_BRANCH --force
