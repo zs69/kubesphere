@@ -759,6 +759,12 @@ func (m metricsServer) GetMetadata(namespace string) []monitoring.Metadata {
 	return meta
 }
 
+func (m metricsServer) GetLabelValues(label string, matches []string, start, end time.Time) []string {
+	var res []string
+
+	return res
+}
+
 func (m metricsServer) GetMetricLabelSet(expr string, start, end time.Time) []map[string]string {
 	var res []map[string]string
 

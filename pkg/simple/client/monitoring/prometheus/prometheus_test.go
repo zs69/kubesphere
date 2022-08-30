@@ -138,6 +138,43 @@ func TestGetMetadata(t *testing.T) {
 	}
 }
 
+func TestGetLabelValues(t *testing.T) {
+	tests := []struct {
+		fakeResp string
+		expected string
+	}{
+		{
+			fakeResp: "labelvalues-prom.json",
+			expected: "labelvalues-res.json",
+		},
+		{
+			fakeResp: "labelvalues-notfound-prom.json",
+			expected: "labelvalues-notfound-res.json",
+		},
+	}
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			expected := make([]string, 0)
+			err := jsonFromFile(tt.expected, &expected)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(expected) == 0 {
+				expected = nil
+			}
+
+			srv := mockPrometheusService("/api/v1/label/__name__/values", tt.fakeResp)
+			defer srv.Close()
+
+			client, _ := NewPrometheus(&Options{Endpoint: srv.URL})
+			result := client.GetLabelValues("__name__", []string{`namespace="default"`}, time.Now(), time.Now())
+			if diff := cmp.Diff(result, expected); diff != "" {
+				t.Fatalf("%T differ (-got, +want): %s", expected, diff)
+			}
+		})
+	}
+}
+
 func TestGetMetricLabelSet(t *testing.T) {
 	tests := []struct {
 		fakeResp string

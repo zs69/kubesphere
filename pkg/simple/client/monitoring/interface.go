@@ -26,6 +26,7 @@ type Interface interface {
 	GetNamedMetrics(metrics []string, time time.Time, opt QueryOption) []Metric
 	GetNamedMetricsOverTime(metrics []string, start, end time.Time, step time.Duration, opt QueryOption) []Metric
 	GetMetadata(namespace string) []Metadata
+	GetLabelValues(label string, matches []string, start, end time.Time) []string
 	GetMetricLabelSet(expr string, start, end time.Time) []map[string]string
 
 	// meter

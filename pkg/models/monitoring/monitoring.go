@@ -184,7 +184,24 @@ func (mo monitoringOperator) GetNamedMetricsOverTime(metrics []string, start, en
 }
 
 func (mo monitoringOperator) GetMetadata(namespace string) Metadata {
-	data := mo.prometheus.GetMetadata(namespace)
+	// Change the query metric name implementation without changing the response format.
+	// Use GetLabelValue() instead of GetMetadata() to query metric name.
+	// The Api will be updated in kubesphere version 4.0
+	var label string = "__name__"
+	start, end := time.Now().Add(-1*time.Hour), time.Now()
+	var matches []string
+
+	if namespace != "" {
+		matches = append(matches, fmt.Sprintf(`{namespace="%s"}`, namespace))
+	}
+	labelValues := mo.prometheus.GetLabelValues(label, matches, start, end)
+
+	var data []monitoring.Metadata
+	for _, labelValue := range labelValues {
+		data = append(data, monitoring.Metadata{
+			Metric: labelValue,
+		})
+	}
 	return Metadata{Data: data}
 }
 

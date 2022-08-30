@@ -284,6 +284,22 @@ func (p prometheus) GetMetadata(namespace string) []monitoring.Metadata {
 	return meta
 }
 
+func (p prometheus) GetLabelValues(label string, matches []string, start, end time.Time) []string {
+	var res []string
+
+	labelValues, _, err := p.client.LabelValues(context.Background(), label, matches, start, end)
+	if err != nil {
+		klog.Error(err)
+		return res
+	}
+
+	for _, labelValue := range labelValues {
+		res = append(res, string(labelValue))
+	}
+
+	return res
+}
+
 func (p prometheus) GetMetricLabelSet(expr string, start, end time.Time) []map[string]string {
 	var res []map[string]string
 
