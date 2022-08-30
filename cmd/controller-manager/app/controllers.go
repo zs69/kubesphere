@@ -36,6 +36,7 @@ import (
 	"kubesphere.io/kubesphere/pkg/controller/application"
 	"kubesphere.io/kubesphere/pkg/controller/certificatesigningrequest"
 	"kubesphere.io/kubesphere/pkg/controller/cluster"
+	"kubesphere.io/kubesphere/pkg/controller/clusterlabel"
 	"kubesphere.io/kubesphere/pkg/controller/clusterrolebinding"
 	"kubesphere.io/kubesphere/pkg/controller/destinationrule"
 	"kubesphere.io/kubesphere/pkg/controller/globalrole"
@@ -106,6 +107,7 @@ var allControllers = []string{
 	"workloadrestart",
 	"loginrecord",
 	"cluster",
+	"clusterlabel",
 	"nsnp",
 	"ippool",
 	"csr",
@@ -498,8 +500,8 @@ func addAllControllers(mgr manager.Manager, client k8s.Client, informerFactory i
 	}
 
 	// "cluster" controller
-	if cmOptions.IsControllerEnabled("cluster") {
-		if cmOptions.MultiClusterOptions.Enable {
+	if cmOptions.MultiClusterOptions.Enable {
+		if cmOptions.IsControllerEnabled("cluster") {
 			clusterController := cluster.NewClusterController(
 				client.Kubernetes(),
 				client.KubeSphere(),
@@ -510,6 +512,10 @@ func addAllControllers(mgr manager.Manager, client k8s.Client, informerFactory i
 				cmOptions.MultiClusterOptions.HostClusterName,
 			)
 			addController(mgr, "cluster", clusterController)
+		}
+		if cmOptions.IsControllerEnabled("clusterlabel") {
+			addControllerWithSetup(mgr, "clusterlabel", &clusterlabel.LabelReconciler{})
+			addControllerWithSetup(mgr, "clusterlabel", &clusterlabel.ClusterReconciler{})
 		}
 	}
 

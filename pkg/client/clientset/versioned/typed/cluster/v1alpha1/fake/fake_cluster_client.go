@@ -32,6 +32,10 @@ func (c *FakeClusterV1alpha1) Clusters() v1alpha1.ClusterInterface {
 	return &FakeClusters{c}
 }
 
+func (c *FakeClusterV1alpha1) Labels() v1alpha1.LabelInterface {
+	return &FakeLabels{c}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeClusterV1alpha1) RESTClient() rest.Interface {
