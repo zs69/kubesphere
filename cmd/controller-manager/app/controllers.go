@@ -142,9 +142,7 @@ func addAllControllers(mgr manager.Manager, client k8s.Client, informerFactory i
 	// //////////////////////////////////
 	// begin init necessary clients
 	// //////////////////////////////////
-	kubeconfigClient := kubeconfig.NewOperator(client.Kubernetes(),
-		informerFactory.KubernetesSharedInformerFactory().Core().V1().ConfigMaps().Lister(),
-		client.Config())
+	kubeconfigClient := kubeconfig.NewOperator(client.Kubernetes(), client.Config())
 
 	var devopsClient devops.Interface
 	if cmOptions.DevopsOptions != nil && len(cmOptions.DevopsOptions.Host) != 0 {

@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v2"
+	certificatesv1 "k8s.io/api/certificates/v1"
 	v1 "k8s.io/api/core/v1"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -37,12 +38,14 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog"
@@ -57,8 +60,8 @@ import (
 	clusterlister "kubesphere.io/kubesphere/pkg/client/listers/cluster/v1alpha1"
 	iamv1alpha2listers "kubesphere.io/kubesphere/pkg/client/listers/iam/v1alpha2"
 	"kubesphere.io/kubesphere/pkg/constants"
+	"kubesphere.io/kubesphere/pkg/models/kubeconfig"
 	"kubesphere.io/kubesphere/pkg/simple/client/multicluster"
-	"kubesphere.io/kubesphere/pkg/utils/k8sutil"
 	"kubesphere.io/kubesphere/pkg/version"
 )
 
@@ -523,7 +526,7 @@ func (c *clusterController) syncCluster(key string) error {
 	}
 	c.updateClusterCondition(cluster, readyCondition)
 
-	if err = c.updateKubeConfigExpirationDateCondition(cluster); err != nil {
+	if err = c.updateKubeConfigExpirationDateCondition(cluster, clusterClient, clusterConfig); err != nil {
 		klog.Errorf("sync KubeConfig expiration date for cluster %s failed: %v", cluster.Name, err)
 		return err
 	}
@@ -774,26 +777,22 @@ func (c *clusterController) unJoinFederation(clusterConfig *rest.Config, unjoini
 	}
 }
 
-func parseKubeConfigExpirationDate(kubeconfig []byte) (time.Time, error) {
-	config, err := k8sutil.LoadKubeConfigFromBytes(kubeconfig)
-	if err != nil {
-		return time.Time{}, err
-	}
+func parseKubeConfigCert(config *rest.Config) (*x509.Certificate, error) {
 	if config.CertData == nil {
-		return time.Time{}, fmt.Errorf("empty CertData")
+		return nil, nil
 	}
 	block, _ := pem.Decode(config.CertData)
 	if block == nil {
-		return time.Time{}, fmt.Errorf("pem.Decode failed, got empty block data")
+		return nil, fmt.Errorf("pem.Decode failed, got empty block data")
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return time.Time{}, err
+		return nil, err
 	}
-	return cert.NotAfter, nil
+	return cert, nil
 }
 
-func (c *clusterController) updateKubeConfigExpirationDateCondition(cluster *clusterv1alpha1.Cluster) error {
+func (c *clusterController) updateKubeConfigExpirationDateCondition(cluster *clusterv1alpha1.Cluster, clusterClient kubernetes.Interface, config *rest.Config) error {
 	if _, ok := cluster.Labels[clusterv1alpha1.HostCluster]; ok {
 		return nil
 	}
@@ -803,24 +802,146 @@ func (c *clusterController) updateKubeConfigExpirationDateCondition(cluster *clu
 	}
 
 	klog.V(5).Infof("sync KubeConfig expiration date for cluster %s", cluster.Name)
-	notAfter, err := parseKubeConfigExpirationDate(cluster.Spec.Connection.KubeConfig)
+	cert, err := parseKubeConfigCert(config)
 	if err != nil {
-		return fmt.Errorf("parseKubeConfigExpirationDate for cluster %s failed: %v", cluster.Name, err)
+		return fmt.Errorf("parseKubeConfigCert for cluster %s failed: %v", cluster.Name, err)
 	}
-	expiresInSevenDays := v1.ConditionFalse
-	if time.Now().AddDate(0, 0, 7).Sub(notAfter) > 0 {
-		expiresInSevenDays = v1.ConditionTrue
+	if cert == nil || cert.NotAfter.IsZero() {
+		// delete the KubeConfigCertExpiresInSevenDays condition if it has
+		conditions := make([]clusterv1alpha1.ClusterCondition, 0)
+		for _, condition := range cluster.Status.Conditions {
+			if condition.Type == clusterv1alpha1.ClusterKubeConfigCertExpiresInSevenDays {
+				continue
+			}
+			conditions = append(conditions, condition)
+		}
+		cluster.Status.Conditions = conditions
+		return nil
+	}
+	if time.Now().AddDate(0, 0, 7).Sub(cert.NotAfter) > 0 {
+		if err = c.renewKubeConfig(cluster, clusterClient, config, cert); err != nil {
+			return err
+		}
 	}
 
 	c.updateClusterCondition(cluster, clusterv1alpha1.ClusterCondition{
 		Type:               clusterv1alpha1.ClusterKubeConfigCertExpiresInSevenDays,
-		Status:             expiresInSevenDays,
 		LastUpdateTime:     metav1.Now(),
 		LastTransitionTime: metav1.Now(),
 		Reason:             string(clusterv1alpha1.ClusterKubeConfigCertExpiresInSevenDays),
-		Message:            notAfter.String(),
+		Message:            cert.NotAfter.String(),
 	})
 	return nil
+}
+
+func setKubeSphereSAToken(clusterClient kubernetes.Interface, apiConfig *clientcmdapi.Config, username string) ([]byte, error) {
+	sa, err := clusterClient.CoreV1().ServiceAccounts(constants.KubeSphereNamespace).Get(context.TODO(), "kubesphere", metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	if len(sa.Secrets) == 0 {
+		return nil, fmt.Errorf("secrets of kubesphere ServiceAccount is empty")
+	}
+	secretName := sa.Secrets[0].Name
+	secret, err := clusterClient.CoreV1().Secrets(constants.KubeSphereNamespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	apiConfig.AuthInfos = map[string]*clientcmdapi.AuthInfo{
+		username: {
+			Token: string(secret.Data["token"]),
+		},
+	}
+	data, err := clientcmd.Write(*apiConfig)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func csrDenied(clusterClient kubernetes.Interface, username string) (bool, error) {
+	csrs, err := clusterClient.CertificatesV1().CertificateSigningRequests().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return false, err
+	}
+
+	var csr *certificatesv1.CertificateSigningRequest
+	for i := range csrs.Items {
+		obj := &csrs.Items[i]
+		if strings.Contains(obj.Name, fmt.Sprintf("%s-csr-", username)) {
+			csr = obj
+			break
+		}
+	}
+	if csr == nil {
+		return false, nil
+	}
+	for _, condition := range csr.Status.Conditions {
+		if condition.Type == certificatesv1.CertificateDenied || condition.Type == certificatesv1.CertificateFailed {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (c *clusterController) renewKubeConfig(cluster *clusterv1alpha1.Cluster, clusterClient kubernetes.Interface, config *rest.Config, cert *x509.Certificate) error {
+	apiConfig, err := clientcmd.Load(cluster.Spec.Connection.KubeConfig)
+	if err != nil {
+		return err
+	}
+	currentContext := apiConfig.Contexts[apiConfig.CurrentContext]
+	username := currentContext.AuthInfo
+	authInfo := apiConfig.AuthInfos[username]
+	if authInfo.Token != "" {
+		return nil
+	}
+
+	kubeConfigClient := kubeconfig.NewOperator(clusterClient, config, kubeconfig.WithNamespace(kubefedNamespace), kubeconfig.WithResidual(7*24*time.Hour))
+	for _, v := range cert.Subject.Organization {
+		// we cannot update the certificate of the system:masters group and will use the certificate of the admin user directly
+		// certificatesigningrequests.certificates.k8s.io is forbidden:
+		// use of kubernetes.io/kube-apiserver-client signer with system:masters group is not allowed
+		//
+		// for cases where we can't issue a certificate, we use the token of the kubesphere service account directly
+		if v == user.SystemPrivilegedGroup {
+			data, err := setKubeSphereSAToken(clusterClient, apiConfig, username)
+			if err != nil {
+				return err
+			}
+			cluster.Spec.Connection.KubeConfig = data
+			return nil
+		}
+	}
+
+	if err = kubeConfigClient.CreateKubeConfig(username, nil); err != nil {
+		return err
+	}
+
+	return wait.Poll(time.Second*3, time.Minute, func() (bool, error) {
+		configData, err := kubeConfigClient.GetKubeConfig(username)
+		if err != nil {
+			return false, err
+		}
+		// if this field is not included, the certificate is not ready
+		if !strings.Contains(configData, "client-certificate-data") {
+			// checking CSR status
+			denied, err := csrDenied(clusterClient, username)
+			if err != nil {
+				return false, err
+			}
+			if !denied {
+				return false, nil
+			}
+			data, err := setKubeSphereSAToken(clusterClient, apiConfig, username)
+			if err != nil {
+				return false, err
+			}
+			cluster.Spec.Connection.KubeConfig = data
+		} else {
+			cluster.Spec.Connection.KubeConfig = []byte(configData)
+		}
+		return true, nil
+	})
 }
 
 // syncClusterMembers Sync granted clusters for users periodically

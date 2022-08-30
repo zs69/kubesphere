@@ -26,8 +26,6 @@ import (
 	"io/ioutil"
 	"time"
 
-	corev1listers "k8s.io/client-go/listers/core/v1"
-
 	certificatesv1 "k8s.io/api/certificates/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -40,8 +38,6 @@ import (
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	iamv1alpha2 "kubesphere.io/api/iam/v1alpha2"
 
 	"kubesphere.io/kubesphere/pkg/client/clientset/versioned/scheme"
 	"kubesphere.io/kubesphere/pkg/constants"
@@ -63,31 +59,64 @@ const (
 
 type Interface interface {
 	GetKubeConfig(username string) (string, error)
-	CreateKubeConfig(user *iamv1alpha2.User) error
+	CreateKubeConfig(username string, obj metav1.Object) error
 	UpdateKubeconfig(username string, csr *certificatesv1.CertificateSigningRequest) error
 }
 
 type operator struct {
-	k8sClient       kubernetes.Interface
-	configMapLister corev1listers.ConfigMapLister
-	config          *rest.Config
-	masterURL       string
+	k8sClient kubernetes.Interface
+	config    *rest.Config
+	masterURL string
+	namespace string
+	residual  time.Duration
 }
 
-func NewOperator(k8sClient kubernetes.Interface, configMapLister corev1listers.ConfigMapLister, config *rest.Config) Interface {
-	return &operator{k8sClient: k8sClient, configMapLister: configMapLister, config: config}
+func WithNamespace(namespace string) func(*operator) {
+	return func(o *operator) {
+		o.namespace = namespace
+	}
 }
 
-func NewReadOnlyOperator(configMapLister corev1listers.ConfigMapLister, masterURL string) Interface {
-	return &operator{configMapLister: configMapLister, masterURL: masterURL}
+func WithResidual(residual time.Duration) func(*operator) {
+	return func(o *operator) {
+		o.residual = residual
+	}
+}
+
+func NewOperator(k8sClient kubernetes.Interface, config *rest.Config, options ...func(*operator)) Interface {
+	o := &operator{
+		k8sClient: k8sClient,
+		config:    config,
+
+		namespace: constants.KubeSphereControlNamespace,
+		residual:  residual,
+	}
+	for _, f := range options {
+		f(o)
+	}
+	return o
+}
+
+func NewReadOnlyOperator(k8sClient kubernetes.Interface, masterURL string, options ...func(*operator)) Interface {
+	o := &operator{
+		k8sClient: k8sClient,
+		masterURL: masterURL,
+
+		namespace: constants.KubeSphereControlNamespace,
+		residual:  residual,
+	}
+	for _, f := range options {
+		f(o)
+	}
+	return o
 }
 
 // CreateKubeConfig Create kubeconfig configmap in KubeSphereControlNamespace for the specified user
-func (o *operator) CreateKubeConfig(user *iamv1alpha2.User) error {
-	configName := fmt.Sprintf(kubeconfigNameFormat, user.Name)
-	cm, err := o.configMapLister.ConfigMaps(constants.KubeSphereControlNamespace).Get(configName)
-	// already exist and cert will not expire in 3 days
-	if err == nil && !isExpired(cm, user.Name) {
+func (o *operator) CreateKubeConfig(username string, obj metav1.Object) error {
+	configName := fmt.Sprintf(kubeconfigNameFormat, username)
+	cm, err := o.k8sClient.CoreV1().ConfigMaps(o.namespace).Get(context.Background(), configName, metav1.GetOptions{})
+	// already exist and cert will not expire in residual time
+	if err == nil && !o.isExpired(cm, username) {
 		return nil
 	}
 
@@ -95,6 +124,10 @@ func (o *operator) CreateKubeConfig(user *iamv1alpha2.User) error {
 	if err != nil && !errors.IsNotFound(err) {
 		klog.Error(err)
 		return err
+	}
+
+	if errors.IsNotFound(err) {
+		cm = nil
 	}
 
 	// create a new CSR
@@ -109,12 +142,12 @@ func (o *operator) CreateKubeConfig(user *iamv1alpha2.User) error {
 		}
 	}
 
-	if err = o.createCSR(user.Name); err != nil {
+	if err = o.createCSR(username); err != nil {
 		klog.Errorln(err)
 		return err
 	}
 
-	currentContext := fmt.Sprintf("%s@%s", user.Name, defaultClusterName)
+	currentContext := fmt.Sprintf("%s@%s", username, defaultClusterName)
 	config := clientcmdapi.Config{
 		Kind:        configMapKind,
 		APIVersion:  configMapAPIVersion,
@@ -126,7 +159,7 @@ func (o *operator) CreateKubeConfig(user *iamv1alpha2.User) error {
 		}},
 		Contexts: map[string]*clientcmdapi.Context{currentContext: {
 			Cluster:   defaultClusterName,
-			AuthInfo:  user.Name,
+			AuthInfo:  username,
 			Namespace: defaultNamespace,
 		}},
 		CurrentContext: currentContext,
@@ -138,10 +171,10 @@ func (o *operator) CreateKubeConfig(user *iamv1alpha2.User) error {
 		return err
 	}
 
-	// update configmap if it already exist.
+	// update configmap if it already exists.
 	if cm != nil {
 		cm.Data = map[string]string{kubeconfigFileName: string(kubeconfig)}
-		if _, err = o.k8sClient.CoreV1().ConfigMaps(constants.KubeSphereControlNamespace).Update(context.Background(), cm, metav1.UpdateOptions{}); err != nil {
+		if _, err = o.k8sClient.CoreV1().ConfigMaps(o.namespace).Update(context.Background(), cm, metav1.UpdateOptions{}); err != nil {
 			klog.Errorln(err)
 			return err
 		}
@@ -156,17 +189,19 @@ func (o *operator) CreateKubeConfig(user *iamv1alpha2.User) error {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   configName,
-			Labels: map[string]string{constants.UsernameLabelKey: user.Name},
+			Labels: map[string]string{constants.UsernameLabelKey: username},
 		},
 		Data: map[string]string{kubeconfigFileName: string(kubeconfig)},
 	}
 
-	if err = controllerutil.SetControllerReference(user, cm, scheme.Scheme); err != nil {
-		klog.Errorln(err)
-		return err
+	if obj != nil {
+		if err = controllerutil.SetControllerReference(obj, cm, scheme.Scheme); err != nil {
+			klog.Errorln(err)
+			return err
+		}
 	}
 
-	if _, err = o.k8sClient.CoreV1().ConfigMaps(constants.KubeSphereControlNamespace).Create(context.Background(), cm, metav1.CreateOptions{}); err != nil {
+	if _, err = o.k8sClient.CoreV1().ConfigMaps(o.namespace).Create(context.Background(), cm, metav1.CreateOptions{}); err != nil {
 		klog.Errorln(err)
 		return err
 	}
@@ -177,7 +212,7 @@ func (o *operator) CreateKubeConfig(user *iamv1alpha2.User) error {
 // GetKubeConfig returns kubeconfig data for the specified user
 func (o *operator) GetKubeConfig(username string) (string, error) {
 	configName := fmt.Sprintf(kubeconfigNameFormat, username)
-	configMap, err := o.configMapLister.ConfigMaps(constants.KubeSphereControlNamespace).Get(configName)
+	configMap, err := o.k8sClient.CoreV1().ConfigMaps(o.namespace).Get(context.Background(), configName, metav1.GetOptions{})
 	if err != nil {
 		klog.Errorln(err)
 		return "", err
@@ -245,8 +280,11 @@ func (o *operator) createCSR(username string) error {
 			APIVersion: "certificates.k8s.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        csrName,
-			Labels:      map[string]string{constants.UsernameLabelKey: username},
+			Name: csrName,
+			Labels: map[string]string{
+				constants.UsernameLabelKey:  username,
+				constants.NamespaceLabelKey: o.namespace,
+			},
 			Annotations: map[string]string{privateKeyAnnotation: string(key)},
 		},
 		Spec: certificatesv1.CertificateSigningRequestSpec{
@@ -270,14 +308,18 @@ func (o *operator) createCSR(username string) error {
 // UpdateKubeconfig Update client key and client certificate after CertificateSigningRequest has been approved
 func (o *operator) UpdateKubeconfig(username string, csr *certificatesv1.CertificateSigningRequest) error {
 	configName := fmt.Sprintf(kubeconfigNameFormat, username)
-	configMap, err := o.k8sClient.CoreV1().ConfigMaps(constants.KubeSphereControlNamespace).Get(context.Background(), configName, metav1.GetOptions{})
+	namespace := csr.Labels[constants.NamespaceLabelKey]
+	if namespace == "" {
+		namespace = o.namespace
+	}
+	configMap, err := o.k8sClient.CoreV1().ConfigMaps(namespace).Get(context.Background(), configName, metav1.GetOptions{})
 	if err != nil {
 		klog.Errorln(err)
 		return err
 	}
 
-	configMap = applyCert(configMap, csr)
-	_, err = o.k8sClient.CoreV1().ConfigMaps(constants.KubeSphereControlNamespace).Update(context.Background(), configMap, metav1.UpdateOptions{})
+	configMap = applyCert(username, configMap, csr)
+	_, err = o.k8sClient.CoreV1().ConfigMaps(namespace).Update(context.Background(), configMap, metav1.UpdateOptions{})
 	if err != nil {
 		klog.Errorln(err)
 		return err
@@ -285,7 +327,7 @@ func (o *operator) UpdateKubeconfig(username string, csr *certificatesv1.Certifi
 	return nil
 }
 
-func applyCert(cm *corev1.ConfigMap, csr *certificatesv1.CertificateSigningRequest) *corev1.ConfigMap {
+func applyCert(username string, cm *corev1.ConfigMap, csr *certificatesv1.CertificateSigningRequest) *corev1.ConfigMap {
 	data := []byte(cm.Data[kubeconfigFileName])
 	kubeconfig, err := clientcmd.Load(data)
 	if err != nil {
@@ -293,7 +335,6 @@ func applyCert(cm *corev1.ConfigMap, csr *certificatesv1.CertificateSigningReque
 		return cm
 	}
 
-	username := getControlledUsername(cm)
 	privateKey := csr.Annotations[privateKeyAnnotation]
 	clientCert := csr.Status.Certificate
 	kubeconfig.AuthInfos = map[string]*clientcmdapi.AuthInfo{
@@ -313,17 +354,8 @@ func applyCert(cm *corev1.ConfigMap, csr *certificatesv1.CertificateSigningReque
 	return cm
 }
 
-func getControlledUsername(cm *corev1.ConfigMap) string {
-	for _, ownerReference := range cm.OwnerReferences {
-		if ownerReference.Kind == iamv1alpha2.ResourceKindUser {
-			return ownerReference.Name
-		}
-	}
-	return ""
-}
-
 // isExpired returns whether the client certificate in kubeconfig is expired
-func isExpired(cm *corev1.ConfigMap, username string) bool {
+func (o *operator) isExpired(cm *corev1.ConfigMap, username string) bool {
 	data := []byte(cm.Data[kubeconfigFileName])
 	kubeconfig, err := clientcmd.Load(data)
 	if err != nil {
@@ -338,12 +370,12 @@ func isExpired(cm *corev1.ConfigMap, username string) bool {
 			return true
 		}
 		for _, cert := range clientCert {
-			if cert.NotAfter.Before(time.Now().Add(residual)) {
+			if cert.NotAfter.Before(time.Now().Add(o.residual)) {
 				return true
 			}
 		}
 		return false
 	}
-	//ignore the kubeconfig, since it's not approved yet.
+	// ignore the kubeconfig, since it's not approved yet.
 	return false
 }

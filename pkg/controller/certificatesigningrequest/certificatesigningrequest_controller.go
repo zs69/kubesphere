@@ -86,7 +86,7 @@ func NewController(k8sClient kubernetes.Interface, csrInformer certificatesinfor
 		csrLister:          csrInformer.Lister(),
 		csrSynced:          csrInformer.Informer().HasSynced,
 		cmSynced:           configMapInformer.Informer().HasSynced,
-		kubeconfigOperator: kubeconfig.NewOperator(k8sClient, configMapInformer.Lister(), config),
+		kubeconfigOperator: kubeconfig.NewOperator(k8sClient, config),
 		workqueue:          workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "CertificateSigningRequest"),
 		recorder:           recorder,
 	}

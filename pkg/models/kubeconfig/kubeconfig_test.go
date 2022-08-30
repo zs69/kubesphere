@@ -23,7 +23,6 @@ import (
 	certificatesv1 "k8s.io/api/certificates/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8sinformers "k8s.io/client-go/informers"
 	k8sfake "k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/clientcmd"
@@ -60,8 +59,7 @@ func Test_operator_CreateKubeConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	k8sClient := k8sfake.NewSimpleClientset()
-	k8sInformers := k8sinformers.NewSharedInformerFactory(k8sClient, 0)
-	operator := NewOperator(k8sClient, k8sInformers.Core().V1().ConfigMaps().Lister(), config)
+	operator := NewOperator(k8sClient, config)
 
 	user1 := &iamv1alpha2.User{
 		TypeMeta: metav1.TypeMeta{
@@ -73,16 +71,16 @@ func Test_operator_CreateKubeConfig(t *testing.T) {
 		},
 	}
 
-	if err := operator.CreateKubeConfig(user1); err != nil {
+	if err := operator.CreateKubeConfig(user1.Name, user1); err != nil {
 		t.Errorf("CreateKubeConfig() unexpected error %v", err)
 	}
 
-	if len(k8sClient.Actions()) != 2 {
+	if len(k8sClient.Actions()) != 3 {
 		t.Errorf("CreateKubeConfig() unexpected action %v", k8sClient.Actions())
 		return
 	}
 
-	csrCreateAction, ok := k8sClient.Actions()[0].(k8stesting.CreateActionImpl)
+	csrCreateAction, ok := k8sClient.Actions()[1].(k8stesting.CreateActionImpl)
 	if !ok {
 		t.Errorf("CreateKubeConfig() unexpected action %v", k8sClient.Actions()[0])
 		return
@@ -97,7 +95,7 @@ func Test_operator_CreateKubeConfig(t *testing.T) {
 		t.Errorf("CreateKubeConfig() unexpected CertificateSigningRequest %v", csr)
 		return
 	}
-	cmCreateAction := k8sClient.Actions()[1].(k8stesting.CreateActionImpl)
+	cmCreateAction := k8sClient.Actions()[2].(k8stesting.CreateActionImpl)
 	if !ok {
 		t.Errorf("CreateKubeConfig() unexpected action %v", k8sClient.Actions()[1])
 		return

@@ -212,7 +212,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req reconcile.Request) (reco
 
 	if r.KubeconfigClient != nil {
 		// ensure user KubeconfigClient configmap is created
-		if err = r.KubeconfigClient.CreateKubeConfig(user); err != nil {
+		if err = r.KubeconfigClient.CreateKubeConfig(user.Name, user); err != nil {
 			klog.Error(err)
 			r.Recorder.Event(user, corev1.EventTypeWarning, failedSynced, fmt.Sprintf(syncFailMessage, err))
 			return ctrl.Result{}, err
