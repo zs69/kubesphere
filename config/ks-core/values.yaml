@@ -156,3 +156,19 @@ controller:
   #  - name: example-config
   #    emptyDir: {}
 
+# Fully qualified name to reach your server
+hostname: example.com
+
+ingress:
+  # If set to false, ingress will not be created
+  # Defaults to true
+  # options: true, false
+  enabled: true
+  tls:
+    secretName: ks-console-ingress-cert
+
+# tls
+#   Where to offload the TLS/SSL encryption
+# - ingress (default)
+# - external
+tls: ingress
