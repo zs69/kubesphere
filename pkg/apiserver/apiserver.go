@@ -370,7 +370,6 @@ func (s *APIServer) buildHandlerChain(stopCh <-chan struct{}) {
 	if s.Config.LicenseOptions == nil || s.Config.LicenseOptions.SkipLicenseCheck == false {
 		informer := s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets().Informer()
 		handler = filters.WithLicense(handler, informer, s.KubernetesClient)
-		go informer.Run(stopCh)
 	}
 
 	userLister := s.InformerFactory.KubeSphereSharedInformerFactory().Iam().V1alpha2().Users().Lister()
