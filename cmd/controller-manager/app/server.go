@@ -39,6 +39,7 @@ import (
 	"kubesphere.io/kubesphere/cmd/controller-manager/app/options"
 	"kubesphere.io/kubesphere/pkg/apis"
 	controllerconfig "kubesphere.io/kubesphere/pkg/apiserver/config"
+	kscontroller "kubesphere.io/kubesphere/pkg/controller"
 	"kubesphere.io/kubesphere/pkg/controller/network/webhooks"
 	"kubesphere.io/kubesphere/pkg/controller/quota"
 	"kubesphere.io/kubesphere/pkg/controller/user"
@@ -163,6 +164,7 @@ func Run(s *options.KubeSphereControllerManagerOptions, configCh <-chan controll
 }
 
 func run(s *options.KubeSphereControllerManagerOptions, ctx context.Context) error {
+	kscontroller.Register()
 
 	kubernetesClient, err := k8s.NewKubernetesClient(s.KubernetesOptions)
 	if err != nil {
@@ -265,7 +267,7 @@ func run(s *options.KubeSphereControllerManagerOptions, ctx context.Context) err
 	}
 
 	klog.V(2).Info("registering metrics to the webhook server")
-	// Add an extra metric endpoint, so we can use the the same metric definition with ks-apiserver
+	// Add an extra metric endpoint, so we can use the same metric definition with ks-apiserver
 	// /kapis/metrics is independent of controller-manager's built-in /metrics
 	mgr.AddMetricsExtraHandler("/kapis/metrics", metrics.Handler())
 
