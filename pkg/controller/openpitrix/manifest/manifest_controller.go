@@ -248,7 +248,7 @@ func (r *ManifestReconciler) installManifest(ctx context.Context, cli client.Cli
 
 	// create backup secret or configmap
 	if r.hasManagedResource(manifest) {
-		return r.createManagedResource(ctx, manifest)
+		return r.createManagedResource(ctx, cli, manifest)
 	}
 
 	objSlice, err := getUnstructuredObj(manifest)
@@ -323,15 +323,10 @@ func (r *ManifestReconciler) replaceManagedFields(ctx context.Context, manifest 
 }
 
 // createManagedResource create s3 secret/configmap base on fixed secret/configmap in dmp-system namespace
-func (r *ManifestReconciler) createManagedResource(ctx context.Context, manifest *v1alpha1.Manifest) (ctrl.Result, error) {
-	cli, err := r.getClusterClient(manifest.GetManifestCluster())
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
+func (r *ManifestReconciler) createManagedResource(ctx context.Context, cli client.Client, manifest *v1alpha1.Manifest) (ctrl.Result, error) {
 	if strings.Contains(manifest.Spec.CustomResource, s3SecretPlaceHolder) {
 		secret := &corev1.Secret{}
-		err = r.Client.Get(ctx, types.NamespacedName{Namespace: managedNamespace, Name: managedS3SecretName}, secret)
+		err := r.Client.Get(ctx, types.NamespacedName{Namespace: managedNamespace, Name: managedS3SecretName}, secret)
 		if err != nil {
 			klog.Errorf("%s not found in %s, unable to create custom resource that contains %s", managedS3SecretName, managedNamespace, s3SecretPlaceHolder)
 			return ctrl.Result{}, err
@@ -370,10 +365,6 @@ func (r *ManifestReconciler) deleteManagedResource(ctx context.Context, cli clie
 func (r *ManifestReconciler) IsCustomResourceExisted(ctx context.Context, cli client.Client, manifest *v1alpha1.Manifest) bool {
 	objSlice, err := getUnstructuredObj(manifest)
 	if err != nil || len(objSlice) == 0 {
-		return true
-	}
-	cli, err = r.getClusterClient(manifest.GetManifestCluster())
-	if err != nil {
 		return true
 	}
 
