@@ -28,6 +28,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/yaml.v2"
 	certificatesv1 "k8s.io/api/certificates/v1"
 	v1 "k8s.io/api/core/v1"
@@ -329,6 +330,7 @@ func (c *clusterController) syncCluster(key string) error {
 		// cluster not found, possibly been deleted
 		// need to do the cleanup
 		if errors.IsNotFound(err) {
+			ClusterCertificateValidityPeriod.DeleteLabelValues(cluster.Name)
 			return nil
 		}
 
@@ -348,6 +350,7 @@ func (c *clusterController) syncCluster(key string) error {
 		}
 	} else {
 		// The object is being deleted
+		ClusterCertificateValidityPeriod.DeleteLabelValues(cluster.Name)
 		if sets.NewString(cluster.ObjectMeta.Finalizers...).Has(clusterv1alpha1.Finalizer) {
 			// need to unJoin federation first, before there are
 			// some cleanup work to do in member cluster which depends
@@ -816,9 +819,12 @@ func (c *clusterController) updateKubeConfigExpirationDateCondition(cluster *clu
 			conditions = append(conditions, condition)
 		}
 		cluster.Status.Conditions = conditions
+		ClusterCertificateValidityPeriod.DeleteLabelValues(cluster.Name)
 		return nil
 	}
-	if time.Now().AddDate(0, 0, 7).Sub(cert.NotAfter) > 0 {
+	seconds := cert.NotAfter.Sub(time.Now()).Seconds()
+	ClusterCertificateValidityPeriod.With(prometheus.Labels{"cluster": cluster.Name}).Set(seconds)
+	if seconds/86400 <= 7 {
 		if err = c.renewKubeConfig(cluster, clusterClient, config, cert); err != nil {
 			return err
 		}

@@ -20,6 +20,7 @@ import (
 
 	compbasemetrics "k8s.io/component-base/metrics"
 
+	"kubesphere.io/kubesphere/pkg/controller/cluster"
 	"kubesphere.io/kubesphere/pkg/controller/license"
 	"kubesphere.io/kubesphere/pkg/utils/metrics"
 )
@@ -29,6 +30,7 @@ var registerMetrics sync.Once
 // Add all the ks-controller-manager metrics here.
 var metricsList = []compbasemetrics.Registerable{
 	license.LicenseValidityPeriod,
+	cluster.ClusterCertificateValidityPeriod,
 }
 
 // Register all metrics.
