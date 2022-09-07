@@ -127,8 +127,8 @@ func (r *ManifestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	// check weather the custom resource still exists
-	if !r.IsCustomResourceExisted(ctx, cli, manifest) {
-		if !r.manifestUnsustainable(manifest) {
+	if !r.isCustomResourceExisted(ctx, cli, manifest) {
+		if !r.canMarkManifestDeleted(manifest) {
 			return ctrl.Result{}, r.updateManifestState(ctx, manifest, "", v1alpha1.StatusDeleted)
 		}
 		return ctrl.Result{RequeueAfter: r.getNextReconcileTime(manifest)}, nil
@@ -362,7 +362,7 @@ func (r *ManifestReconciler) deleteManagedResource(ctx context.Context, cli clie
 	return nil
 }
 
-func (r *ManifestReconciler) IsCustomResourceExisted(ctx context.Context, cli client.Client, manifest *v1alpha1.Manifest) bool {
+func (r *ManifestReconciler) isCustomResourceExisted(ctx context.Context, cli client.Client, manifest *v1alpha1.Manifest) bool {
 	objSlice, err := getUnstructuredObj(manifest)
 	if err != nil || len(objSlice) == 0 {
 		return true
@@ -413,10 +413,11 @@ func (r *ManifestReconciler) checkResourceStatus(ctx context.Context, cli client
 	return ctrl.Result{RequeueAfter: r.getNextReconcileTime(manifest)}, err
 }
 
-// manifestUnsustainable
-// when the manifest is in the state of Error, Failed, and Deleted, it is considered as non-continuable.
-// when a manifest became unsustainable, we should keep the last state for troubleshooting.
-func (r *ManifestReconciler) manifestUnsustainable(manifest *v1alpha1.Manifest) bool {
+// canMarkManifestDeleted check if a manifest can be marked as deleted
+// if currently in Deleted state, it has been marked as Deleted and will not be processed again
+// if currently in Failed state, custom resource creation failed, message of failure should be preserved
+// if currently in Error state, an error occurred at some step, error should be preserved
+func (r *ManifestReconciler) canMarkManifestDeleted(manifest *v1alpha1.Manifest) bool {
 	switch manifest.Status.State {
 	case v1alpha1.StatusError, v1alpha1.StatusFailed, v1alpha1.StatusDeleted:
 		return true
