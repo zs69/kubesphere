@@ -36,12 +36,12 @@ type AlertingV2beta1Client struct {
 	restClient rest.Interface
 }
 
-func (c *AlertingV2beta1Client) ClusterRuleGroups(namespace string) ClusterRuleGroupInterface {
-	return newClusterRuleGroups(c, namespace)
+func (c *AlertingV2beta1Client) ClusterRuleGroups() ClusterRuleGroupInterface {
+	return newClusterRuleGroups(c)
 }
 
-func (c *AlertingV2beta1Client) GlobalRuleGroups(namespace string) GlobalRuleGroupInterface {
-	return newGlobalRuleGroups(c, namespace)
+func (c *AlertingV2beta1Client) GlobalRuleGroups() GlobalRuleGroupInterface {
+	return newGlobalRuleGroups(c)
 }
 
 func (c *AlertingV2beta1Client) RuleGroups(namespace string) RuleGroupInterface {
