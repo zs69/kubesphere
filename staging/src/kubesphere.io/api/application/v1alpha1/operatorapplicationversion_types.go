@@ -109,3 +109,14 @@ func (in *OperatorApplicationVersion) State() string {
 func (in *OperatorApplicationVersion) GetCreationTime() time.Time {
 	return in.CreationTimestamp.Time
 }
+
+func (in *OperatorApplicationVersion) GetReleaseDate() time.Time {
+	if tstr, ok := in.Labels[OperatorAppReleaseDateKey]; ok {
+		t, err := time.Parse("2006-01-02", tstr)
+		if err == nil {
+			return t
+		}
+	}
+
+	return in.CreationTimestamp.Time
+}

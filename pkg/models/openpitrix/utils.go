@@ -958,6 +958,10 @@ func convertOperatorAppVersion(in *v1alpha1.OperatorApplicationVersion) *AppVers
 	t := in.CreationTimestamp.Time
 	date := strfmt.DateTime(t)
 	out.CreateTime = &date
+
+	releaseDate := strfmt.DateTime(in.GetReleaseDate())
+	out.StatusTime = &releaseDate
+
 	if in.Status.UpdateTime == nil {
 		out.UpdateTime = &date
 	} else {
