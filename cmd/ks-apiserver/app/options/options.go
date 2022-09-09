@@ -50,6 +50,7 @@ import (
 	"kubesphere.io/kubesphere/pkg/simple/client/monitoring/metricsserver"
 	"kubesphere.io/kubesphere/pkg/simple/client/monitoring/prometheus"
 	notificationclient "kubesphere.io/kubesphere/pkg/simple/client/notification/elasticsearch"
+	o11yprometheus "kubesphere.io/kubesphere/pkg/simple/client/observability/monitoring/prometheus"
 	"kubesphere.io/kubesphere/pkg/simple/client/s3"
 	fakes3 "kubesphere.io/kubesphere/pkg/simple/client/s3/fake"
 	"kubesphere.io/kubesphere/pkg/simple/client/sonarqube"
@@ -93,6 +94,7 @@ func (s *ServerRunOptions) Flags() (fss cliflag.NamedFlagSets) {
 	s.NetworkOptions.AddFlags(fss.FlagSet("network"), s.NetworkOptions)
 	s.ServiceMeshOptions.AddFlags(fss.FlagSet("servicemesh"), s.ServiceMeshOptions)
 	s.MonitoringOptions.AddFlags(fss.FlagSet("monitoring"), s.MonitoringOptions)
+	s.ObservabilityOptions.AddFlags(fss.FlagSet("observability"), s.ObservabilityOptions)
 	s.LoggingOptions.AddFlags(fss.FlagSet("logging"), s.LoggingOptions)
 	s.MultiClusterOptions.AddFlags(fss.FlagSet("multicluster"), s.MultiClusterOptions)
 	s.EventsOptions.AddFlags(fss.FlagSet("events"), s.EventsOptions)
@@ -140,6 +142,14 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 	}
 
 	apiServer.MetricsClient = metricsserver.NewMetricsClient(kubernetesClient.Kubernetes(), s.KubernetesOptions)
+
+	if s.ObservabilityOptions.Monitoring.Endpoint != "" {
+		monitoringClient, err := o11yprometheus.NewPrometheus(s.ObservabilityOptions.Monitoring)
+		if err != nil {
+			return nil, fmt.Errorf("failed to connect to whizard, please check whizard status, error: %v", err)
+		}
+		apiServer.O11yMonitoringClient = monitoringClient
+	}
 
 	if s.LoggingOptions.Host != "" {
 		loggingClient, err := esclient.NewClient(s.LoggingOptions)

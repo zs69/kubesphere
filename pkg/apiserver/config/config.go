@@ -52,6 +52,7 @@ import (
 	"kubesphere.io/kubesphere/pkg/simple/client/multicluster"
 	"kubesphere.io/kubesphere/pkg/simple/client/network"
 	"kubesphere.io/kubesphere/pkg/simple/client/notification"
+	"kubesphere.io/kubesphere/pkg/simple/client/observability"
 	"kubesphere.io/kubesphere/pkg/simple/client/openpitrix"
 	"kubesphere.io/kubesphere/pkg/simple/client/s3"
 	"kubesphere.io/kubesphere/pkg/simple/client/servicemesh"
@@ -165,6 +166,7 @@ type Config struct {
 	S3Options             *s3.Options             `json:"s3,omitempty" yaml:"s3,omitempty" mapstructure:"s3"`
 	OpenPitrixOptions     *openpitrix.Options     `json:"openpitrix,omitempty" yaml:"openpitrix,omitempty" mapstructure:"openpitrix"`
 	MonitoringOptions     *prometheus.Options     `json:"monitoring,omitempty" yaml:"monitoring,omitempty" mapstructure:"monitoring"`
+	ObservabilityOptions  *observability.Options  `json:"observability,omitempty" yaml:"observability,omitempty" mapstructure:"observability"`
 	LoggingOptions        *logging.Options        `json:"logging,omitempty" yaml:"logging,omitempty" mapstructure:"logging"`
 	AuthenticationOptions *authentication.Options `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
 	AuthorizationOptions  *authorization.Options  `json:"authorization,omitempty" yaml:"authorization,omitempty" mapstructure:"authorization"`
@@ -194,6 +196,7 @@ func New() *Config {
 		RedisOptions:          cache.NewRedisOptions(),
 		S3Options:             s3.NewS3Options(),
 		OpenPitrixOptions:     openpitrix.NewOptions(),
+		ObservabilityOptions:  observability.NewObservabilityOptions(),
 		MonitoringOptions:     prometheus.NewPrometheusOptions(),
 		AlertingOptions:       alerting.NewAlertingOptions(),
 		NotificationOptions:   notification.NewNotificationOptions(),

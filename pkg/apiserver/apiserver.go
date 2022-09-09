@@ -84,6 +84,7 @@ import (
 	notificationkapisv2beta1 "kubesphere.io/kubesphere/pkg/kapis/notification/v2beta1"
 	notificationkapisv2beta2 "kubesphere.io/kubesphere/pkg/kapis/notification/v2beta2"
 	"kubesphere.io/kubesphere/pkg/kapis/oauth"
+	o11ymonitoringv1alpha1 "kubesphere.io/kubesphere/pkg/kapis/observability/monitoring/v1alpha1"
 	openpitrixv1 "kubesphere.io/kubesphere/pkg/kapis/openpitrix/v1"
 	openpitrixv2alpha1 "kubesphere.io/kubesphere/pkg/kapis/openpitrix/v2alpha1"
 	operationsv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/operations/v1alpha2"
@@ -110,6 +111,7 @@ import (
 	"kubesphere.io/kubesphere/pkg/simple/client/logging"
 	"kubesphere.io/kubesphere/pkg/simple/client/monitoring"
 	"kubesphere.io/kubesphere/pkg/simple/client/notification"
+	o11ymonitoring "kubesphere.io/kubesphere/pkg/simple/client/observability/monitoring"
 	"kubesphere.io/kubesphere/pkg/simple/client/s3"
 	"kubesphere.io/kubesphere/pkg/simple/client/sonarqube"
 	"kubesphere.io/kubesphere/pkg/utils/clusterclient"
@@ -144,6 +146,8 @@ type APIServer struct {
 	MonitoringClient monitoring.Interface
 
 	MetricsClient monitoring.Interface
+
+	O11yMonitoringClient o11ymonitoring.Interface
 
 	LoggingClient logging.Client
 
@@ -234,6 +238,7 @@ func (s *APIServer) installKubeSphereAPIs(stopCh <-chan struct{}) {
 	urlruntime.Must(configv1alpha2.AddToContainer(s.container, s.Config))
 	urlruntime.Must(resourcev1alpha3.AddToContainer(s.container, s.InformerFactory, s.RuntimeCache))
 	urlruntime.Must(monitoringv1alpha3.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.MonitoringClient, s.MetricsClient, s.InformerFactory, s.OpenpitrixClient, s.Config.MonitoringOptions.EnableGPUMonitoring, s.RuntimeClient))
+	urlruntime.Must(o11ymonitoringv1alpha1.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.O11yMonitoringClient, s.InformerFactory))
 	urlruntime.Must(meteringv1alpha1.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.MonitoringClient, s.InformerFactory, s.RuntimeCache, s.Config.MeteringOptions, s.OpenpitrixClient, s.Config.MonitoringOptions.EnableGPUMonitoring, s.RuntimeClient))
 	urlruntime.Must(openpitrixv1.AddToContainer(s.container, s.InformerFactory, s.KubernetesClient.KubeSphere(), s.Config.OpenPitrixOptions, s.OpenpitrixClient))
 	urlruntime.Must(openpitrixv2alpha1.AddToContainer(s.container, s.InformerFactory, s.KubernetesClient.KubeSphere(), s.Config.OpenPitrixOptions))
