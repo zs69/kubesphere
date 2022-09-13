@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	openpitrixv1 "kubesphere.io/kubesphere/pkg/kapis/openpitrix/v1"
+
 	"kubesphere.io/kubesphere/pkg/utils/clusterclient"
 
 	"kubesphere.io/kubesphere/pkg/apiserver/authentication/token"
@@ -101,6 +102,7 @@ func (s *ServerRunOptions) Flags() (fss cliflag.NamedFlagSets) {
 	s.AuditingOptions.AddFlags(fss.FlagSet("auditing"), s.AuditingOptions)
 	s.AlertingOptions.AddFlags(fss.FlagSet("alerting"), s.AlertingOptions)
 	s.LicenseOptions.AddFlags(fss.FlagSet("license"), s.LicenseOptions)
+	s.NativeHelmReleaseOptions.AddFlags(fss.FlagSet("openpitrix"), s.NativeHelmReleaseOptions)
 
 	fs = fss.FlagSet("klog")
 	local := flag.NewFlagSet("klog", flag.ExitOnError)

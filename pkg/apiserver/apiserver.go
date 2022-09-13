@@ -79,6 +79,7 @@ import (
 	licensev1alpha1 "kubesphere.io/kubesphere/pkg/kapis/license/v1alpha1"
 	meteringv1alpha1 "kubesphere.io/kubesphere/pkg/kapis/metering/v1alpha1"
 	monitoringv1alpha3 "kubesphere.io/kubesphere/pkg/kapis/monitoring/v1alpha3"
+	helmshreleasev1alpha1 "kubesphere.io/kubesphere/pkg/kapis/nativehelmrelease/v1alpha1"
 	networkv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/network/v1alpha2"
 	notificationv1 "kubesphere.io/kubesphere/pkg/kapis/notification/v1"
 	notificationkapisv2beta1 "kubesphere.io/kubesphere/pkg/kapis/notification/v2beta1"
@@ -284,6 +285,8 @@ func (s *APIServer) installKubeSphereAPIs(stopCh <-chan struct{}) {
 	urlruntime.Must(notificationkapisv2beta2.AddToContainer(s.container, s.InformerFactory, s.KubernetesClient.Kubernetes(),
 		s.KubernetesClient.KubeSphere(), s.NotificationClient, s.Config.NotificationOptions))
 	urlruntime.Must(gatewayv1alpha1.AddToContainer(s.container, s.Config.GatewayOptions, s.RuntimeCache, s.RuntimeClient, s.InformerFactory, s.KubernetesClient.Kubernetes(), s.LoggingClient))
+	urlruntime.Must(helmshreleasev1alpha1.AddToContainer(s.container, s.InformerFactory.KubeSphereSharedInformerFactory(), s.KubernetesClient.KubeSphere(),
+		s.ClusterClient, s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets(), s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().ConfigMaps(), s.Config.NativeHelmReleaseOptions))
 }
 
 // installCRDAPIs Install CRDs to the KAPIs with List and Get options

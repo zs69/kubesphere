@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"kubesphere.io/kubesphere/pkg/simple/client/nativehelmrelease"
+
 	"github.com/google/go-cmp/cmp"
 	"gopkg.in/yaml.v2"
 
@@ -216,6 +218,7 @@ func newTestConfig() (*Config, error) {
 			Image:   "alpine:3.15",
 			Timeout: 600,
 		},
+		NativeHelmReleaseOptions: &nativehelmrelease.Options{Enable: false},
 	}
 	return conf, nil
 }
@@ -250,6 +253,7 @@ func newTestMap() map[string]bool {
 		"servicemesh":         true,
 		"sonarqube":           true,
 		"terminal":            true,
+		"nativehelmrelease":   true,
 	}
 	return confMap
 }

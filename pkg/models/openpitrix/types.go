@@ -814,6 +814,7 @@ type Cluster struct {
 	// additional info
 	AdditionalInfo string `json:"additional_info,omitempty"`
 
+	ReleaseVersion int `json:"release_version,omitempty"`
 	// id of app run in cluster
 	AppId string `json:"app_id,omitempty"`
 

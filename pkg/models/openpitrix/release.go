@@ -327,7 +327,7 @@ func (c *releaseOperator) ListApplications(workspace, clusterName, namespace str
 		return nil, err
 	}
 
-	releases = filterReleases(releases, conditions)
+	releases = FilterReleases(releases, conditions)
 
 	// only show release whose app versions are active or suspended
 	if versionId == "" && strings.HasSuffix(appId, v1alpha1.HelmApplicationAppStoreSuffix) {
@@ -356,7 +356,7 @@ func (c *releaseOperator) ListApplications(workspace, clusterName, namespace str
 	releases = releases[start:end]
 	items := make([]interface{}, 0, len(releases))
 	for i := range releases {
-		app := convertApplication(releases[i], nil)
+		app := ConvertApplication(releases[i], nil)
 		items = append(items, app)
 	}
 
@@ -407,7 +407,7 @@ func (c *releaseOperator) DescribeApplication(workspace, clusterName, namespace,
 		if err != nil {
 			klog.Errorf("parse resource failed, error: %s", err)
 		}
-		app = convertApplication(rls, infos)
+		app = ConvertApplication(rls, infos)
 	}
 
 	return app, nil

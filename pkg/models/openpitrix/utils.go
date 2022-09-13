@@ -239,7 +239,7 @@ func convertCategory(in *v1alpha1.HelmCategory) *Category {
 	return out
 }
 
-func convertApplication(rls *v1alpha1.HelmRelease, rlsInfos []*resource.Info) *Application {
+func ConvertApplication(rls *v1alpha1.HelmRelease, rlsInfos []*resource.Info) *Application {
 	app := &Application{}
 	app.Name = rls.Spec.ChartName
 	cluster := &Cluster{}
@@ -290,6 +290,7 @@ func convertApplication(rls *v1alpha1.HelmRelease, rlsInfos []*resource.Info) *A
 			app.ReleaseInfo = append(app.ReleaseInfo, info.Object)
 		}
 	}
+	app.Cluster.ReleaseVersion = rls.Status.Version
 
 	return app
 }
@@ -823,7 +824,7 @@ func filterReleasesWithAppVersions(releases []*v1alpha1.HelmRelease, appVersions
 	return releases[:curr:curr]
 }
 
-func filterReleases(releases []*v1alpha1.HelmRelease, conditions *params.Conditions) []*v1alpha1.HelmRelease {
+func FilterReleases(releases []*v1alpha1.HelmRelease, conditions *params.Conditions) []*v1alpha1.HelmRelease {
 	if conditions == nil || len(conditions.Match) == 0 || len(releases) == 0 {
 		return releases
 	}
