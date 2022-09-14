@@ -219,6 +219,7 @@ func newTestConfig() (*Config, error) {
 			Timeout: 600,
 		},
 		NativeHelmReleaseOptions: &nativehelmrelease.Options{Enable: false},
+		ThemeConfig:              &ThemeConfig{SysTitle: "KubeSphere"},
 	}
 	return conf, nil
 }
@@ -254,6 +255,7 @@ func newTestMap() map[string]bool {
 		"sonarqube":           true,
 		"terminal":            true,
 		"nativehelmrelease":   true,
+		"themeconfig":         true,
 	}
 	return confMap
 }
