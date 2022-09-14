@@ -6347,6 +6347,3399 @@
         }
       }
     },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Cluster Metrics"
+        ],
+        "summary": "Get cluster-level metric data for all clusters.",
+        "operationId": "handleClusterMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both cluster CPU usage and disk usage: `cluster_cpu_usage|cluster_disk_size_usage`. ",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort nodes by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for cluster ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Cluster Metrics"
+        ],
+        "summary": "Get cluster-level metric data of the specific cluster.",
+        "operationId": "handleClusterMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both cluster CPU usage and disk usage: `cluster_cpu_usage|cluster_disk_size_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/components/{component}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Component Metrics"
+        ],
+        "summary": "Get component-level metrics for the specified system component of the specified cluster.",
+        "operationId": "handleComponentMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "system component to monitor. One of etcd, apiserver, scheduler.",
+            "name": "component",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both etcd server list and total size of the underlying database: `etcd_server_list|etcd_mvcc_db_size`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Metrics"
+        ],
+        "summary": "Get namespace-level metric data for all namespaces of the specific cluster.",
+        "operationId": "handleNamespaceMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both namespace CPU usage and memory usage: `namespace_cpu_usage|namespace_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The namespace filter consists of a regexp pattern. It specifies which namespace data to return. For example, the following filter matches both namespace test and kube-system: `test|kube-system`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort namespaces by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Metrics"
+        ],
+        "summary": "Get namespace-level metric data for the specific namespace of the specific cluster.",
+        "operationId": "handleNamespaceMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both namespace CPU usage and memory usage: `namespace_cpu_usage|namespace_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}/ingresses": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Ingress Metrics"
+        ],
+        "summary": "Get Ingress-level metric data for the specific namespace's Ingresses of the specified cluster.",
+        "operationId": "handleIngressMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The job name filter. Ingress could be served by multi Ingress controllers, The job filters metric from a specific controller.",
+            "name": "job",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The pod name filter.",
+            "name": "pod",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The duration is the time window of Range Vector. The format is [0-9]+[smhdwy]. Defaults to 5m (i.e. 5 min).",
+            "name": "duration",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both PVC available and used inodes: `pvc_inodes_available|pvc_inodes_used`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The PVC filter consists of a regexp pattern. It specifies which PVC data to return. For example, the following filter matches any pod whose name begins with redis: `redis.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort PVCs by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}/ingresses/{ingress}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Ingress Metrics"
+        ],
+        "summary": "Get Ingress-level metric data for the specific Ingress. Navigate to the Ingress by the Ingress's cluster and namespace.",
+        "operationId": "handleIngressMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "ingress name.",
+            "name": "ingress",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The job name filter. Ingress could be served by multi Ingress controllers, The job filters metric from a specific controller.",
+            "name": "job",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The pod filter.",
+            "name": "pod",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The duration is the time window of Range Vector. The format is [0-9]+[smhdwy]. Defaults to 5m (i.e. 5 min).",
+            "name": "duration",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both PVC available and used inodes: `pvc_inodes_available|pvc_inodes_used`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}/persistentvolumeclaims": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "PVC Metrics"
+        ],
+        "summary": "Get PVC-level metric data for the specific namespace's PVCs of the specified cluster.",
+        "operationId": "handlePVCMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both PVC available and used inodes: `pvc_inodes_available|pvc_inodes_used`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The PVC filter consists of a regexp pattern. It specifies which PVC data to return. For example, the following filter matches any pod whose name begins with redis: `redis.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort PVCs by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}/persistentvolumeclaims/{pvc}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "PVC Metrics"
+        ],
+        "summary": "Get PVC-level metric data of the specific PVC. Navigate to the PVC by the PVC's cluster and namespace.",
+        "operationId": "handlePVCMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "PVC name.",
+            "name": "pvc",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both PVC available and used inodes: `pvc_inodes_available|pvc_inodes_used`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}/pods": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Pod Metrics"
+        ],
+        "summary": "Get pod-level metric data for the specific namespace's pods of the specific cluster.",
+        "operationId": "handlePodMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both pod CPU usage and memory usage: `pod_cpu_usage|pod_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The pod filter consists of a regexp pattern. It specifies which pod data to return. For example, the following filter matches any pod whose name begins with redis: `redis.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort pods by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}/pods/{pod}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Pod Metrics"
+        ],
+        "summary": "Get pod-level metric data of a specific pod. Navigate to the pod by the pod's cluster and namespace.",
+        "operationId": "handlePodMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Pod name.",
+            "name": "pod",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both pod CPU usage and memory usage: `pod_cpu_usage|pod_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}/pods/{pod}/containers": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Container Metrics"
+        ],
+        "summary": "Get container-level metric data of a specific pod's containers. Navigate to the pod by the pod's cluster and namespace.",
+        "operationId": "handleContainerMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Pod name.",
+            "name": "pod",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both container CPU usage and memory usage: `container_cpu_usage|container_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The container filter consists of a regexp pattern. It specifies which container data to return. For example, the following filter matches container prometheus and prometheus-config-reloader: `prometheus|prometheus-config-reloader`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort containers by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}/pods/{pod}/containers/{container}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Container Metrics"
+        ],
+        "summary": "Get container-level metric data of a specific container. Navigate to the container by the pod's cluster, namespace and name ",
+        "operationId": "handleContainerMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Pod name.",
+            "name": "pod",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Container name.",
+            "name": "container",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both container CPU usage and memory usage: `container_cpu_usage|container_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}/workloads": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Workload Metrics"
+        ],
+        "summary": "Get workload-level metric data of a specific namespace's workloads.",
+        "operationId": "handleWorkloadMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both workload CPU usage and memory usage: `workload_cpu_usage|workload_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The workload filter consists of a regexp pattern. It specifies which workload data to return. For example, the following filter matches any workload whose name begins with prometheus: `prometheus.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort workloads by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}/workloads/{kind}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Workload Metrics"
+        ],
+        "summary": "Get workload-level metric data of all workloads which belongs to a specific kind.",
+        "operationId": "handleWorkloadMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Workload kind. One of deployment, daemonset, statefulset.",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both workload CPU usage and memory usage: `workload_cpu_usage|workload_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The workload filter consists of a regexp pattern. It specifies which workload data to return. For example, the following filter matches any workload whose name begins with prometheus: `prometheus.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort workloads by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/namespaces/{namespace}/workloads/{kind}/{workload}/pods": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Pod Metrics"
+        ],
+        "summary": "Get pod-level metric data of a specific workload's pods. Navigate to the workload by the cluster and namespace.",
+        "operationId": "handlePodMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Workload kind. One of deployment, daemonset, statefulset.",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Workload name.",
+            "name": "workload",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both pod CPU usage and memory usage: `pod_cpu_usage|pod_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The pod filter consists of a regexp pattern. It specifies which pod data to return. For example, the following filter matches any pod whose name begins with redis: `redis.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort pods by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/nodes": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Node Metrics"
+        ],
+        "summary": "Get node-level metric data for all nodes of the specific cluster.",
+        "operationId": "handleNodeMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both node CPU usage and disk usage: `node_cpu_usage|node_disk_size_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The node filter consists of a regexp pattern. It specifies which node data to return. For example, the following filter matches both node i-caojnter and i-cmu82ogj: `i-caojnter|i-cmu82ogj`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort nodes by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for node ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/nodes/{node}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Node Metrics"
+        ],
+        "summary": "Get node-level metric data for the specific node of the specific cluster.",
+        "operationId": "handleNodeMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Node name.",
+            "name": "node",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both node CPU usage and disk usage: `node_cpu_usage|node_disk_size_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/nodes/{node}/pods": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Pod Metrics"
+        ],
+        "summary": "Get pod-level metric data of all pods on a specific node of the specific cluster.",
+        "operationId": "handlePodMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Node name.",
+            "name": "node",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both pod CPU usage and memory usage: `pod_cpu_usage|pod_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The pod filter consists of a regexp pattern. It specifies which pod data to return. For example, the following filter matches any pod whose name begins with redis: `redis.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Specifies a namespaced resources filter in `\u003cnamespace\u003e/\u003cpod_name\u003e|\u003cnamespace\u003e/\u003cpod_name\u003e` format. For example, a namespaced resources filter like `ns1/pod1|ns2/pod2` will request the data of pod1 in ns1 together with pod2 in ns2.",
+            "name": "namespaced_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort pods by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/pods": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Pod Metrics"
+        ],
+        "summary": "Get pod-level metric data of the specific cluster's pods.",
+        "operationId": "handlePodMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both pod CPU usage and memory usage: `pod_cpu_usage|pod_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Specifies a namespaced resources filter in `\u003cnamespace\u003e/\u003cpod_name\u003e|\u003cnamespace\u003e/\u003cpod_name\u003e` format. For example, a namespaced resources filter like `ns1/pod1|ns2/pod2` will request the data of pod1 in ns1 together with pod2 in ns2.",
+            "name": "namespaced_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort pods by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/storageclasses/{storageclass}/persistentvolumeclaims": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "PVC Metrics"
+        ],
+        "summary": "Get PVC-level metric data for the specific storageclass's PVCs of the specified cluster.",
+        "operationId": "handlePVCMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The name of the storageclass.",
+            "name": "storageclass",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both PVC available and used inodes: `pvc_inodes_available|pvc_inodes_used`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The PVC filter consists of a regexp pattern. It specifies which PVC data to return. For example, the following filter matches any pod whose name begins with redis: `redis.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort PVCs by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/workspaces": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Workspace Metrics"
+        ],
+        "summary": "Get workspace-level metric data of all workspaces of the specific cluster.",
+        "operationId": "handleWorkspaceMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both workspace CPU usage and memory usage: `workspace_cpu_usage|workspace_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The workspace filter consists of a regexp pattern. It specifies which workspace data to return.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort workspaces by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/workspaces/{workspace}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Workspace Metrics"
+        ],
+        "summary": "Get workspace-level metric data for the specific workspace of the specific cluster.",
+        "operationId": "handleWorkspaceMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Workspace name.",
+            "name": "workspace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both workspace CPU usage and memory usage: `workspace_cpu_usage|workspace_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Additional operations. Currently available types is statistics. It retrieves the total number of namespaces, devops projects, members and roles in this workspace at the moment.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/clusters/{cluster}/workspaces/{workspace}/namespaces": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Metrics"
+        ],
+        "summary": "Get namespace-level metric data for the specific workspace's namespaces of the specific cluster.",
+        "operationId": "handleNamespaceMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of cluster",
+            "name": "cluster",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Workspace name.",
+            "name": "workspace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both namespace CPU usage and memory usage: `namespace_cpu_usage|namespace_memory_usage`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/).",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The namespace filter consists of a regexp pattern. It specifies which namespace data to return. For example, the following filter matches both namespace test and kube-system: `test|kube-system`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort namespaces by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/components/{component}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Component Metrics"
+        ],
+        "summary": "Get component-level metric data for all cluster's system component.",
+        "operationId": "handleComponentMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "system component to monitor. One of etcd, apiserver, scheduler.",
+            "name": "component",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both etcd server list and total size of the underlying database: `etcd_server_list|etcd_mvcc_db_size`. ",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`.",
+            "name": "cluster_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort components by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for cluster ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/containers": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Container Metrics"
+        ],
+        "summary": "Get container-level metric data for all cluster's containers",
+        "operationId": "handleContainerMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both container CPU usage and memory usage: `container_cpu_usage|container_memory_usage`. ",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The container filter consists of a regexp pattern. It specifies which container data to return. For example, the following filter matches container prometheus and prometheus-config-reloader: `prometheus|prometheus-config-reloader`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`.",
+            "name": "cluster_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The namespace filter consists of a regexp pattern. It specifies which namespace data to return. For example, the following filter matches both namespace test and default: `test|default`.",
+            "name": "namespace_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The pod filter consists of a regexp pattern. It specifies which pod data to return. For example, the following filter matches both pod sts-kafka-0 and nginx-5dc869b4fb-26v4b: `sts-kafka-0|nginx-5dc869b4fb-26v4b`.",
+            "name": "pod_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort containers by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for cluster ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/ingresses": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Ingress Metrics"
+        ],
+        "summary": "Get Ingress-level metric data for all cluster's ingresses.",
+        "operationId": "handleIngressMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both PVC available and used inodes: `pvc_inodes_available|pvc_inodes_used`. ",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The PVC filter consists of a regexp pattern. It specifies which PVC data to return. For example, the following filter matches any pod whose name begins with redis: `redis.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`.",
+            "name": "cluster_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The namespace filter consists of a regexp pattern. It specifies which namespace data to return. For example, the following filter matches both namespace test and default: `test|default`.",
+            "name": "namespace_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The job name filter. Ingress could be served by multi Ingress controllers, The job filters metric from a specific controller.",
+            "name": "job",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort ingresses by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for cluster ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/kubesphere": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "KubeSphere Metrics"
+        ],
+        "summary": "Get platform-level metric data for all clusters.",
+        "operationId": "handleKubeSphereMetricsQuery",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/label/{label}/values": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Custom Metrics"
+        ],
+        "summary": "Get the values of the given label in all clusters.",
+        "operationId": "handleLabelValuesQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the label. For example, query metric names: `__name__`",
+            "name": "label",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`.",
+            "name": "cluster_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The namespace filter consists of a regexp pattern. It specifies which namespace data to return. For example, the following filter matches both namespace test and default: `test|default`.",
+            "name": "namespace_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "End time of query. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.LabelValues"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/namespaces": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Namespace Metrics"
+        ],
+        "summary": "Get namespace-level metric data for all cluster's namespaces.",
+        "operationId": "handleNamespaceMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both namespace CPU usage and memory usage: `namespace_cpu_usage|namespace_memory_usage`. ",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The namespace filter consists of a regexp pattern. It specifies which namespace data to return. For example, the following filter matches both namespace test and kube-system: `test|kube-system`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`.",
+            "name": "cluster_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The workspace filter consists of a regexp pattern. It specifies which workspace data to return. For example, the following filter matches both workspace devops and default: `devops|default`.",
+            "name": "workspace_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort namespaces by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for namespace ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/nodes": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Node Metrics"
+        ],
+        "summary": "Get node-level metric data for all cluster's nodes.",
+        "operationId": "handleNodeMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both node CPU usage and disk usage: `node_cpu_usage|node_disk_size_usage`. ",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The node filter consists of a regexp pattern. It specifies which node data to return. For example, the following filter matches both node i-caojnter and i-cmu82ogj: `i-caojnter|i-cmu82ogj`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`.",
+            "name": "cluster_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort nodes by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for node ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/persistentvolumeclaims": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "PVC Metrics"
+        ],
+        "summary": "Get PVC-level metric data for all cluster's persistentvolumeclaims",
+        "operationId": "handlePVCMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both PVC available and used inodes: `pvc_inodes_available|pvc_inodes_used`. ",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The PVC filter consists of a regexp pattern. It specifies which PVC data to return. For example, the following filter matches any pod whose name begins with redis: `redis.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`.",
+            "name": "cluster_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The namespace filter consists of a regexp pattern. It specifies which namespace data to return. For example, the following filter matches both namespace test and default: `test|default`.",
+            "name": "namespace_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The storageclass filter consists of a regexp pattern. It specifies which storageclass data to return. For example, the following filter matches both namespace local and default: `local|default`.",
+            "name": "storageclass_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort PVCs by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for cluster ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/pods": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Pod Metrics"
+        ],
+        "summary": "Get pod-level metric data for all cluster's pods.",
+        "operationId": "handlePodMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both pod CPU usage and memory usage: `pod_cpu_usage|pod_memory_usage`. ",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The pod filter consists of a regexp pattern. It specifies which pod data to return. For example, the following filter matches any pod whose name begins with redis: `redis.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`.",
+            "name": "cluster_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The workspace filter consists of a regexp pattern. It specifies which workspace data to return. For example, the following filter matches both workspace devops and default: `devops|default`.",
+            "name": "workspace_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The namespace filter consists of a regexp pattern. It specifies which namespace data to return. For example, the following filter matches both cluster test and default: `test|default`.",
+            "name": "namespace_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort pods by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for pods ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/targets/labelsets": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Custom Metrics"
+        ],
+        "summary": "List all available labels and values of a metric within a specific time span in all clusters.",
+        "operationId": "handleMetricLabelSetQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the metric",
+            "name": "metric",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "End time of query. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.MetricLabelSet"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/targets/metadata": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Custom Metrics"
+        ],
+        "summary": "Get metadata of metrics in all clusters.",
+        "operationId": "handleMetadataQuery",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metadata"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/targets/query": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Custom Metrics"
+        ],
+        "summary": "Make an ad-hoc query in all clusters.",
+        "operationId": "handleAdhocQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The expression to be evaluated.",
+            "name": "expr",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metric"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/workloads": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Workload Metrics"
+        ],
+        "summary": "Get workload-level metric data for all cluster's workloads.",
+        "operationId": "handleWorkloadMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the namespace.",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both workload CPU usage and memory usage: `workload_cpu_usage|workload_memory_usage`. ",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The workload filter consists of a regexp pattern. It specifies which workload data to return. For example, the following filter matches any workload whose name begins with prometheus: `prometheus.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`.",
+            "name": "cluster_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The namespace filter consists of a regexp pattern. It specifies which namespace data to return. For example, the following filter matches both cluster test and default: `test|default`.",
+            "name": "namespace_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort workloads by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for workloads ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/workloads/{kind}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Workload Metrics"
+        ],
+        "summary": "Get workload-level metric data for all cluster's workloads which belongs to a specific kind.",
+        "operationId": "handleWorkloadMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Workload kind. One of deployment, daemonset, statefulset.",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both workload CPU usage and memory usage: `workload_cpu_usage|workload_memory_usage`. ",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The workload filter consists of a regexp pattern. It specifies which workload data to return. For example, the following filter matches any workload whose name begins with prometheus: `prometheus.*`.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`.",
+            "name": "cluster_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The namespace filter consists of a regexp pattern. It specifies which namespace data to return. For example, the following filter matches both cluster test and default: `test|default`.",
+            "name": "namespace_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort workloads by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for workloads ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
+    "/kapis/monitoring.observability.kubesphere.io/v1alpha1/workspaces": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Workspace Metrics"
+        ],
+        "summary": "Get workspace-level metric data for all cluster's workspaces.",
+        "operationId": "handleWorkspaceMetricsQuery",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both workspace CPU usage and memory usage: `workspace_cpu_usage|workspace_memory_usage`. ",
+            "name": "metrics_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The workspace filter consists of a regexp pattern. It specifies which workspace data to return.",
+            "name": "resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The cluster filter consists of a regexp pattern. It specifies which cluster data to return. For example, the following filter matches both cluster host and member-a: `host|member-a`.",
+            "name": "cluster_resources_filter",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Start time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1559347200. ",
+            "name": "start",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "End time of query. Use **start** and **end** to retrieve metric data over a time span. It is a string with Unix time format, eg. 1561939200. ",
+            "name": "end",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "10m",
+            "description": "Time interval. Retrieve metric data at a fixed interval within the time range of start and end. It requires both **start** and **end** are provided. The format is [0-9]+[smhdwy]. Defaults to 10m (i.e. 10 min).",
+            "name": "step",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A timestamp in Unix time format. Retrieve metric data at a single point in time. Defaults to now. Time and the combination of start, end, step are mutually exclusive.",
+            "name": "time",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Sort workspaces by the specified metric. Not applicable if **start** and **end** are provided.",
+            "name": "sort_metric",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "default": "desc.",
+            "description": "Sort order. One of asc, desc.",
+            "name": "sort_type",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "The page number. This field paginates result data of each metric, then returns a specific page. For example, setting **page** to 2 returns the second page. It only applies to sorted metric data.",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "default": 5,
+            "description": "Page size, the maximum number of results in a single page. Defaults to 5.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The query type. This field can be set to 'rank' for workspaces ranking query or '' for others. Defaults to ''.",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/monitoring.Metrics"
+            }
+          }
+        }
+      }
+    },
     "/kapis/network.kubesphere.io/v1alpha2/namespaces/{namespace}/topology": {
       "get": {
         "produces": [
@@ -15059,14 +18452,14 @@
     },
     "metering.OpenPitrixStatistic": {
       "required": [
-        "cpu_usage",
-        "memory_usage_wo_cache",
-        "net_bytes_transmitted",
-        "net_bytes_received",
         "pvc_bytes_total",
         "deployments",
         "statefulsets",
-        "daemonsets"
+        "daemonsets",
+        "cpu_usage",
+        "memory_usage_wo_cache",
+        "net_bytes_transmitted",
+        "net_bytes_received"
       ],
       "properties": {
         "cpu_usage": {
@@ -15317,6 +18710,20 @@
         "pod": {
           "description": "pod name",
           "type": "string"
+        }
+      }
+    },
+    "monitoring.LabelValues": {
+      "required": [
+        "data"
+      ],
+      "properties": {
+        "data": {
+          "description": "actual array of results",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -15640,6 +19047,9 @@
         },
         "latest_app_version": {
           "$ref": "#/definitions/openpitrix.AppVersion"
+        },
+        "licenseRequired": {
+          "type": "string"
         },
         "maintainers": {
           "type": "string"
@@ -22589,10 +25999,10 @@
     },
     "v1alpha2.Node": {
       "required": [
-        "labelMinor",
-        "label",
-        "rank",
         "id",
+        "label",
+        "labelMinor",
+        "rank",
         "controls"
       ],
       "properties": {
@@ -22700,10 +26110,10 @@
     },
     "v1alpha2.NodeSummary": {
       "required": [
+        "rank",
         "id",
         "label",
-        "labelMinor",
-        "rank"
+        "labelMinor"
       ],
       "properties": {
         "adjacency": {

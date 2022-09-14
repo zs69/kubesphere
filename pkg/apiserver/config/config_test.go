@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"kubesphere.io/kubesphere/pkg/simple/client/nativehelmrelease"
+
 	"github.com/google/go-cmp/cmp"
 	"gopkg.in/yaml.v2"
 
@@ -50,6 +52,7 @@ import (
 	"kubesphere.io/kubesphere/pkg/simple/client/multicluster"
 	"kubesphere.io/kubesphere/pkg/simple/client/network"
 	"kubesphere.io/kubesphere/pkg/simple/client/notification"
+	"kubesphere.io/kubesphere/pkg/simple/client/observability"
 	"kubesphere.io/kubesphere/pkg/simple/client/openpitrix"
 	"kubesphere.io/kubesphere/pkg/simple/client/s3"
 	"kubesphere.io/kubesphere/pkg/simple/client/servicemesh"
@@ -132,6 +135,11 @@ func newTestConfig() (*Config, error) {
 		MonitoringOptions: &prometheus.Options{
 			Endpoint: "http://prometheus.kubesphere-monitoring-system.svc",
 		},
+		ObservabilityOptions: &observability.Options{
+			Monitoring: &observability.MonitoringOptions{
+				Endpoint: "http://whizard.kubesphere-monitoring-system.svc",
+			},
+		},
 		LoggingOptions: &logging.Options{
 			Host:        "http://elasticsearch-logging.kubesphere-logging-system.svc:9200",
 			IndexPrefix: "elk",
@@ -210,6 +218,7 @@ func newTestConfig() (*Config, error) {
 			Image:   "alpine:3.15",
 			Timeout: 600,
 		},
+		NativeHelmReleaseOptions: &nativehelmrelease.Options{Enable: false},
 	}
 	return conf, nil
 }
@@ -236,6 +245,7 @@ func newTestMap() map[string]bool {
 		"network.ippool":      false,
 		"network.topology":    true,
 		"notification":        true,
+		"observability":       true,
 		"openpitrix":          true,
 		"openpitrix.appstore": true,
 		"redis":               true,
@@ -243,6 +253,7 @@ func newTestMap() map[string]bool {
 		"servicemesh":         true,
 		"sonarqube":           true,
 		"terminal":            true,
+		"nativehelmrelease":   true,
 	}
 	return confMap
 }

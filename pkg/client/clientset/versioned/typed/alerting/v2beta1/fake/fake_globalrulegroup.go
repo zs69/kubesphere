@@ -33,7 +33,6 @@ import (
 // FakeGlobalRuleGroups implements GlobalRuleGroupInterface
 type FakeGlobalRuleGroups struct {
 	Fake *FakeAlertingV2beta1
-	ns   string
 }
 
 var globalrulegroupsResource = schema.GroupVersionResource{Group: "alerting.kubesphere.io", Version: "v2beta1", Resource: "globalrulegroups"}
@@ -43,8 +42,7 @@ var globalrulegroupsKind = schema.GroupVersionKind{Group: "alerting.kubesphere.i
 // Get takes name of the globalRuleGroup, and returns the corresponding globalRuleGroup object, and an error if there is any.
 func (c *FakeGlobalRuleGroups) Get(ctx context.Context, name string, options v1.GetOptions) (result *v2beta1.GlobalRuleGroup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(globalrulegroupsResource, c.ns, name), &v2beta1.GlobalRuleGroup{})
-
+		Invokes(testing.NewRootGetAction(globalrulegroupsResource, name), &v2beta1.GlobalRuleGroup{})
 	if obj == nil {
 		return nil, err
 	}
@@ -54,8 +52,7 @@ func (c *FakeGlobalRuleGroups) Get(ctx context.Context, name string, options v1.
 // List takes label and field selectors, and returns the list of GlobalRuleGroups that match those selectors.
 func (c *FakeGlobalRuleGroups) List(ctx context.Context, opts v1.ListOptions) (result *v2beta1.GlobalRuleGroupList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(globalrulegroupsResource, globalrulegroupsKind, c.ns, opts), &v2beta1.GlobalRuleGroupList{})
-
+		Invokes(testing.NewRootListAction(globalrulegroupsResource, globalrulegroupsKind, opts), &v2beta1.GlobalRuleGroupList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -76,15 +73,13 @@ func (c *FakeGlobalRuleGroups) List(ctx context.Context, opts v1.ListOptions) (r
 // Watch returns a watch.Interface that watches the requested globalRuleGroups.
 func (c *FakeGlobalRuleGroups) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(globalrulegroupsResource, c.ns, opts))
-
+		InvokesWatch(testing.NewRootWatchAction(globalrulegroupsResource, opts))
 }
 
 // Create takes the representation of a globalRuleGroup and creates it.  Returns the server's representation of the globalRuleGroup, and an error, if there is any.
 func (c *FakeGlobalRuleGroups) Create(ctx context.Context, globalRuleGroup *v2beta1.GlobalRuleGroup, opts v1.CreateOptions) (result *v2beta1.GlobalRuleGroup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(globalrulegroupsResource, c.ns, globalRuleGroup), &v2beta1.GlobalRuleGroup{})
-
+		Invokes(testing.NewRootCreateAction(globalrulegroupsResource, globalRuleGroup), &v2beta1.GlobalRuleGroup{})
 	if obj == nil {
 		return nil, err
 	}
@@ -94,8 +89,7 @@ func (c *FakeGlobalRuleGroups) Create(ctx context.Context, globalRuleGroup *v2be
 // Update takes the representation of a globalRuleGroup and updates it. Returns the server's representation of the globalRuleGroup, and an error, if there is any.
 func (c *FakeGlobalRuleGroups) Update(ctx context.Context, globalRuleGroup *v2beta1.GlobalRuleGroup, opts v1.UpdateOptions) (result *v2beta1.GlobalRuleGroup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(globalrulegroupsResource, c.ns, globalRuleGroup), &v2beta1.GlobalRuleGroup{})
-
+		Invokes(testing.NewRootUpdateAction(globalrulegroupsResource, globalRuleGroup), &v2beta1.GlobalRuleGroup{})
 	if obj == nil {
 		return nil, err
 	}
@@ -106,8 +100,7 @@ func (c *FakeGlobalRuleGroups) Update(ctx context.Context, globalRuleGroup *v2be
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 func (c *FakeGlobalRuleGroups) UpdateStatus(ctx context.Context, globalRuleGroup *v2beta1.GlobalRuleGroup, opts v1.UpdateOptions) (*v2beta1.GlobalRuleGroup, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(globalrulegroupsResource, "status", c.ns, globalRuleGroup), &v2beta1.GlobalRuleGroup{})
-
+		Invokes(testing.NewRootUpdateSubresourceAction(globalrulegroupsResource, "status", globalRuleGroup), &v2beta1.GlobalRuleGroup{})
 	if obj == nil {
 		return nil, err
 	}
@@ -117,14 +110,13 @@ func (c *FakeGlobalRuleGroups) UpdateStatus(ctx context.Context, globalRuleGroup
 // Delete takes name of the globalRuleGroup and deletes it. Returns an error if one occurs.
 func (c *FakeGlobalRuleGroups) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(globalrulegroupsResource, c.ns, name), &v2beta1.GlobalRuleGroup{})
-
+		Invokes(testing.NewRootDeleteAction(globalrulegroupsResource, name), &v2beta1.GlobalRuleGroup{})
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeGlobalRuleGroups) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(globalrulegroupsResource, c.ns, listOpts)
+	action := testing.NewRootDeleteCollectionAction(globalrulegroupsResource, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v2beta1.GlobalRuleGroupList{})
 	return err
@@ -133,8 +125,7 @@ func (c *FakeGlobalRuleGroups) DeleteCollection(ctx context.Context, opts v1.Del
 // Patch applies the patch and returns the patched globalRuleGroup.
 func (c *FakeGlobalRuleGroups) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v2beta1.GlobalRuleGroup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(globalrulegroupsResource, c.ns, name, pt, data, subresources...), &v2beta1.GlobalRuleGroup{})
-
+		Invokes(testing.NewRootPatchSubresourceAction(globalrulegroupsResource, name, pt, data, subresources...), &v2beta1.GlobalRuleGroup{})
 	if obj == nil {
 		return nil, err
 	}

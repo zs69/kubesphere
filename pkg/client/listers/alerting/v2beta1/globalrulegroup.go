@@ -31,8 +31,9 @@ type GlobalRuleGroupLister interface {
 	// List lists all GlobalRuleGroups in the indexer.
 	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v2beta1.GlobalRuleGroup, err error)
-	// GlobalRuleGroups returns an object that can list and get GlobalRuleGroups.
-	GlobalRuleGroups(namespace string) GlobalRuleGroupNamespaceLister
+	// Get retrieves the GlobalRuleGroup from the index for a given name.
+	// Objects returned here must be treated as read-only.
+	Get(name string) (*v2beta1.GlobalRuleGroup, error)
 	GlobalRuleGroupListerExpansion
 }
 
@@ -54,41 +55,9 @@ func (s *globalRuleGroupLister) List(selector labels.Selector) (ret []*v2beta1.G
 	return ret, err
 }
 
-// GlobalRuleGroups returns an object that can list and get GlobalRuleGroups.
-func (s *globalRuleGroupLister) GlobalRuleGroups(namespace string) GlobalRuleGroupNamespaceLister {
-	return globalRuleGroupNamespaceLister{indexer: s.indexer, namespace: namespace}
-}
-
-// GlobalRuleGroupNamespaceLister helps list and get GlobalRuleGroups.
-// All objects returned here must be treated as read-only.
-type GlobalRuleGroupNamespaceLister interface {
-	// List lists all GlobalRuleGroups in the indexer for a given namespace.
-	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v2beta1.GlobalRuleGroup, err error)
-	// Get retrieves the GlobalRuleGroup from the indexer for a given namespace and name.
-	// Objects returned here must be treated as read-only.
-	Get(name string) (*v2beta1.GlobalRuleGroup, error)
-	GlobalRuleGroupNamespaceListerExpansion
-}
-
-// globalRuleGroupNamespaceLister implements the GlobalRuleGroupNamespaceLister
-// interface.
-type globalRuleGroupNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all GlobalRuleGroups in the indexer for a given namespace.
-func (s globalRuleGroupNamespaceLister) List(selector labels.Selector) (ret []*v2beta1.GlobalRuleGroup, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v2beta1.GlobalRuleGroup))
-	})
-	return ret, err
-}
-
-// Get retrieves the GlobalRuleGroup from the indexer for a given namespace and name.
-func (s globalRuleGroupNamespaceLister) Get(name string) (*v2beta1.GlobalRuleGroup, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
+// Get retrieves the GlobalRuleGroup from the index for a given name.
+func (s *globalRuleGroupLister) Get(name string) (*v2beta1.GlobalRuleGroup, error) {
+	obj, exists, err := s.indexer.GetByKey(name)
 	if err != nil {
 		return nil, err
 	}

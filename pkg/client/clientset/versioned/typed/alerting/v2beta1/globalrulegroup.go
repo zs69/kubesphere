@@ -33,7 +33,7 @@ import (
 // GlobalRuleGroupsGetter has a method to return a GlobalRuleGroupInterface.
 // A group's client should implement this interface.
 type GlobalRuleGroupsGetter interface {
-	GlobalRuleGroups(namespace string) GlobalRuleGroupInterface
+	GlobalRuleGroups() GlobalRuleGroupInterface
 }
 
 // GlobalRuleGroupInterface has methods to work with GlobalRuleGroup resources.
@@ -53,14 +53,12 @@ type GlobalRuleGroupInterface interface {
 // globalRuleGroups implements GlobalRuleGroupInterface
 type globalRuleGroups struct {
 	client rest.Interface
-	ns     string
 }
 
 // newGlobalRuleGroups returns a GlobalRuleGroups
-func newGlobalRuleGroups(c *AlertingV2beta1Client, namespace string) *globalRuleGroups {
+func newGlobalRuleGroups(c *AlertingV2beta1Client) *globalRuleGroups {
 	return &globalRuleGroups{
 		client: c.RESTClient(),
-		ns:     namespace,
 	}
 }
 
@@ -68,7 +66,6 @@ func newGlobalRuleGroups(c *AlertingV2beta1Client, namespace string) *globalRule
 func (c *globalRuleGroups) Get(ctx context.Context, name string, options v1.GetOptions) (result *v2beta1.GlobalRuleGroup, err error) {
 	result = &v2beta1.GlobalRuleGroup{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("globalrulegroups").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
@@ -85,7 +82,6 @@ func (c *globalRuleGroups) List(ctx context.Context, opts v1.ListOptions) (resul
 	}
 	result = &v2beta1.GlobalRuleGroupList{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("globalrulegroups").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -102,7 +98,6 @@ func (c *globalRuleGroups) Watch(ctx context.Context, opts v1.ListOptions) (watc
 	}
 	opts.Watch = true
 	return c.client.Get().
-		Namespace(c.ns).
 		Resource("globalrulegroups").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -113,7 +108,6 @@ func (c *globalRuleGroups) Watch(ctx context.Context, opts v1.ListOptions) (watc
 func (c *globalRuleGroups) Create(ctx context.Context, globalRuleGroup *v2beta1.GlobalRuleGroup, opts v1.CreateOptions) (result *v2beta1.GlobalRuleGroup, err error) {
 	result = &v2beta1.GlobalRuleGroup{}
 	err = c.client.Post().
-		Namespace(c.ns).
 		Resource("globalrulegroups").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(globalRuleGroup).
@@ -126,7 +120,6 @@ func (c *globalRuleGroups) Create(ctx context.Context, globalRuleGroup *v2beta1.
 func (c *globalRuleGroups) Update(ctx context.Context, globalRuleGroup *v2beta1.GlobalRuleGroup, opts v1.UpdateOptions) (result *v2beta1.GlobalRuleGroup, err error) {
 	result = &v2beta1.GlobalRuleGroup{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("globalrulegroups").
 		Name(globalRuleGroup.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
@@ -141,7 +134,6 @@ func (c *globalRuleGroups) Update(ctx context.Context, globalRuleGroup *v2beta1.
 func (c *globalRuleGroups) UpdateStatus(ctx context.Context, globalRuleGroup *v2beta1.GlobalRuleGroup, opts v1.UpdateOptions) (result *v2beta1.GlobalRuleGroup, err error) {
 	result = &v2beta1.GlobalRuleGroup{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("globalrulegroups").
 		Name(globalRuleGroup.Name).
 		SubResource("status").
@@ -155,7 +147,6 @@ func (c *globalRuleGroups) UpdateStatus(ctx context.Context, globalRuleGroup *v2
 // Delete takes name of the globalRuleGroup and deletes it. Returns an error if one occurs.
 func (c *globalRuleGroups) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("globalrulegroups").
 		Name(name).
 		Body(&opts).
@@ -170,7 +161,6 @@ func (c *globalRuleGroups) DeleteCollection(ctx context.Context, opts v1.DeleteO
 		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("globalrulegroups").
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -183,7 +173,6 @@ func (c *globalRuleGroups) DeleteCollection(ctx context.Context, opts v1.DeleteO
 func (c *globalRuleGroups) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v2beta1.GlobalRuleGroup, err error) {
 	result = &v2beta1.GlobalRuleGroup{}
 	err = c.client.Patch(pt).
-		Namespace(c.ns).
 		Resource("globalrulegroups").
 		Name(name).
 		SubResource(subresources...).

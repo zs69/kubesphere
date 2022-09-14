@@ -33,7 +33,6 @@ import (
 // FakeClusterRuleGroups implements ClusterRuleGroupInterface
 type FakeClusterRuleGroups struct {
 	Fake *FakeAlertingV2beta1
-	ns   string
 }
 
 var clusterrulegroupsResource = schema.GroupVersionResource{Group: "alerting.kubesphere.io", Version: "v2beta1", Resource: "clusterrulegroups"}
@@ -43,8 +42,7 @@ var clusterrulegroupsKind = schema.GroupVersionKind{Group: "alerting.kubesphere.
 // Get takes name of the clusterRuleGroup, and returns the corresponding clusterRuleGroup object, and an error if there is any.
 func (c *FakeClusterRuleGroups) Get(ctx context.Context, name string, options v1.GetOptions) (result *v2beta1.ClusterRuleGroup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(clusterrulegroupsResource, c.ns, name), &v2beta1.ClusterRuleGroup{})
-
+		Invokes(testing.NewRootGetAction(clusterrulegroupsResource, name), &v2beta1.ClusterRuleGroup{})
 	if obj == nil {
 		return nil, err
 	}
@@ -54,8 +52,7 @@ func (c *FakeClusterRuleGroups) Get(ctx context.Context, name string, options v1
 // List takes label and field selectors, and returns the list of ClusterRuleGroups that match those selectors.
 func (c *FakeClusterRuleGroups) List(ctx context.Context, opts v1.ListOptions) (result *v2beta1.ClusterRuleGroupList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(clusterrulegroupsResource, clusterrulegroupsKind, c.ns, opts), &v2beta1.ClusterRuleGroupList{})
-
+		Invokes(testing.NewRootListAction(clusterrulegroupsResource, clusterrulegroupsKind, opts), &v2beta1.ClusterRuleGroupList{})
 	if obj == nil {
 		return nil, err
 	}
@@ -76,15 +73,13 @@ func (c *FakeClusterRuleGroups) List(ctx context.Context, opts v1.ListOptions) (
 // Watch returns a watch.Interface that watches the requested clusterRuleGroups.
 func (c *FakeClusterRuleGroups) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(clusterrulegroupsResource, c.ns, opts))
-
+		InvokesWatch(testing.NewRootWatchAction(clusterrulegroupsResource, opts))
 }
 
 // Create takes the representation of a clusterRuleGroup and creates it.  Returns the server's representation of the clusterRuleGroup, and an error, if there is any.
 func (c *FakeClusterRuleGroups) Create(ctx context.Context, clusterRuleGroup *v2beta1.ClusterRuleGroup, opts v1.CreateOptions) (result *v2beta1.ClusterRuleGroup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(clusterrulegroupsResource, c.ns, clusterRuleGroup), &v2beta1.ClusterRuleGroup{})
-
+		Invokes(testing.NewRootCreateAction(clusterrulegroupsResource, clusterRuleGroup), &v2beta1.ClusterRuleGroup{})
 	if obj == nil {
 		return nil, err
 	}
@@ -94,8 +89,7 @@ func (c *FakeClusterRuleGroups) Create(ctx context.Context, clusterRuleGroup *v2
 // Update takes the representation of a clusterRuleGroup and updates it. Returns the server's representation of the clusterRuleGroup, and an error, if there is any.
 func (c *FakeClusterRuleGroups) Update(ctx context.Context, clusterRuleGroup *v2beta1.ClusterRuleGroup, opts v1.UpdateOptions) (result *v2beta1.ClusterRuleGroup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(clusterrulegroupsResource, c.ns, clusterRuleGroup), &v2beta1.ClusterRuleGroup{})
-
+		Invokes(testing.NewRootUpdateAction(clusterrulegroupsResource, clusterRuleGroup), &v2beta1.ClusterRuleGroup{})
 	if obj == nil {
 		return nil, err
 	}
@@ -106,8 +100,7 @@ func (c *FakeClusterRuleGroups) Update(ctx context.Context, clusterRuleGroup *v2
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 func (c *FakeClusterRuleGroups) UpdateStatus(ctx context.Context, clusterRuleGroup *v2beta1.ClusterRuleGroup, opts v1.UpdateOptions) (*v2beta1.ClusterRuleGroup, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(clusterrulegroupsResource, "status", c.ns, clusterRuleGroup), &v2beta1.ClusterRuleGroup{})
-
+		Invokes(testing.NewRootUpdateSubresourceAction(clusterrulegroupsResource, "status", clusterRuleGroup), &v2beta1.ClusterRuleGroup{})
 	if obj == nil {
 		return nil, err
 	}
@@ -117,14 +110,13 @@ func (c *FakeClusterRuleGroups) UpdateStatus(ctx context.Context, clusterRuleGro
 // Delete takes name of the clusterRuleGroup and deletes it. Returns an error if one occurs.
 func (c *FakeClusterRuleGroups) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(clusterrulegroupsResource, c.ns, name), &v2beta1.ClusterRuleGroup{})
-
+		Invokes(testing.NewRootDeleteAction(clusterrulegroupsResource, name), &v2beta1.ClusterRuleGroup{})
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeClusterRuleGroups) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(clusterrulegroupsResource, c.ns, listOpts)
+	action := testing.NewRootDeleteCollectionAction(clusterrulegroupsResource, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v2beta1.ClusterRuleGroupList{})
 	return err
@@ -133,8 +125,7 @@ func (c *FakeClusterRuleGroups) DeleteCollection(ctx context.Context, opts v1.De
 // Patch applies the patch and returns the patched clusterRuleGroup.
 func (c *FakeClusterRuleGroups) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v2beta1.ClusterRuleGroup, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(clusterrulegroupsResource, c.ns, name, pt, data, subresources...), &v2beta1.ClusterRuleGroup{})
-
+		Invokes(testing.NewRootPatchSubresourceAction(clusterrulegroupsResource, name, pt, data, subresources...), &v2beta1.ClusterRuleGroup{})
 	if obj == nil {
 		return nil, err
 	}

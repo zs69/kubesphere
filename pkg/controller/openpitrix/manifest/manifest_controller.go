@@ -127,8 +127,8 @@ func (r *ManifestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	// check weather the custom resource still exists
-	if !r.IsCustomResourceExisted(ctx, cli, manifest) {
-		if manifest.Status.ResourceState != v1alpha1.StatusDeleted {
+	if !r.isCustomResourceExisted(ctx, cli, manifest) {
+		if !r.canMarkManifestDeleted(manifest) {
 			return ctrl.Result{}, r.updateManifestState(ctx, manifest, "", v1alpha1.StatusDeleted)
 		}
 		return ctrl.Result{RequeueAfter: r.getNextReconcileTime(manifest)}, nil
@@ -194,6 +194,7 @@ func (r *ManifestReconciler) updateManifest(ctx context.Context, cli client.Clie
 		return ctrl.Result{}, err
 	}
 
+	manifest.Status.State = v1alpha1.StatusUpdated
 	manifest.Status.Version = manifest.Spec.Version
 	manifest.Status.LastUpdate = &metav1.Time{Time: time.Now()}
 	err = r.Status().Update(ctx, manifest)
@@ -247,7 +248,7 @@ func (r *ManifestReconciler) installManifest(ctx context.Context, cli client.Cli
 
 	// create backup secret or configmap
 	if r.hasManagedResource(manifest) {
-		return r.createManagedResource(ctx, manifest)
+		return r.createManagedResource(ctx, cli, manifest)
 	}
 
 	objSlice, err := getUnstructuredObj(manifest)
@@ -322,15 +323,10 @@ func (r *ManifestReconciler) replaceManagedFields(ctx context.Context, manifest 
 }
 
 // createManagedResource create s3 secret/configmap base on fixed secret/configmap in dmp-system namespace
-func (r *ManifestReconciler) createManagedResource(ctx context.Context, manifest *v1alpha1.Manifest) (ctrl.Result, error) {
-	cli, err := r.getClusterClient(manifest.GetManifestCluster())
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
+func (r *ManifestReconciler) createManagedResource(ctx context.Context, cli client.Client, manifest *v1alpha1.Manifest) (ctrl.Result, error) {
 	if strings.Contains(manifest.Spec.CustomResource, s3SecretPlaceHolder) {
 		secret := &corev1.Secret{}
-		err = r.Client.Get(ctx, types.NamespacedName{Namespace: managedNamespace, Name: managedS3SecretName}, secret)
+		err := r.Client.Get(ctx, types.NamespacedName{Namespace: managedNamespace, Name: managedS3SecretName}, secret)
 		if err != nil {
 			klog.Errorf("%s not found in %s, unable to create custom resource that contains %s", managedS3SecretName, managedNamespace, s3SecretPlaceHolder)
 			return ctrl.Result{}, err
@@ -366,13 +362,9 @@ func (r *ManifestReconciler) deleteManagedResource(ctx context.Context, cli clie
 	return nil
 }
 
-func (r *ManifestReconciler) IsCustomResourceExisted(ctx context.Context, cli client.Client, manifest *v1alpha1.Manifest) bool {
+func (r *ManifestReconciler) isCustomResourceExisted(ctx context.Context, cli client.Client, manifest *v1alpha1.Manifest) bool {
 	objSlice, err := getUnstructuredObj(manifest)
 	if err != nil || len(objSlice) == 0 {
-		return true
-	}
-	cli, err = r.getClusterClient(manifest.GetManifestCluster())
-	if err != nil {
 		return true
 	}
 
@@ -419,6 +411,19 @@ func (r *ManifestReconciler) checkResourceStatus(ctx context.Context, cli client
 		klog.Errorf("update manifest status error: %s", err)
 	}
 	return ctrl.Result{RequeueAfter: r.getNextReconcileTime(manifest)}, err
+}
+
+// canMarkManifestDeleted check if a manifest can be marked as deleted
+// if currently in Deleted state, it has been marked as Deleted and will not be processed again
+// if currently in Failed state, custom resource creation failed, message of failure should be preserved
+// if currently in Error state, an error occurred at some step, error should be preserved
+func (r *ManifestReconciler) canMarkManifestDeleted(manifest *v1alpha1.Manifest) bool {
+	switch manifest.Status.State {
+	case v1alpha1.StatusError, v1alpha1.StatusFailed, v1alpha1.StatusDeleted:
+		return true
+	default:
+		return false
+	}
 }
 
 func getUnstructuredObj(manifest *v1alpha1.Manifest) (objSlice []*unstructured.Unstructured, err error) {

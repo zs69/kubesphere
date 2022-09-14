@@ -67,6 +67,7 @@ import (
 	"kubesphere.io/kubesphere/pkg/informers"
 	alertingv1 "kubesphere.io/kubesphere/pkg/kapis/alerting/v1"
 	alertingv2alpha1 "kubesphere.io/kubesphere/pkg/kapis/alerting/v2alpha1"
+	alertingv2beta1 "kubesphere.io/kubesphere/pkg/kapis/alerting/v2beta1"
 	clusterkapisv1alpha1 "kubesphere.io/kubesphere/pkg/kapis/cluster/v1alpha1"
 	configv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/config/v1alpha2"
 	"kubesphere.io/kubesphere/pkg/kapis/crd"
@@ -78,11 +79,13 @@ import (
 	licensev1alpha1 "kubesphere.io/kubesphere/pkg/kapis/license/v1alpha1"
 	meteringv1alpha1 "kubesphere.io/kubesphere/pkg/kapis/metering/v1alpha1"
 	monitoringv1alpha3 "kubesphere.io/kubesphere/pkg/kapis/monitoring/v1alpha3"
+	helmshreleasev1alpha1 "kubesphere.io/kubesphere/pkg/kapis/nativehelmrelease/v1alpha1"
 	networkv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/network/v1alpha2"
 	notificationv1 "kubesphere.io/kubesphere/pkg/kapis/notification/v1"
 	notificationkapisv2beta1 "kubesphere.io/kubesphere/pkg/kapis/notification/v2beta1"
 	notificationkapisv2beta2 "kubesphere.io/kubesphere/pkg/kapis/notification/v2beta2"
 	"kubesphere.io/kubesphere/pkg/kapis/oauth"
+	o11ymonitoringv1alpha1 "kubesphere.io/kubesphere/pkg/kapis/observability/monitoring/v1alpha1"
 	openpitrixv1 "kubesphere.io/kubesphere/pkg/kapis/openpitrix/v1"
 	openpitrixv2alpha1 "kubesphere.io/kubesphere/pkg/kapis/openpitrix/v2alpha1"
 	operationsv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/operations/v1alpha2"
@@ -109,6 +112,7 @@ import (
 	"kubesphere.io/kubesphere/pkg/simple/client/logging"
 	"kubesphere.io/kubesphere/pkg/simple/client/monitoring"
 	"kubesphere.io/kubesphere/pkg/simple/client/notification"
+	o11ymonitoring "kubesphere.io/kubesphere/pkg/simple/client/observability/monitoring"
 	"kubesphere.io/kubesphere/pkg/simple/client/s3"
 	"kubesphere.io/kubesphere/pkg/simple/client/sonarqube"
 	"kubesphere.io/kubesphere/pkg/utils/clusterclient"
@@ -143,6 +147,8 @@ type APIServer struct {
 	MonitoringClient monitoring.Interface
 
 	MetricsClient monitoring.Interface
+
+	O11yMonitoringClient o11ymonitoring.Interface
 
 	LoggingClient logging.Client
 
@@ -233,6 +239,7 @@ func (s *APIServer) installKubeSphereAPIs(stopCh <-chan struct{}) {
 	urlruntime.Must(configv1alpha2.AddToContainer(s.container, s.Config, s.KubernetesClient.Kubernetes(), s.S3Client))
 	urlruntime.Must(resourcev1alpha3.AddToContainer(s.container, s.InformerFactory, s.RuntimeCache))
 	urlruntime.Must(monitoringv1alpha3.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.MonitoringClient, s.MetricsClient, s.InformerFactory, s.OpenpitrixClient, s.Config.MonitoringOptions.EnableGPUMonitoring, s.RuntimeClient))
+	urlruntime.Must(o11ymonitoringv1alpha1.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.O11yMonitoringClient, s.InformerFactory))
 	urlruntime.Must(meteringv1alpha1.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.MonitoringClient, s.InformerFactory, s.RuntimeCache, s.Config.MeteringOptions, s.OpenpitrixClient, s.Config.MonitoringOptions.EnableGPUMonitoring, s.RuntimeClient))
 	urlruntime.Must(openpitrixv1.AddToContainer(s.container, s.InformerFactory, s.KubernetesClient.KubeSphere(), s.Config.OpenPitrixOptions, s.OpenpitrixClient))
 	urlruntime.Must(openpitrixv2alpha1.AddToContainer(s.container, s.InformerFactory, s.KubernetesClient.KubeSphere(), s.Config.OpenPitrixOptions))
@@ -269,6 +276,7 @@ func (s *APIServer) installKubeSphereAPIs(stopCh <-chan struct{}) {
 	urlruntime.Must(alertingv1.AddToContainer(s.container, s.Config.AlertingOptions.Endpoint))
 	urlruntime.Must(alertingv2alpha1.AddToContainer(s.container, s.InformerFactory,
 		s.KubernetesClient.Prometheus(), s.AlertingClient, s.Config.AlertingOptions))
+	urlruntime.Must(alertingv2beta1.AddToContainer(s.container, s.KubernetesClient.KubeSphere(), s.AlertingClient))
 	urlruntime.Must(version.AddToContainer(s.container, s.KubernetesClient.Kubernetes().Discovery()))
 	urlruntime.Must(kubeedgev1alpha1.AddToContainer(s.container, s.Config.KubeEdgeOptions.Endpoint))
 	urlruntime.Must(edgeruntimev1alpha1.AddToContainer(s.container, s.Config.EdgeRuntimeOptions.Endpoint))
@@ -277,6 +285,8 @@ func (s *APIServer) installKubeSphereAPIs(stopCh <-chan struct{}) {
 	urlruntime.Must(notificationkapisv2beta2.AddToContainer(s.container, s.InformerFactory, s.KubernetesClient.Kubernetes(),
 		s.KubernetesClient.KubeSphere(), s.NotificationClient, s.Config.NotificationOptions))
 	urlruntime.Must(gatewayv1alpha1.AddToContainer(s.container, s.Config.GatewayOptions, s.RuntimeCache, s.RuntimeClient, s.InformerFactory, s.KubernetesClient.Kubernetes(), s.LoggingClient))
+	urlruntime.Must(helmshreleasev1alpha1.AddToContainer(s.container, s.InformerFactory.KubeSphereSharedInformerFactory(), s.KubernetesClient.KubeSphere(),
+		s.ClusterClient, s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets(), s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().ConfigMaps(), s.Config.NativeHelmReleaseOptions))
 }
 
 // installCRDAPIs Install CRDs to the KAPIs with List and Get options

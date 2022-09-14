@@ -45,12 +45,12 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 
 // ClusterRuleGroups returns a ClusterRuleGroupInformer.
 func (v *version) ClusterRuleGroups() ClusterRuleGroupInformer {
-	return &clusterRuleGroupInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+	return &clusterRuleGroupInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
 // GlobalRuleGroups returns a GlobalRuleGroupInformer.
 func (v *version) GlobalRuleGroups() GlobalRuleGroupInformer {
-	return &globalRuleGroupInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+	return &globalRuleGroupInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
 // RuleGroups returns a RuleGroupInformer.
