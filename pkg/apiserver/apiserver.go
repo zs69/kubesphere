@@ -230,7 +230,7 @@ func (s *APIServer) installKubeSphereAPIs(stopCh <-chan struct{}) {
 	rbacAuthorizer := rbac.NewRBACAuthorizer(amOperator)
 
 	urlruntime.Must(licensev1alpha1.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.InformerFactory, s.Config.MultiClusterOptions))
-	urlruntime.Must(configv1alpha2.AddToContainer(s.container, s.Config))
+	urlruntime.Must(configv1alpha2.AddToContainer(s.container, s.Config, s.KubernetesClient.Kubernetes(), s.S3Client))
 	urlruntime.Must(resourcev1alpha3.AddToContainer(s.container, s.InformerFactory, s.RuntimeCache))
 	urlruntime.Must(monitoringv1alpha3.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.MonitoringClient, s.MetricsClient, s.InformerFactory, s.OpenpitrixClient, s.Config.MonitoringOptions.EnableGPUMonitoring, s.RuntimeClient))
 	urlruntime.Must(meteringv1alpha1.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.MonitoringClient, s.InformerFactory, s.RuntimeCache, s.Config.MeteringOptions, s.OpenpitrixClient, s.Config.MonitoringOptions.EnableGPUMonitoring, s.RuntimeClient))
