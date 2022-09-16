@@ -20,12 +20,11 @@ import (
 	"github.com/emicklei/go-restful"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
-	"kubesphere.io/kubesphere/pkg/simple/client/s3"
-
-	"kubesphere.io/kubesphere/pkg/simple/client/gpu"
 
 	kubesphereconfig "kubesphere.io/kubesphere/pkg/apiserver/config"
 	"kubesphere.io/kubesphere/pkg/apiserver/runtime"
+	"kubesphere.io/kubesphere/pkg/simple/client/gpu"
+	"kubesphere.io/kubesphere/pkg/simple/client/s3"
 )
 
 const (

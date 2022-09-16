@@ -23,14 +23,11 @@ import (
 	"strings"
 	"sync"
 
-	"kubesphere.io/kubesphere/pkg/simple/client/nativehelmrelease"
-
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
-
 	networkv1alpha1 "kubesphere.io/api/network/v1alpha1"
 
 	"kubesphere.io/kubesphere/pkg/apiserver/authentication"
@@ -53,6 +50,7 @@ import (
 	"kubesphere.io/kubesphere/pkg/simple/client/metering"
 	"kubesphere.io/kubesphere/pkg/simple/client/monitoring/prometheus"
 	"kubesphere.io/kubesphere/pkg/simple/client/multicluster"
+	"kubesphere.io/kubesphere/pkg/simple/client/nativehelmrelease"
 	"kubesphere.io/kubesphere/pkg/simple/client/network"
 	"kubesphere.io/kubesphere/pkg/simple/client/notification"
 	"kubesphere.io/kubesphere/pkg/simple/client/observability"
@@ -217,8 +215,7 @@ type Config struct {
 	LicenseOptions           *license.Options           `json:"license,omitempty" yaml:"license,omitempty" mapstructure:"license"`
 	TerminalOptions          *terminal.Options          `json:"terminal,omitempty" yaml:"terminal,omitempty" mapstructure:"terminal"`
 	NativeHelmReleaseOptions *nativehelmrelease.Options `json:"nativehelmrelease,omitempty" yaml:"nativehelmrelease,omitempty" mapstructure:"nativehelmrelease,omitempty"`
-	ThemeConfig           *ThemeConfig            `json:"themeconfig,omitempty" yaml:"themeconfig,omitempty" mapstructure:"themeconfig"`
-
+	ThemeConfig              *ThemeConfig               `json:"themeconfig,omitempty" yaml:"themeconfig,omitempty" mapstructure:"themeconfig"`
 }
 
 // newConfig creates a default non-empty Config
@@ -251,7 +248,7 @@ func New() *Config {
 		LicenseOptions:           license.NewOptions(),
 		TerminalOptions:          terminal.NewTerminalOptions(),
 		NativeHelmReleaseOptions: nativehelmrelease.NewOptions(),
-		ThemeConfig:           defaultThemeConfig(),
+		ThemeConfig:              defaultThemeConfig(),
 	}
 }
 
