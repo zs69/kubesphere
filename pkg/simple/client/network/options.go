@@ -31,11 +31,13 @@ type Options struct {
 	NSNPOptions         NSNPOptions `json:"nsnpOptions,omitempty" yaml:"nsnpOptions,omitempty"`
 	WeaveScopeHost      string      `json:"weaveScopeHost,omitempty" yaml:"weaveScopeHost,omitempty"`
 	IPPoolType          string      `json:"ippoolType,omitempty" yaml:"ippoolType,omitempty"`
+	EnableMultusCNI     bool        `json:"enableMultusCni,omitempty" yaml:"enableMultusCni,omitempty"`
 }
 
 // NewNetworkOptions returns a `zero` instance
 func NewNetworkOptions() *Options {
 	return &Options{
+		EnableMultusCNI:     false,
 		EnableNetworkPolicy: false,
 		IPPoolType:          networkv1alpha1.IPPoolTypeNone,
 		NSNPOptions: NSNPOptions{
@@ -47,6 +49,7 @@ func NewNetworkOptions() *Options {
 
 func (s *Options) IsEmpty() bool {
 	return s.EnableNetworkPolicy == false &&
+		s.EnableMultusCNI == false &&
 		s.WeaveScopeHost == "" &&
 		s.IPPoolType == networkv1alpha1.IPPoolTypeNone
 }
@@ -61,9 +64,12 @@ func (s *Options) ApplyTo(options *Options) {
 	options.IPPoolType = s.IPPoolType
 	options.NSNPOptions = s.NSNPOptions
 	options.WeaveScopeHost = s.WeaveScopeHost
+	options.EnableMultusCNI = s.EnableMultusCNI
 }
 
 func (s *Options) AddFlags(fs *pflag.FlagSet, c *Options) {
+	fs.BoolVar(&s.EnableMultusCNI, "enable-multus-cni", c.EnableMultusCNI,
+		"This field instructs KubeSphere to enable multus cni or not.")
 	fs.BoolVar(&s.EnableNetworkPolicy, "enable-network-policy", c.EnableNetworkPolicy,
 		"This field instructs KubeSphere to enable network policy or not.")
 	fs.StringVar(&s.IPPoolType, "ippool-type", c.IPPoolType,
