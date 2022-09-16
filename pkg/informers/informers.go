@@ -158,4 +158,8 @@ func (f *informerFactories) Start(stopCh <-chan struct{}) {
 	if f.prometheusInformerFactory != nil {
 		f.prometheusInformerFactory.Start(stopCh)
 	}
+
+	if f.mutluscniInformerFactory != nil {
+		f.mutluscniInformerFactory.Start(stopCh)
+	}
 }

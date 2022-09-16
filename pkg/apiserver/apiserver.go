@@ -608,7 +608,7 @@ func (s *APIServer) waitForResourceSync(ctx context.Context) error {
 		}
 	}
 
-	if multuscniInformerFactory := s.InformerFactory.MultusCniSharedInformerFactory(); multuscniInformerFactory != nil {
+	if multuscniInformerFactory := s.InformerFactory.MultusCniSharedInformerFactory(); multuscniInformerFactory != nil && s.Config.NetworkOptions.EnableMultusCNI {
 		multuscniGVRs := map[schema.GroupVersion][]string{
 			{Group: "k8s.cni.cncf.io", Version: "v1"}: {
 				"network-attachment-definitions",
