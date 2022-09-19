@@ -20,6 +20,10 @@ func AddToContainer(c *restful.Container, s3Client s3.Interface) error {
 		Consumes("multipart/form-data").
 		To(h.uploadStatics).
 		Param(webservice.BodyParameter("image", "statics images,support jpg png svg, size in 2M")))
+	webservice.Route(webservice.GET("/statics/images/{name}").
+		Doc("get statics images").
+		To(h.getStaticsImage).
+		Param(webservice.BodyParameter("image", "statics images,support jpg png svg, size in 2M")))
 
 	c.Add(webservice)
 	return nil

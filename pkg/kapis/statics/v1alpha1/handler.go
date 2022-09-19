@@ -2,6 +2,9 @@ package v1alpha1
 
 import (
 	"errors"
+	"io"
+	"net/http"
+	"strings"
 
 	"github.com/emicklei/go-restful"
 	"github.com/google/uuid"
@@ -13,8 +16,8 @@ import (
 )
 
 const (
-	StaticsPath            = "/statics/images/"
-	S3KeyStaticsPlatformUI = "platform-ui-statics"
+	StaticsPath = "/statics/images/"
+	//S3KeyStaticsPlatformUI = "platform-ui-statics"
 
 	Size2M int64 = 2 * 1024 * 1024
 )
@@ -54,8 +57,8 @@ func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
 		ksapi.HandleBadRequest(resp, req, fErr)
 		return
 	}
-	fName := randStaticsFileName(contentType)
-	err = h.s3Cli.Upload(S3KeyStaticsPlatformUI, fName, f, int(header.Size))
+	fName, typ := randStaticsFileName(contentType)
+	err = h.s3Cli.Upload(fName, fName+typ, f, int(header.Size))
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleBadRequest(resp, req, err)
@@ -65,16 +68,39 @@ func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
 	resp.WriteAsJson(result)
 }
 
-func randStaticsFileName(contentType string) string {
+func (h handler) getStaticsImage(req *restful.Request, resp *restful.Response) {
+	name := req.PathParameter("name")
+	stringSlice := strings.Split(name, ".")
+
+	if len(stringSlice) != 2 {
+		ksapi.HandleBadRequest(resp, req, errors.New("invalid filename "))
+		return
+	}
+	url, err := h.s3Cli.GetDownloadURL(stringSlice[0], name)
+	if err != nil {
+		klog.Error(err)
+		ksapi.HandleBadRequest(resp, req, err)
+	}
+	img, err := http.Get(url)
+	if err != nil {
+		klog.Error(err)
+		ksapi.HandleInternalError(resp, req, err)
+		return
+	}
+	defer img.Body.Close()
+	io.Copy(resp.ResponseWriter, img.Body)
+}
+
+func randStaticsFileName(contentType string) (filename, style string) {
 	uid := uuid.New().String()
 	switch contentType {
 	case "images/png":
-		return uid + ".png"
+		return uid, ".png"
 	case "images/jpeg":
-		return uid + ".jpg"
+		return uid, ".jpg"
 	case "images/svg+xml":
-		return uid + ".svg"
+		return uid, ".svg"
 	default:
-		return uid
+		return uid, ""
 	}
 }

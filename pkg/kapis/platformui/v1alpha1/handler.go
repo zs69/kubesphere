@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	PlatformUIConfigMap = "platform-ui"
-	NamespaceKubeSphere = "kubesphere-system"
+	PlatformUIConfigMap     = "platform-information"
+	ConfigMapDataPlatformUI = "platformui"
+	NamespaceKubeSphere     = "kubesphere-system"
 )
 
 type handler struct {
@@ -58,7 +59,7 @@ func (h handler) createPlatformUI(req *restful.Request, resp *restful.Response) 
 		return
 	}
 	marshalStr := string(marshal)
-	configMap.Data["platformui"] = marshalStr
+	configMap.Data[ConfigMapDataPlatformUI] = marshalStr
 	_, err = h.k8sCli.CoreV1().ConfigMaps(NamespaceKubeSphere).Create(context.TODO(), configMap, metav1.CreateOptions{})
 	if err != nil {
 		klog.Error(err)
@@ -89,7 +90,7 @@ func (h handler) updatePlatformUI(req *restful.Request, resp *restful.Response) 
 		return
 	}
 	marshalStr := string(marshal)
-	configMap.Data["platformui"] = marshalStr
+	configMap.Data[ConfigMapDataPlatformUI] = marshalStr
 	_, err = h.k8sCli.CoreV1().ConfigMaps(NamespaceKubeSphere).Update(context.TODO(), configMap, metav1.UpdateOptions{})
 	if err != nil {
 		klog.Error(err)
@@ -103,7 +104,11 @@ func (h handler) getPlatformUI(req *restful.Request, resp *restful.Response) {
 	cm, err := h.k8sCli.CoreV1().ConfigMaps(NamespaceKubeSphere).Get(context.TODO(), PlatformUIConfigMap, metav1.GetOptions{})
 	if err != nil {
 		klog.Error(err)
-		ksapi.HandleBadRequest(resp, req, err)
+		ksapi.HandleNotFound(resp, req, err)
+		return
+	}
+	if cm == nil {
+		ksapi.HandleNotFound(resp, req, err)
 		return
 	}
 	cmStr := cm.Data[PlatformUIConfigMap]
