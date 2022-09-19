@@ -136,7 +136,7 @@ func (p *PlatformUIConf) Valid() bool {
 	if !matchTitle {
 		return false
 	}
-	if len([]rune(p.Description)) > 63 {
+	if len([]rune(p.Description)) > 256 {
 		return false
 	}
 	return true
