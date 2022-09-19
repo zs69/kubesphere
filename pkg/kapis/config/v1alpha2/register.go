@@ -19,12 +19,10 @@ package v1alpha2
 import (
 	"github.com/emicklei/go-restful"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/kubernetes"
 
 	kubesphereconfig "kubesphere.io/kubesphere/pkg/apiserver/config"
 	"kubesphere.io/kubesphere/pkg/apiserver/runtime"
 	"kubesphere.io/kubesphere/pkg/simple/client/gpu"
-	"kubesphere.io/kubesphere/pkg/simple/client/s3"
 )
 
 const (
@@ -33,9 +31,8 @@ const (
 
 var GroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1alpha2"}
 
-func AddToContainer(c *restful.Container, config *kubesphereconfig.Config, k8sCli kubernetes.Interface, s3Client s3.Interface) error {
+func AddToContainer(c *restful.Container, config *kubesphereconfig.Config) error {
 	webservice := runtime.NewWebService(GroupVersion)
-	h := newConfigHandler(k8sCli, s3Client, config)
 
 	webservice.Route(webservice.GET("/configs/oauth").
 		Doc("Information about the authorization server are published.").
@@ -58,22 +55,6 @@ func AddToContainer(c *restful.Container, config *kubesphereconfig.Config, k8sCl
 			}
 			response.WriteAsJson(kinds)
 		}))
-
-	webservice.Route(webservice.POST("/configs/statics/{static}").
-		Doc("upload them statics").
-		Consumes("multipart/form-data").
-		To(h.uploadThemeStatics).
-		Param(webservice.PathParameter("static", "logo favicon background")))
-
-	webservice.Route(webservice.PUT("/configs/theme").
-		Doc("update theme").
-		To(h.updateTheme).
-		Reads(kubesphereconfig.ThemeConfig{}))
-
-	webservice.Route(webservice.GET("/configs/theme").
-		Doc("get theme").
-		To(h.getTheme))
-
 	c.Add(webservice)
 	return nil
 }

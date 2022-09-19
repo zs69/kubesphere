@@ -19,7 +19,6 @@ package config
 import (
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 	"sync"
 
@@ -155,37 +154,6 @@ func defaultConfig() *config {
 	}
 }
 
-func defaultThemeConfig() *ThemeConfig {
-	return &ThemeConfig{
-		SysTitle:       "KubeSphere",
-		SysDescription: "",
-	}
-}
-func (theme *ThemeConfig) Valid() bool {
-	regx := "^[a-z0-9][0-9a-z-]{0,61}[a-z0-9]$"
-	compile, err := regexp.Compile(regx)
-	if err != nil {
-		klog.Warning(err)
-		return false
-	}
-	matchTitle := compile.MatchString(theme.SysTitle)
-	if !matchTitle {
-		return false
-	}
-	if len([]rune(theme.SysDescription)) > 63 {
-		return false
-	}
-	return true
-}
-
-type ThemeConfig struct {
-	SysTitle       string `json:"systitle,omitempty" yaml:"systitle,omitempty" mapstructure:"systitle"`
-	SysDescription string `json:"sysdescription,omitempty" yaml:"sysdescription,omitempty" mapstructure:"sysdescription"`
-	//Logo           string `json:"logo,omitempty" yaml:"logo,omitempty" mapstructure:"logo"`
-	//Favicon        string `json:"favicon,omitempty" yaml:"favicon,omitempty" mapstructure:"favicon"`
-	//Background     string `json:"background,omitempty" yaml:"background,omitempty" mapstructure:"background"`
-}
-
 // Config defines everything needed for apiserver to deal with external services
 type Config struct {
 	DevopsOptions            *jenkins.Options           `json:"devops,omitempty" yaml:"devops,omitempty" mapstructure:"devops"`
@@ -215,7 +183,6 @@ type Config struct {
 	LicenseOptions           *license.Options           `json:"license,omitempty" yaml:"license,omitempty" mapstructure:"license"`
 	TerminalOptions          *terminal.Options          `json:"terminal,omitempty" yaml:"terminal,omitempty" mapstructure:"terminal"`
 	NativeHelmReleaseOptions *nativehelmrelease.Options `json:"nativehelmrelease,omitempty" yaml:"nativehelmrelease,omitempty" mapstructure:"nativehelmrelease,omitempty"`
-	ThemeConfig              *ThemeConfig               `json:"themeconfig,omitempty" yaml:"themeconfig,omitempty" mapstructure:"themeconfig"`
 }
 
 // newConfig creates a default non-empty Config
@@ -248,7 +215,6 @@ func New() *Config {
 		LicenseOptions:           license.NewOptions(),
 		TerminalOptions:          terminal.NewTerminalOptions(),
 		NativeHelmReleaseOptions: nativehelmrelease.NewOptions(),
-		ThemeConfig:              defaultThemeConfig(),
 	}
 }
 
