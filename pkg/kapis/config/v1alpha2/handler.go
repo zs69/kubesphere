@@ -13,11 +13,12 @@ import (
 	"k8s.io/klog"
 
 	ksapi "kubesphere.io/kubesphere/pkg/api"
+	"kubesphere.io/kubesphere/pkg/constants"
+	kserrors "kubesphere.io/kubesphere/pkg/server/errors"
 )
 
 const (
 	PlatformUIConfigMap = "platform-information"
-	NamespaceKubeSphere = "kubesphere-system"
 )
 
 type handler struct {
@@ -59,7 +60,7 @@ func (h handler) createPlatformUI(req *restful.Request, resp *restful.Response) 
 		return
 	}
 	configMap.Data = configMapData
-	_, err = h.k8sClient.CoreV1().ConfigMaps(NamespaceKubeSphere).Create(context.TODO(), configMap, metav1.CreateOptions{})
+	_, err = h.k8sClient.CoreV1().ConfigMaps(constants.KubeSphereNamespace).Create(context.TODO(), configMap, metav1.CreateOptions{})
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleInternalError(resp, req, err)
@@ -91,7 +92,7 @@ func (h handler) updatePlatformUI(req *restful.Request, resp *restful.Response) 
 	}
 
 	configMap.Data = configMapData
-	_, err = h.k8sClient.CoreV1().ConfigMaps(NamespaceKubeSphere).Update(context.TODO(), configMap, metav1.UpdateOptions{})
+	_, err = h.k8sClient.CoreV1().ConfigMaps(constants.KubeSphereNamespace).Update(context.TODO(), configMap, metav1.UpdateOptions{})
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleInternalError(resp, req, err)
@@ -101,7 +102,7 @@ func (h handler) updatePlatformUI(req *restful.Request, resp *restful.Response) 
 }
 
 func (h handler) getPlatformUI(req *restful.Request, resp *restful.Response) {
-	cm, err := h.k8sClient.CoreV1().ConfigMaps(NamespaceKubeSphere).Get(context.TODO(), PlatformUIConfigMap, metav1.GetOptions{})
+	cm, err := h.k8sClient.CoreV1().ConfigMaps(constants.KubeSphereNamespace).Get(context.TODO(), PlatformUIConfigMap, metav1.GetOptions{})
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleNotFound(resp, req, err)
@@ -116,13 +117,13 @@ func (h handler) getPlatformUI(req *restful.Request, resp *restful.Response) {
 }
 
 func (h handler) deletePlatformUI(req *restful.Request, resp *restful.Response) {
-	err := h.k8sClient.CoreV1().ConfigMaps(NamespaceKubeSphere).Delete(context.TODO(), PlatformUIConfigMap, metav1.DeleteOptions{})
+	err := h.k8sClient.CoreV1().ConfigMaps(constants.KubeSphereNamespace).Delete(context.TODO(), PlatformUIConfigMap, metav1.DeleteOptions{})
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleBadRequest(resp, req, err)
 		return
 	}
-	resp.WriteAsJson("success")
+	resp.WriteEntity(kserrors.None)
 }
 
 func (p *PlatformUIConf) Valid() bool {
@@ -144,6 +145,6 @@ func (p *PlatformUIConf) Valid() bool {
 
 func defaultPlatformUICM() *v1.ConfigMap {
 	typeMeta := metav1.TypeMeta{Kind: "ConfigMap", APIVersion: "v1"}
-	objectMeta := metav1.ObjectMeta{Name: PlatformUIConfigMap, Namespace: NamespaceKubeSphere}
+	objectMeta := metav1.ObjectMeta{Name: PlatformUIConfigMap, Namespace: constants.KubeSphereNamespace}
 	return &v1.ConfigMap{TypeMeta: typeMeta, ObjectMeta: objectMeta}
 }
