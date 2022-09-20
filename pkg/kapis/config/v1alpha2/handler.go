@@ -2,11 +2,11 @@ package v1alpha2
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"regexp"
 
 	"github.com/emicklei/go-restful"
+	"github.com/mitchellh/mapstructure"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -16,9 +16,8 @@ import (
 )
 
 const (
-	PlatformUIConfigMap     = "platform-information"
-	ConfigMapDataPlatformUI = "platformui"
-	NamespaceKubeSphere     = "kubesphere-system"
+	PlatformUIConfigMap = "platform-information"
+	NamespaceKubeSphere = "kubesphere-system"
 )
 
 type handler struct {
@@ -52,18 +51,18 @@ func (h handler) createPlatformUI(req *restful.Request, resp *restful.Response) 
 	}
 
 	configMap := defaultPlatformUICM()
-	marshal, merr := json.Marshal(params)
-	if merr != nil {
+	configMapData := make(map[string]string)
+	err = mapstructure.Decode(params, configMapData)
+	if err != nil {
 		klog.Error(err)
-		ksapi.HandleBadRequest(resp, req, merr)
+		ksapi.HandleInternalError(resp, req, err)
 		return
 	}
-	marshalStr := string(marshal)
-	configMap.Data[ConfigMapDataPlatformUI] = marshalStr
+	configMap.Data = configMapData
 	_, err = h.k8sClient.CoreV1().ConfigMaps(NamespaceKubeSphere).Create(context.TODO(), configMap, metav1.CreateOptions{})
 	if err != nil {
 		klog.Error(err)
-		ksapi.HandleBadRequest(resp, req, err)
+		ksapi.HandleInternalError(resp, req, err)
 		return
 	}
 	resp.WriteAsJson(params)
@@ -83,18 +82,19 @@ func (h handler) updatePlatformUI(req *restful.Request, resp *restful.Response) 
 		return
 	}
 	configMap := defaultPlatformUICM()
-	marshal, merr := json.Marshal(params)
-	if merr != nil {
+	configMapData := make(map[string]string)
+	err = mapstructure.Decode(params, configMapData)
+	if err != nil {
 		klog.Error(err)
-		ksapi.HandleBadRequest(resp, req, merr)
+		ksapi.HandleInternalError(resp, req, err)
 		return
 	}
-	marshalStr := string(marshal)
-	configMap.Data[ConfigMapDataPlatformUI] = marshalStr
+
+	configMap.Data = configMapData
 	_, err = h.k8sClient.CoreV1().ConfigMaps(NamespaceKubeSphere).Update(context.TODO(), configMap, metav1.UpdateOptions{})
 	if err != nil {
 		klog.Error(err)
-		ksapi.HandleBadRequest(resp, req, err)
+		ksapi.HandleInternalError(resp, req, err)
 		return
 	}
 	resp.WriteAsJson(params)
@@ -107,12 +107,12 @@ func (h handler) getPlatformUI(req *restful.Request, resp *restful.Response) {
 		ksapi.HandleNotFound(resp, req, err)
 		return
 	}
-	if cm == nil {
+	if cm == nil || cm.Data == nil {
 		ksapi.HandleNotFound(resp, req, err)
 		return
 	}
-	cmStr := cm.Data[PlatformUIConfigMap]
-	resp.WriteAsJson(cmStr)
+
+	resp.WriteAsJson(cm.Data)
 }
 
 func (h handler) deletePlatformUI(req *restful.Request, resp *restful.Response) {
