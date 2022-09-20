@@ -18,17 +18,21 @@ import (
 const (
 	StaticsPath = "/statics/images/"
 
+	ImageStylePNG = "images/png"
+	ImageStyleJPG = "images/svg+xml"
+	ImageStyleSVG = "images/jpeg"
+
 	Size2M int64 = 2 * 1024 * 1024
 )
 
-var StaticStyles = sets.NewString("images/png", "images/svg+xml", "images/jpeg")
+var StaticStyles = sets.NewString(ImageStylePNG, ImageStyleJPG, ImageStyleSVG)
 
 type handler struct {
-	s3Cli s3.Interface
+	s3Client s3.Interface
 }
 
-func newStaticsHandler(s3Cli s3.Interface) *handler {
-	return &handler{s3Cli: s3Cli}
+func newStaticsHandler(s3Client s3.Interface) *handler {
+	return &handler{s3Client: s3Client}
 }
 
 func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
@@ -57,7 +61,7 @@ func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
 		return
 	}
 	fileName, fileType := randStaticsFileName(contentType)
-	err = h.s3Cli.Upload(fileName, fileName+fileType, file, int(fileHeader.Size))
+	err = h.s3Client.Upload(fileName, fileName+fileType, file, int(fileHeader.Size))
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleBadRequest(resp, req, err)
@@ -68,14 +72,14 @@ func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
 }
 
 func (h handler) getStaticsImage(req *restful.Request, resp *restful.Response) {
-	name := req.PathParameter("name")
-	stringSlice := strings.Split(name, ".")
+	fileName := req.PathParameter("fileName")
+	nameAndSuffix := strings.Split(fileName, ".")
 
-	if len(stringSlice) != 2 {
+	if len(nameAndSuffix) != 2 {
 		ksapi.HandleBadRequest(resp, req, errors.New("invalid filename "))
 		return
 	}
-	url, err := h.s3Cli.GetDownloadURL(stringSlice[0], name)
+	url, err := h.s3Client.GetDownloadURL(nameAndSuffix[0], fileName)
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleBadRequest(resp, req, err)
@@ -93,11 +97,11 @@ func (h handler) getStaticsImage(req *restful.Request, resp *restful.Response) {
 func randStaticsFileName(contentType string) (filename, style string) {
 	uid := uuid.New().String()
 	switch contentType {
-	case "images/png":
+	case ImageStylePNG:
 		return uid, ".png"
-	case "images/jpeg":
+	case ImageStyleJPG:
 		return uid, ".jpg"
-	case "images/svg+xml":
+	case ImageStyleSVG:
 		return uid, ".svg"
 	default:
 		return uid, ""
