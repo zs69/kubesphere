@@ -17,7 +17,6 @@ import (
 
 const (
 	StaticsPath = "/statics/images/"
-	//S3KeyStaticsPlatformUI = "platform-ui-statics"
 
 	Size2M int64 = 2 * 1024 * 1024
 )
@@ -39,32 +38,32 @@ func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
 		ksapi.HandleBadRequest(resp, req, err)
 		return
 	}
-	headers, existed := req.Request.MultipartForm.File["image"]
-	if !existed || len(headers) == 0 {
+	fileHeaders, existed := req.Request.MultipartForm.File["image"]
+	if !existed || len(fileHeaders) == 0 {
 		ksapi.HandleBadRequest(resp, req, errors.New("image filed not existed"))
 		return
 	}
-	header := headers[0]
-	contentType := header.Header.Get("Content-Type")
+	fileHeader := fileHeaders[0]
+	contentType := fileHeader.Header.Get("Content-Type")
 	if !StaticStyles.Has(contentType) {
-		ksapi.HandleBadRequest(resp, req, errors.New("not supported file style"))
+		ksapi.HandleBadRequest(resp, req, errors.New("not supported fileHeader style"))
 		return
 	}
-	f, fErr := header.Open()
-	defer f.Close()
-	if fErr != nil {
-		klog.Error(fErr)
-		ksapi.HandleBadRequest(resp, req, fErr)
+	file, fileErr := fileHeader.Open()
+	defer file.Close()
+	if fileErr != nil {
+		klog.Error(fileErr)
+		ksapi.HandleBadRequest(resp, req, fileErr)
 		return
 	}
-	fName, typ := randStaticsFileName(contentType)
-	err = h.s3Cli.Upload(fName, fName+typ, f, int(header.Size))
+	fileName, fileType := randStaticsFileName(contentType)
+	err = h.s3Cli.Upload(fileName, fileName+fileType, file, int(fileHeader.Size))
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleBadRequest(resp, req, err)
 		return
 	}
-	result := map[string]string{"image": StaticsPath + fName}
+	result := map[string]string{"image": StaticsPath + fileName}
 	resp.WriteAsJson(result)
 }
 
