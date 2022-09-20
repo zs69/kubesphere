@@ -22,6 +22,8 @@ const (
 	ImageStyleJPG = "images/jpeg"
 	ImageStyleSVG = "images/svg+xml"
 
+	SeparatorsPoint = "."
+
 	Size2M int64 = 2 * 1024 * 1024
 )
 
@@ -73,7 +75,7 @@ func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
 
 func (h handler) getStaticsImage(req *restful.Request, resp *restful.Response) {
 	fileName := req.PathParameter("name")
-	nameAndSuffix := strings.Split(fileName, ".")
+	nameAndSuffix := strings.Split(fileName, SeparatorsPoint)
 
 	if len(nameAndSuffix) != 2 {
 		ksapi.HandleBadRequest(resp, req, errors.New("invalid filename"))
