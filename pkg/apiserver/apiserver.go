@@ -286,7 +286,7 @@ func (s *APIServer) installKubeSphereAPIs(stopCh <-chan struct{}) {
 		s.KubernetesClient.KubeSphere(), s.NotificationClient, s.Config.NotificationOptions))
 	urlruntime.Must(gatewayv1alpha1.AddToContainer(s.container, s.Config.GatewayOptions, s.RuntimeCache, s.RuntimeClient, s.InformerFactory, s.KubernetesClient.Kubernetes(), s.LoggingClient))
 	urlruntime.Must(helmshreleasev1alpha1.AddToContainer(s.container, s.InformerFactory.KubeSphereSharedInformerFactory(), s.KubernetesClient.KubeSphere(),
-		s.ClusterClient, s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets(), s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().ConfigMaps(), s.Config.NativeHelmReleaseOptions))
+		s.ClusterClient, s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets(), s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().ConfigMaps(), s.Config.OpenPitrixOptions))
 }
 
 // installCRDAPIs Install CRDs to the KAPIs with List and Get options

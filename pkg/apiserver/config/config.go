@@ -22,8 +22,6 @@ import (
 	"strings"
 	"sync"
 
-	"kubesphere.io/kubesphere/pkg/simple/client/nativehelmrelease"
-
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
@@ -158,65 +156,63 @@ func defaultConfig() *config {
 
 // Config defines everything needed for apiserver to deal with external services
 type Config struct {
-	DevopsOptions            *jenkins.Options           `json:"devops,omitempty" yaml:"devops,omitempty" mapstructure:"devops"`
-	SonarQubeOptions         *sonarqube.Options         `json:"sonarqube,omitempty" yaml:"sonarQube,omitempty" mapstructure:"sonarqube"`
-	KubernetesOptions        *k8s.KubernetesOptions     `json:"kubernetes,omitempty" yaml:"kubernetes,omitempty" mapstructure:"kubernetes"`
-	ServiceMeshOptions       *servicemesh.Options       `json:"servicemesh,omitempty" yaml:"servicemesh,omitempty" mapstructure:"servicemesh"`
-	NetworkOptions           *network.Options           `json:"network,omitempty" yaml:"network,omitempty" mapstructure:"network"`
-	LdapOptions              *ldap.Options              `json:"-,omitempty" yaml:"ldap,omitempty" mapstructure:"ldap"`
-	RedisOptions             *cache.Options             `json:"redis,omitempty" yaml:"redis,omitempty" mapstructure:"redis"`
-	S3Options                *s3.Options                `json:"s3,omitempty" yaml:"s3,omitempty" mapstructure:"s3"`
-	OpenPitrixOptions        *openpitrix.Options        `json:"openpitrix,omitempty" yaml:"openpitrix,omitempty" mapstructure:"openpitrix"`
-	MonitoringOptions        *prometheus.Options        `json:"monitoring,omitempty" yaml:"monitoring,omitempty" mapstructure:"monitoring"`
-	ObservabilityOptions     *observability.Options     `json:"observability,omitempty" yaml:"observability,omitempty" mapstructure:"observability"`
-	LoggingOptions           *logging.Options           `json:"logging,omitempty" yaml:"logging,omitempty" mapstructure:"logging"`
-	AuthenticationOptions    *authentication.Options    `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
-	AuthorizationOptions     *authorization.Options     `json:"authorization,omitempty" yaml:"authorization,omitempty" mapstructure:"authorization"`
-	MultiClusterOptions      *multicluster.Options      `json:"multicluster,omitempty" yaml:"multicluster,omitempty" mapstructure:"multicluster"`
-	EventsOptions            *events.Options            `json:"events,omitempty" yaml:"events,omitempty" mapstructure:"events"`
-	AuditingOptions          *auditing.Options          `json:"auditing,omitempty" yaml:"auditing,omitempty" mapstructure:"auditing"`
-	AlertingOptions          *alerting.Options          `json:"alerting,omitempty" yaml:"alerting,omitempty" mapstructure:"alerting"`
-	NotificationOptions      *notification.Options      `json:"notification,omitempty" yaml:"notification,omitempty" mapstructure:"notification"`
-	KubeEdgeOptions          *kubeedge.Options          `json:"kubeedge,omitempty" yaml:"kubeedge,omitempty" mapstructure:"kubeedge"`
-	EdgeRuntimeOptions       *edgeruntime.Options       `json:"edgeruntime,omitempty" yaml:"edgeruntime,omitempty" mapstructure:"edgeruntime"`
-	MeteringOptions          *metering.Options          `json:"metering,omitempty" yaml:"metering,omitempty" mapstructure:"metering"`
-	GatewayOptions           *gateway.Options           `json:"gateway,omitempty" yaml:"gateway,omitempty" mapstructure:"gateway"`
-	GPUOptions               *gpu.Options               `json:"gpu,omitempty" yaml:"gpu,omitempty" mapstructure:"gpu"`
-	LicenseOptions           *license.Options           `json:"license,omitempty" yaml:"license,omitempty" mapstructure:"license"`
-	TerminalOptions          *terminal.Options          `json:"terminal,omitempty" yaml:"terminal,omitempty" mapstructure:"terminal"`
-	NativeHelmReleaseOptions *nativehelmrelease.Options `json:"nativehelmrelease,omitempty" yaml:"nativehelmrelease,omitempty" mapstructure:"nativehelmrelease,omitempty"`
+	DevopsOptions         *jenkins.Options        `json:"devops,omitempty" yaml:"devops,omitempty" mapstructure:"devops"`
+	SonarQubeOptions      *sonarqube.Options      `json:"sonarqube,omitempty" yaml:"sonarQube,omitempty" mapstructure:"sonarqube"`
+	KubernetesOptions     *k8s.KubernetesOptions  `json:"kubernetes,omitempty" yaml:"kubernetes,omitempty" mapstructure:"kubernetes"`
+	ServiceMeshOptions    *servicemesh.Options    `json:"servicemesh,omitempty" yaml:"servicemesh,omitempty" mapstructure:"servicemesh"`
+	NetworkOptions        *network.Options        `json:"network,omitempty" yaml:"network,omitempty" mapstructure:"network"`
+	LdapOptions           *ldap.Options           `json:"-,omitempty" yaml:"ldap,omitempty" mapstructure:"ldap"`
+	RedisOptions          *cache.Options          `json:"redis,omitempty" yaml:"redis,omitempty" mapstructure:"redis"`
+	S3Options             *s3.Options             `json:"s3,omitempty" yaml:"s3,omitempty" mapstructure:"s3"`
+	OpenPitrixOptions     *openpitrix.Options     `json:"openpitrix,omitempty" yaml:"openpitrix,omitempty" mapstructure:"openpitrix"`
+	MonitoringOptions     *prometheus.Options     `json:"monitoring,omitempty" yaml:"monitoring,omitempty" mapstructure:"monitoring"`
+	ObservabilityOptions  *observability.Options  `json:"observability,omitempty" yaml:"observability,omitempty" mapstructure:"observability"`
+	LoggingOptions        *logging.Options        `json:"logging,omitempty" yaml:"logging,omitempty" mapstructure:"logging"`
+	AuthenticationOptions *authentication.Options `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
+	AuthorizationOptions  *authorization.Options  `json:"authorization,omitempty" yaml:"authorization,omitempty" mapstructure:"authorization"`
+	MultiClusterOptions   *multicluster.Options   `json:"multicluster,omitempty" yaml:"multicluster,omitempty" mapstructure:"multicluster"`
+	EventsOptions         *events.Options         `json:"events,omitempty" yaml:"events,omitempty" mapstructure:"events"`
+	AuditingOptions       *auditing.Options       `json:"auditing,omitempty" yaml:"auditing,omitempty" mapstructure:"auditing"`
+	AlertingOptions       *alerting.Options       `json:"alerting,omitempty" yaml:"alerting,omitempty" mapstructure:"alerting"`
+	NotificationOptions   *notification.Options   `json:"notification,omitempty" yaml:"notification,omitempty" mapstructure:"notification"`
+	KubeEdgeOptions       *kubeedge.Options       `json:"kubeedge,omitempty" yaml:"kubeedge,omitempty" mapstructure:"kubeedge"`
+	EdgeRuntimeOptions    *edgeruntime.Options    `json:"edgeruntime,omitempty" yaml:"edgeruntime,omitempty" mapstructure:"edgeruntime"`
+	MeteringOptions       *metering.Options       `json:"metering,omitempty" yaml:"metering,omitempty" mapstructure:"metering"`
+	GatewayOptions        *gateway.Options        `json:"gateway,omitempty" yaml:"gateway,omitempty" mapstructure:"gateway"`
+	GPUOptions            *gpu.Options            `json:"gpu,omitempty" yaml:"gpu,omitempty" mapstructure:"gpu"`
+	LicenseOptions        *license.Options        `json:"license,omitempty" yaml:"license,omitempty" mapstructure:"license"`
+	TerminalOptions       *terminal.Options       `json:"terminal,omitempty" yaml:"terminal,omitempty" mapstructure:"terminal"`
 }
 
 // newConfig creates a default non-empty Config
 func New() *Config {
 	return &Config{
-		DevopsOptions:            jenkins.NewDevopsOptions(),
-		SonarQubeOptions:         sonarqube.NewSonarQubeOptions(),
-		KubernetesOptions:        k8s.NewKubernetesOptions(),
-		ServiceMeshOptions:       servicemesh.NewServiceMeshOptions(),
-		NetworkOptions:           network.NewNetworkOptions(),
-		LdapOptions:              ldap.NewOptions(),
-		RedisOptions:             cache.NewRedisOptions(),
-		S3Options:                s3.NewS3Options(),
-		OpenPitrixOptions:        openpitrix.NewOptions(),
-		ObservabilityOptions:     observability.NewObservabilityOptions(),
-		MonitoringOptions:        prometheus.NewPrometheusOptions(),
-		AlertingOptions:          alerting.NewAlertingOptions(),
-		NotificationOptions:      notification.NewNotificationOptions(),
-		LoggingOptions:           logging.NewLoggingOptions(),
-		AuthenticationOptions:    authentication.NewOptions(),
-		AuthorizationOptions:     authorization.NewOptions(),
-		MultiClusterOptions:      multicluster.NewOptions(),
-		EventsOptions:            events.NewEventsOptions(),
-		AuditingOptions:          auditing.NewAuditingOptions(),
-		KubeEdgeOptions:          kubeedge.NewKubeEdgeOptions(),
-		EdgeRuntimeOptions:       edgeruntime.NewEdgeRuntimeOptions(),
-		MeteringOptions:          metering.NewMeteringOptions(),
-		GatewayOptions:           gateway.NewGatewayOptions(),
-		GPUOptions:               gpu.NewGPUOptions(),
-		LicenseOptions:           license.NewOptions(),
-		TerminalOptions:          terminal.NewTerminalOptions(),
-		NativeHelmReleaseOptions: nativehelmrelease.NewOptions(),
+		DevopsOptions:         jenkins.NewDevopsOptions(),
+		SonarQubeOptions:      sonarqube.NewSonarQubeOptions(),
+		KubernetesOptions:     k8s.NewKubernetesOptions(),
+		ServiceMeshOptions:    servicemesh.NewServiceMeshOptions(),
+		NetworkOptions:        network.NewNetworkOptions(),
+		LdapOptions:           ldap.NewOptions(),
+		RedisOptions:          cache.NewRedisOptions(),
+		S3Options:             s3.NewS3Options(),
+		OpenPitrixOptions:     openpitrix.NewOptions(),
+		ObservabilityOptions:  observability.NewObservabilityOptions(),
+		MonitoringOptions:     prometheus.NewPrometheusOptions(),
+		AlertingOptions:       alerting.NewAlertingOptions(),
+		NotificationOptions:   notification.NewNotificationOptions(),
+		LoggingOptions:        logging.NewLoggingOptions(),
+		AuthenticationOptions: authentication.NewOptions(),
+		AuthorizationOptions:  authorization.NewOptions(),
+		MultiClusterOptions:   multicluster.NewOptions(),
+		EventsOptions:         events.NewEventsOptions(),
+		AuditingOptions:       auditing.NewAuditingOptions(),
+		KubeEdgeOptions:       kubeedge.NewKubeEdgeOptions(),
+		EdgeRuntimeOptions:    edgeruntime.NewEdgeRuntimeOptions(),
+		MeteringOptions:       metering.NewMeteringOptions(),
+		GatewayOptions:        gateway.NewGatewayOptions(),
+		GPUOptions:            gpu.NewGPUOptions(),
+		LicenseOptions:        license.NewOptions(),
+		TerminalOptions:       terminal.NewTerminalOptions(),
 	}
 }
 
@@ -285,6 +281,12 @@ func (conf *Config) ToMap() map[string]bool {
 				result["openpitrix.appstore"] = false
 			} else {
 				result["openpitrix.appstore"] = !conf.OpenPitrixOptions.AppStoreConfIsEmpty()
+			}
+			if conf.OpenPitrixOptions == nil || conf.OpenPitrixOptions.NativeHelmReleaseOptions == nil ||
+				conf.OpenPitrixOptions.NativeHelmReleaseOptions.Enable == false {
+				result["nativehelmrelease"] = false
+			} else {
+				result["nativehelmrelease"] = true
 			}
 			continue
 		}

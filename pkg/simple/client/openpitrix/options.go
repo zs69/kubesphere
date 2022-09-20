@@ -28,6 +28,11 @@ import (
 type Options struct {
 	S3Options                *s3.Options               `json:"s3,omitempty" yaml:"s3,omitempty" mapstructure:"s3"`
 	ReleaseControllerOptions *ReleaseControllerOptions `json:"releaseControllerOptions,omitempty" yaml:"releaseControllerOptions,omitempty" mapstructure:"releaseControllerOptions"`
+	NativeHelmReleaseOptions *NativeHelmReleaseOptions `json:"nativeHelmRelease,omitempty" yaml:"nativeHelmRelease,omitempty" mapstructure:"nativeHelmRelease,omitempty"`
+}
+
+type NativeHelmReleaseOptions struct {
+	Enable bool `json:"enable,omitempty" yaml:"enable,omitempty" mapstructure:"enable"`
 }
 
 type ReleaseControllerOptions struct {
@@ -41,6 +46,9 @@ func NewOptions() *Options {
 		ReleaseControllerOptions: &ReleaseControllerOptions{
 			MaxConcurrent: 10,
 			WaitTime:      30 * time.Second,
+		},
+		NativeHelmReleaseOptions: &NativeHelmReleaseOptions{
+			Enable: false,
 		},
 	}
 }
@@ -91,4 +99,6 @@ func (s *Options) AddFlags(fs *pflag.FlagSet, c *Options) {
 
 	fs.DurationVar(&s.ReleaseControllerOptions.WaitTime, "openpitrix-release-controller-options-wait-time", c.ReleaseControllerOptions.WaitTime, "wait time when check release is ready or not")
 	fs.IntVar(&s.ReleaseControllerOptions.MaxConcurrent, "openpitrix-release-controller-options-max-concurrent", c.ReleaseControllerOptions.MaxConcurrent, "the maximum number of concurrent Reconciles which can be run for release controller")
+
+	fs.BoolVar(&s.NativeHelmReleaseOptions.Enable, "openpitrix-native-helm-release", c.NativeHelmReleaseOptions.Enable, "enable ks-apiserver aggregates all releases created by helm cmd")
 }

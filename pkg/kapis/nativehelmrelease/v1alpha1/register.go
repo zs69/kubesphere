@@ -19,7 +19,7 @@ package v1alpha1
 import (
 	"net/http"
 
-	"kubesphere.io/kubesphere/pkg/simple/client/nativehelmrelease"
+	openpitrixoptions "kubesphere.io/kubesphere/pkg/simple/client/openpitrix"
 
 	restful "github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
@@ -50,9 +50,9 @@ var GroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1alpha1"}
 
 func AddToContainer(container *restful.Container, ksFactory externalversions.SharedInformerFactory,
 	ksClient versioned.Interface, cc clusterclient.ClusterClients,
-	secretInformer v1.SecretInformer, configmapInformer v1.ConfigMapInformer, option *nativehelmrelease.Options) error {
+	secretInformer v1.SecretInformer, configmapInformer v1.ConfigMapInformer, option *openpitrixoptions.Options) error {
 
-	if option == nil || option.Enable == false {
+	if option == nil || option.NativeHelmReleaseOptions == nil || option.NativeHelmReleaseOptions.Enable == false {
 		return nil
 	}
 

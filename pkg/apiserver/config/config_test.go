@@ -23,8 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"kubesphere.io/kubesphere/pkg/simple/client/nativehelmrelease"
-
 	"github.com/google/go-cmp/cmp"
 	"gopkg.in/yaml.v2"
 
@@ -123,6 +121,7 @@ func newTestConfig() (*Config, error) {
 				MaxConcurrent: 10,
 				WaitTime:      30 * time.Second,
 			},
+			NativeHelmReleaseOptions: &openpitrix.NativeHelmReleaseOptions{Enable: false},
 		},
 		NetworkOptions: &network.Options{
 			EnableNetworkPolicy: true,
@@ -218,7 +217,6 @@ func newTestConfig() (*Config, error) {
 			Image:   "alpine:3.15",
 			Timeout: 600,
 		},
-		NativeHelmReleaseOptions: &nativehelmrelease.Options{Enable: false},
 	}
 	return conf, nil
 }
@@ -248,12 +246,12 @@ func newTestMap() map[string]bool {
 		"observability":       true,
 		"openpitrix":          true,
 		"openpitrix.appstore": true,
+		"nativehelmrelease":   false,
 		"redis":               true,
 		"s3":                  true,
 		"servicemesh":         true,
 		"sonarqube":           true,
 		"terminal":            true,
-		"nativehelmrelease":   true,
 	}
 	return confMap
 }
