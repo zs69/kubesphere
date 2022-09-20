@@ -20,6 +20,8 @@ import (
 	"github.com/emicklei/go-restful"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
+	"kubesphere.io/kubesphere/pkg/api"
+	"net/http"
 
 	kubesphereconfig "kubesphere.io/kubesphere/pkg/apiserver/config"
 	"kubesphere.io/kubesphere/pkg/apiserver/runtime"
@@ -60,20 +62,24 @@ func AddToContainer(c *restful.Container, config *kubesphereconfig.Config, k8sCl
 	webservice.Route(webservice.POST("/configs/theme").
 		To(h.createPlatformUI).
 		Doc("create customer platform ui config ").
-		Reads(PlatformUIConf{}))
+		Reads(PlatformUIConf{}).
+		Returns(http.StatusOK, api.StatusOK, PlatformUIConf{}))
 
 	webservice.Route(webservice.PUT("/configs/theme").
 		To(h.updatePlatformUI).
 		Doc("update customer platform ui config ").
-		Reads(PlatformUIConf{}))
+		Reads(PlatformUIConf{}).
+		Returns(http.StatusOK, api.StatusOK, PlatformUIConf{}))
 
 	webservice.Route(webservice.GET("/configs/theme").
 		To(h.getPlatformUI).
-		Doc("get customer platform ui config"))
+		Doc("get customer platform ui config").
+		Returns(http.StatusOK, api.StatusOK, PlatformUIConf{}))
 
 	webservice.Route(webservice.DELETE("/configs/theme").
 		To(h.deletePlatformUI).
-		Doc("delete customer platform ui"))
+		Doc("delete customer platform ui").
+		Returns(http.StatusOK, api.StatusOK, "success"))
 	c.Add(webservice)
 	return nil
 }
