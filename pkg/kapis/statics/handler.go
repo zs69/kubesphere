@@ -76,7 +76,7 @@ func (h handler) getStaticsImage(req *restful.Request, resp *restful.Response) {
 	nameAndSuffix := strings.Split(fileName, ".")
 
 	if len(nameAndSuffix) != 2 {
-		ksapi.HandleBadRequest(resp, req, errors.New("invalid filename "))
+		ksapi.HandleBadRequest(resp, req, errors.New("invalid filename"))
 		return
 	}
 	url, err := h.s3Client.GetDownloadURL(nameAndSuffix[0], fileName)
