@@ -52,7 +52,7 @@ func (h handler) createPlatformUI(req *restful.Request, resp *restful.Response) 
 
 	configMap := defaultPlatformUICM()
 	configMapData := make(map[string]string)
-	err = mapstructure.Decode(params, configMapData)
+	err = mapstructure.Decode(params, &configMapData)
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleInternalError(resp, req, err)
@@ -83,7 +83,7 @@ func (h handler) updatePlatformUI(req *restful.Request, resp *restful.Response) 
 	}
 	configMap := defaultPlatformUICM()
 	configMapData := make(map[string]string)
-	err = mapstructure.Decode(params, configMapData)
+	err = mapstructure.Decode(params, &configMapData)
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleInternalError(resp, req, err)
