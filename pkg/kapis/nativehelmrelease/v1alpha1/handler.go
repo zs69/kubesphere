@@ -208,7 +208,7 @@ func (h *nativeHelmReleaseHandler) Run() {
 			}
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			secret := oldObj.(*corev1.Secret)
+			secret := newObj.(*corev1.Secret)
 			if rls, err := helmcmdrelease.ToReleaseCR(secret); err != nil {
 				if err == helmcmdrelease.ErrNotHelmRelease {
 					klog.V(4).Infof("secret %s/%s is not a helm release", secret.Namespace, secret.Name)
