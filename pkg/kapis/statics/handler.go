@@ -27,7 +27,7 @@ const (
 	Size2M int64 = 2 * 1024 * 1024
 )
 
-var StaticStyles = sets.NewString(ImageStylePNG, ImageStyleJPG, ImageStyleSVG)
+var supportedMIMETypes = sets.NewString(ImageStylePNG, ImageStyleJPG, ImageStyleSVG)
 
 type handler struct {
 	s3Client s3.Interface
@@ -46,12 +46,12 @@ func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
 	}
 	fileHeaders, existed := req.Request.MultipartForm.File["image"]
 	if !existed || len(fileHeaders) == 0 {
-		ksapi.HandleBadRequest(resp, req, errors.New("image filed not existed"))
+		ksapi.HandleBadRequest(resp, req, errors.New("mime type is not supported"))
 		return
 	}
 	fileHeader := fileHeaders[0]
 	contentType := fileHeader.Header.Get("Content-Type")
-	if !StaticStyles.Has(contentType) {
+	if !supportedMIMETypes.Has(contentType) {
 		ksapi.HandleBadRequest(resp, req, errors.New("not supported fileHeader style"))
 		return
 	}
@@ -59,14 +59,14 @@ func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
 	defer file.Close()
 	if fileErr != nil {
 		klog.Error(fileErr)
-		ksapi.HandleBadRequest(resp, req, fileErr)
+		ksapi.HandleInternalError(resp, req, fileErr)
 		return
 	}
 	fileName, fileType := randStaticsFileName(contentType)
 	err = h.s3Client.Upload(fileName, fileName+fileType, file, int(fileHeader.Size))
 	if err != nil {
 		klog.Error(err)
-		ksapi.HandleBadRequest(resp, req, err)
+		ksapi.HandleInternalError(resp, req, err)
 		return
 	}
 	result := map[string]string{"image": StaticsPath + fileName}
@@ -84,7 +84,7 @@ func (h handler) getStaticsImage(req *restful.Request, resp *restful.Response) {
 	url, err := h.s3Client.GetDownloadURL(nameAndSuffix[0], fileName)
 	if err != nil {
 		klog.Error(err)
-		ksapi.HandleBadRequest(resp, req, err)
+		ksapi.HandleInternalError(resp, req, err)
 	}
 	img, err := http.Get(url)
 	if err != nil {
