@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	staticsv1alpha1 "kubesphere.io/kubesphere/pkg/kapis/statics"
 	"net/http"
 	rt "runtime"
 	"strconv"
@@ -94,6 +93,7 @@ import (
 	resourcesv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/resources/v1alpha2"
 	resourcev1alpha3 "kubesphere.io/kubesphere/pkg/kapis/resources/v1alpha3"
 	servicemeshv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/servicemesh/metrics/v1alpha2"
+	staticsapi "kubesphere.io/kubesphere/pkg/kapis/statics"
 	tenantv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/tenant/v1alpha2"
 	tenantv1alpha3 "kubesphere.io/kubesphere/pkg/kapis/tenant/v1alpha3"
 	terminalv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/terminal/v1alpha2"
@@ -289,7 +289,7 @@ func (s *APIServer) installKubeSphereAPIs(stopCh <-chan struct{}) {
 	urlruntime.Must(gatewayv1alpha1.AddToContainer(s.container, s.Config.GatewayOptions, s.RuntimeCache, s.RuntimeClient, s.InformerFactory, s.KubernetesClient.Kubernetes(), s.LoggingClient))
 	urlruntime.Must(helmshreleasev1alpha1.AddToContainer(s.container, s.InformerFactory.KubeSphereSharedInformerFactory(), s.KubernetesClient.KubeSphere(),
 		s.ClusterClient, s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets(), s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().ConfigMaps(), s.Config.NativeHelmReleaseOptions))
-	urlruntime.Must(staticsv1alpha1.AddToContainer(s.container, s.S3Client))
+	urlruntime.Must(staticsapi.AddToContainer(s.container, s.S3Client))
 	urlruntime.Must(platformuiv1alpha1.AddToContainer(s.container, s.KubernetesClient.Kubernetes()))
 }
 
