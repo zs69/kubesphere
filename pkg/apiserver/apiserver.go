@@ -89,7 +89,6 @@ import (
 	openpitrixv1 "kubesphere.io/kubesphere/pkg/kapis/openpitrix/v1"
 	openpitrixv2alpha1 "kubesphere.io/kubesphere/pkg/kapis/openpitrix/v2alpha1"
 	operationsv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/operations/v1alpha2"
-	platformuiv1alpha1 "kubesphere.io/kubesphere/pkg/kapis/platformui/v1alpha1"
 	resourcesv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/resources/v1alpha2"
 	resourcev1alpha3 "kubesphere.io/kubesphere/pkg/kapis/resources/v1alpha3"
 	servicemeshv1alpha2 "kubesphere.io/kubesphere/pkg/kapis/servicemesh/metrics/v1alpha2"
@@ -238,7 +237,7 @@ func (s *APIServer) installKubeSphereAPIs(stopCh <-chan struct{}) {
 	rbacAuthorizer := rbac.NewRBACAuthorizer(amOperator)
 
 	urlruntime.Must(licensev1alpha1.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.InformerFactory, s.Config.MultiClusterOptions))
-	urlruntime.Must(configv1alpha2.AddToContainer(s.container, s.Config))
+	urlruntime.Must(configv1alpha2.AddToContainer(s.container, s.Config, s.KubernetesClient.Kubernetes()))
 	urlruntime.Must(resourcev1alpha3.AddToContainer(s.container, s.InformerFactory, s.RuntimeCache))
 	urlruntime.Must(monitoringv1alpha3.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.MonitoringClient, s.MetricsClient, s.InformerFactory, s.OpenpitrixClient, s.Config.MonitoringOptions.EnableGPUMonitoring, s.RuntimeClient))
 	urlruntime.Must(o11ymonitoringv1alpha1.AddToContainer(s.container, s.KubernetesClient.Kubernetes(), s.O11yMonitoringClient, s.InformerFactory))
@@ -290,7 +289,6 @@ func (s *APIServer) installKubeSphereAPIs(stopCh <-chan struct{}) {
 	urlruntime.Must(helmshreleasev1alpha1.AddToContainer(s.container, s.InformerFactory.KubeSphereSharedInformerFactory(), s.KubernetesClient.KubeSphere(),
 		s.ClusterClient, s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().Secrets(), s.InformerFactory.KubernetesSharedInformerFactory().Core().V1().ConfigMaps(), s.Config.NativeHelmReleaseOptions))
 	urlruntime.Must(staticsapi.AddToContainer(s.container, s.S3Client))
-	urlruntime.Must(platformuiv1alpha1.AddToContainer(s.container, s.KubernetesClient.Kubernetes()))
 }
 
 // installCRDAPIs Install CRDs to the KAPIs with List and Get options

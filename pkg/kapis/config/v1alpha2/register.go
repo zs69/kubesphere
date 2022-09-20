@@ -19,6 +19,7 @@ package v1alpha2
 import (
 	"github.com/emicklei/go-restful"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 
 	kubesphereconfig "kubesphere.io/kubesphere/pkg/apiserver/config"
 	"kubesphere.io/kubesphere/pkg/apiserver/runtime"
@@ -31,9 +32,9 @@ const (
 
 var GroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1alpha2"}
 
-func AddToContainer(c *restful.Container, config *kubesphereconfig.Config) error {
+func AddToContainer(c *restful.Container, config *kubesphereconfig.Config, k8sCLi kubernetes.Interface) error {
 	webservice := runtime.NewWebService(GroupVersion)
-
+	h := newPlatformUIHandler(k8sCLi)
 	webservice.Route(webservice.GET("/configs/oauth").
 		Doc("Information about the authorization server are published.").
 		To(func(request *restful.Request, response *restful.Response) {
@@ -55,6 +56,24 @@ func AddToContainer(c *restful.Container, config *kubesphereconfig.Config) error
 			}
 			response.WriteAsJson(kinds)
 		}))
+
+	webservice.Route(webservice.POST("/configs/theme").
+		To(h.createPlatformUI).
+		Doc("create customer platform ui config ").
+		Reads(PlatformUIConf{}))
+
+	webservice.Route(webservice.PUT("/configs/theme").
+		To(h.updatePlatformUI).
+		Doc("update customer platform ui config ").
+		Reads(PlatformUIConf{}))
+
+	webservice.Route(webservice.GET("/configs/theme").
+		To(h.getPlatformUI).
+		Doc("get customer platform ui config"))
+
+	webservice.Route(webservice.DELETE("/configs/theme").
+		To(h.deletePlatformUI).
+		Doc("delete customer platform ui"))
 	c.Add(webservice)
 	return nil
 }
