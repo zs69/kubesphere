@@ -72,7 +72,7 @@ func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
 }
 
 func (h handler) getStaticsImage(req *restful.Request, resp *restful.Response) {
-	fileName := req.PathParameter("fileName")
+	fileName := req.PathParameter("name")
 	nameAndSuffix := strings.Split(fileName, ".")
 
 	if len(nameAndSuffix) != 2 {
