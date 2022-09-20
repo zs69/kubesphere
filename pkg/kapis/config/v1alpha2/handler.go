@@ -22,7 +22,7 @@ const (
 )
 
 type handler struct {
-	k8sCli kubernetes.Interface
+	k8sClient kubernetes.Interface
 }
 
 type PlatformUIConf struct {
@@ -33,8 +33,8 @@ type PlatformUIConf struct {
 	Background  string `json:"background,omitempty" yaml:"background,omitempty" mapstructure:"background"`
 }
 
-func newPlatformUIHandler(k8sCli kubernetes.Interface) *handler {
-	return &handler{k8sCli: k8sCli}
+func newPlatformUIHandler(k8sClient kubernetes.Interface) *handler {
+	return &handler{k8sClient: k8sClient}
 }
 
 func (h handler) createPlatformUI(req *restful.Request, resp *restful.Response) {
@@ -60,7 +60,7 @@ func (h handler) createPlatformUI(req *restful.Request, resp *restful.Response) 
 	}
 	marshalStr := string(marshal)
 	configMap.Data[ConfigMapDataPlatformUI] = marshalStr
-	_, err = h.k8sCli.CoreV1().ConfigMaps(NamespaceKubeSphere).Create(context.TODO(), configMap, metav1.CreateOptions{})
+	_, err = h.k8sClient.CoreV1().ConfigMaps(NamespaceKubeSphere).Create(context.TODO(), configMap, metav1.CreateOptions{})
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleBadRequest(resp, req, err)
@@ -91,7 +91,7 @@ func (h handler) updatePlatformUI(req *restful.Request, resp *restful.Response) 
 	}
 	marshalStr := string(marshal)
 	configMap.Data[ConfigMapDataPlatformUI] = marshalStr
-	_, err = h.k8sCli.CoreV1().ConfigMaps(NamespaceKubeSphere).Update(context.TODO(), configMap, metav1.UpdateOptions{})
+	_, err = h.k8sClient.CoreV1().ConfigMaps(NamespaceKubeSphere).Update(context.TODO(), configMap, metav1.UpdateOptions{})
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleBadRequest(resp, req, err)
@@ -101,7 +101,7 @@ func (h handler) updatePlatformUI(req *restful.Request, resp *restful.Response) 
 }
 
 func (h handler) getPlatformUI(req *restful.Request, resp *restful.Response) {
-	cm, err := h.k8sCli.CoreV1().ConfigMaps(NamespaceKubeSphere).Get(context.TODO(), PlatformUIConfigMap, metav1.GetOptions{})
+	cm, err := h.k8sClient.CoreV1().ConfigMaps(NamespaceKubeSphere).Get(context.TODO(), PlatformUIConfigMap, metav1.GetOptions{})
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleNotFound(resp, req, err)
@@ -116,7 +116,7 @@ func (h handler) getPlatformUI(req *restful.Request, resp *restful.Response) {
 }
 
 func (h handler) deletePlatformUI(req *restful.Request, resp *restful.Response) {
-	err := h.k8sCli.CoreV1().ConfigMaps(NamespaceKubeSphere).Delete(context.TODO(), PlatformUIConfigMap, metav1.DeleteOptions{})
+	err := h.k8sClient.CoreV1().ConfigMaps(NamespaceKubeSphere).Delete(context.TODO(), PlatformUIConfigMap, metav1.DeleteOptions{})
 	if err != nil {
 		klog.Error(err)
 		ksapi.HandleBadRequest(resp, req, err)

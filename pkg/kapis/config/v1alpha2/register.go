@@ -32,9 +32,9 @@ const (
 
 var GroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1alpha2"}
 
-func AddToContainer(c *restful.Container, config *kubesphereconfig.Config, k8sCLi kubernetes.Interface) error {
+func AddToContainer(c *restful.Container, config *kubesphereconfig.Config, k8sClient kubernetes.Interface) error {
 	webservice := runtime.NewWebService(GroupVersion)
-	h := newPlatformUIHandler(k8sCLi)
+	h := newPlatformUIHandler(k8sClient)
 	webservice.Route(webservice.GET("/configs/oauth").
 		Doc("Information about the authorization server are published.").
 		To(func(request *restful.Request, response *restful.Response) {
