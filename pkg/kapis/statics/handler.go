@@ -19,8 +19,8 @@ const (
 	StaticsPath = "/statics/images/"
 
 	ImageStylePNG = "images/png"
-	ImageStyleJPG = "images/svg+xml"
-	ImageStyleSVG = "images/jpeg"
+	ImageStyleJPG = "images/jpeg"
+	ImageStyleSVG = "images/svg+xml"
 
 	Size2M int64 = 2 * 1024 * 1024
 )
