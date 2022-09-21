@@ -125,12 +125,12 @@ func (f *sharedInformerFactory) Start(stopCh <-chan struct{}) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	//for informerType, informer := range f.informers {
-	//	if !f.startedInformers[informerType] {
-	//		go informer.Run(stopCh)
-	//		f.startedInformers[informerType] = true
-	//	}
-	//}
+	for informerType, informer := range f.informers {
+		if !f.startedInformers[informerType] {
+			go informer.Run(stopCh)
+			f.startedInformers[informerType] = true
+		}
+	}
 }
 
 // WaitForCacheSync waits for all started informers' cache were synced.
