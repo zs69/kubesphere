@@ -18,9 +18,9 @@ import (
 const (
 	StaticsPath = "/statics/images/"
 
-	ImageStylePNG = "images/png"
-	ImageStyleJPG = "images/jpeg"
-	ImageStyleSVG = "images/svg+xml"
+	ImageStylePNG = "image/png"
+	ImageStyleJPG = "image/jpeg"
+	ImageStyleSVG = "image/svg+xml"
 
 	SeparatorsPoint = "."
 
@@ -52,7 +52,7 @@ func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
 	fileHeader := fileHeaders[0]
 	contentType := fileHeader.Header.Get("Content-Type")
 	if !supportedMIMETypes.Has(contentType) {
-		ksapi.HandleBadRequest(resp, req, errors.New("not supported fileHeader style"))
+		ksapi.HandleBadRequest(resp, req, errors.New("not supported fileHeader style:"+contentType))
 		return
 	}
 	file, fileErr := fileHeader.Open()
@@ -69,7 +69,7 @@ func (h handler) uploadStatics(req *restful.Request, resp *restful.Response) {
 		ksapi.HandleInternalError(resp, req, err)
 		return
 	}
-	result := map[string]string{"image": StaticsPath + fileName}
+	result := map[string]string{"image": StaticsPath + fileName + fileType}
 	resp.WriteAsJson(result)
 }
 
