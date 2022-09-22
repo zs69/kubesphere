@@ -12,9 +12,9 @@ func Test_randStaticsFileName(t *testing.T) {
 		contentType string
 		wantStyle   string
 	}{
-		{"png", "images/png", ".png"},
-		{"jpg", "images/jpeg", ".jpg"},
-		{"svg", "images/svg+xml", ".svg"},
+		{"png", "image/png", ".png"},
+		{"jpg", "image/jpeg", ".jpg"},
+		{"svg", "image/svg+xml", ".svg"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
