@@ -5,12 +5,12 @@ on:
     branches:
       - 'master'
       - 'release-*'
-      - 'qkcp'
+      - 'kse-3.3'
     tags:
       - 'v*'
   pull_request:
     branches:
-      - 'qkcp'
+      - 'kse-3.3'
       - 'master'
       - 'release-*'
 
