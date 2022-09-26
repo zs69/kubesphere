@@ -5,7 +5,7 @@ on:
     branches:
       - 'master'
       - 'release-*'
-      - 'qkcp'
+      - 'kse-3.3'
     tags:
       - 'v*'
 
