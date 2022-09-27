@@ -17,10 +17,11 @@ limitations under the License.
 package monitoring
 
 const (
-	KubeSphereWorkspaceCount = "kubesphere_workspace_count"
-	KubeSphereUserCount      = "kubesphere_user_count"
-	KubeSphereClusterCount   = "kubesphere_cluser_count"
-	KubeSphereAppTmplCount   = "kubesphere_app_template_count"
+	KubeSphereWorkspaceCount  = "kubesphere_workspace_count"
+	KubeSphereUserCount       = "kubesphere_user_count"
+	KubeSphereClusterCount    = "kubesphere_cluser_count"
+	KubeSphereAppTmplCount    = "kubesphere_app_template_count"
+	KubeSphereGlobalRoleCount = "kubesphere_globle_role_count"
 
 	WorkspaceNamespaceCount = "workspace_namespace_count"
 	WorkspaceDevopsCount    = "workspace_devops_project_count"
@@ -75,6 +76,16 @@ var ClusterMetrics = []string{
 	"clusters_secret_count",
 	"clusters_pv_count",
 	"clusters_ingresses_count",
+	"clusters_gpu_utilization",
+	"clusters_gpu_usage",
+	"clusters_gpu_total",
+	"clusters_gpu_memory_utilization",
+	"clusters_gpu_memory_usage",
+	"clusters_gpu_memory_available",
+	"clusters_gpu_memory_total",
+	"clusters_alerts_critical_total",
+	"clusters_alerts_warning_total",
+	"clusters_alerts_info_total",
 
 	// cluster
 	"cluster_cpu_utilisation",

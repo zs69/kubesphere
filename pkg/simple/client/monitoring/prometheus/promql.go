@@ -30,7 +30,7 @@ const (
 var promQLTemplates = map[string]string{
 	// cluster
 	"cluster_cpu_utilisation":                            ":node_cpu_utilisation:avg1m",
-	"cluster_cpu_usage":                                  `round(:node_cpu_utilisation:avg1m * sum(node:node_num_cpu:sum), 0.001)`,
+	"cluster_cpu_usage":                                  `round(sum(node:node_cpu_utilisation:avg1m{} * node:node_num_cpu:sum{}), 0.001)`,
 	"cluster_cpu_total":                                  "sum(node:node_num_cpu:sum)",
 	"cluster_cpu_non_master_total":                       `sum(node:node_num_cpu:sum{role!="master"})`,
 	"cluster_memory_utilisation":                         ":node_memory_utilisation:",

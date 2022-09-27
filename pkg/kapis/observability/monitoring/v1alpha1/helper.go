@@ -314,7 +314,7 @@ func (h handler) makeQueryOptions(r reqParams, lvl monitoring.Level) (q queryOpt
 		q.option = monitoring.SampleOption{
 			Level:                  monitoring.LevelComponent,
 			QueryType:              r.queryType,
-			ContainerName:          r.clusterName,
+			ClusterName:            r.clusterName,
 			ClusterResourcesFilter: r.clusterResourcesFilter,
 		}
 		switch r.componentType {

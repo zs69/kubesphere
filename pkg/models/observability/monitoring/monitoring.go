@@ -160,6 +160,26 @@ func (mo monitoringOperator) GetKubeSphereStats() Metrics {
 		})
 	}
 
+	globalRoleList, err := mo.ks.Iam().V1alpha2().GlobalRoles().Lister().List(labels.Everything())
+	if err != nil {
+		res.Results = append(res.Results, monitoring.Metric{
+			MetricName: KubeSphereGlobalRoleCount,
+			Error:      err.Error(),
+		})
+	} else {
+		res.Results = append(res.Results, monitoring.Metric{
+			MetricName: KubeSphereGlobalRoleCount,
+			MetricData: monitoring.MetricData{
+				MetricType: monitoring.MetricTypeVector,
+				MetricValues: []monitoring.MetricValue{
+					{
+						Sample: &monitoring.Point{now, float64(len(globalRoleList))},
+					},
+				},
+			},
+		})
+	}
+
 	usrList, err := mo.ks.Iam().V1alpha2().Users().Lister().List(labels.Everything())
 	if err != nil {
 		res.Results = append(res.Results, monitoring.Metric{

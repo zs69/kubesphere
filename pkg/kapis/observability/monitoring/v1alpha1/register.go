@@ -639,6 +639,7 @@ func AddToContainer(c *restful.Container, k8sClient kubernetes.Interface, monito
 	ws.Route(ws.GET("/clusters/{cluster}/namespaces/{namespace}/ingresses").
 		To(h.handleIngressMetricsQuery).
 		Doc("Get Ingress-level metric data for the specific namespace's Ingresses of the specified cluster.").
+		Param(ws.PathParameter("cluster", "The name of cluster").DataType("string").Required(true)).
 		Param(ws.PathParameter("namespace", "The name of the namespace.").DataType("string").Required(true)).
 		Param(ws.QueryParameter("job", "The job name filter. Ingress could be served by multi Ingress controllers, The job filters metric from a specific controller.").DataType("string").Required(true)).
 		Param(ws.QueryParameter("pod", "The pod name filter.").DataType("string")).
@@ -661,6 +662,7 @@ func AddToContainer(c *restful.Container, k8sClient kubernetes.Interface, monito
 	ws.Route(ws.GET("/clusters/{cluster}/namespaces/{namespace}/ingresses/{ingress}").
 		To(h.handleIngressMetricsQuery).
 		Doc("Get Ingress-level metric data for the specific Ingress. Navigate to the Ingress by the Ingress's cluster and namespace.").
+		Param(ws.PathParameter("cluster", "The name of cluster").DataType("string").Required(true)).
 		Param(ws.PathParameter("namespace", "The name of the namespace.").DataType("string").Required(true)).
 		Param(ws.PathParameter("ingress", "ingress name.").DataType("string").Required(true)).
 		Param(ws.QueryParameter("job", "The job name filter. Ingress could be served by multi Ingress controllers, The job filters metric from a specific controller.").DataType("string").Required(true)).
