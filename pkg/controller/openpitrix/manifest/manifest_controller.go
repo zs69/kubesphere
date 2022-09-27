@@ -452,22 +452,34 @@ func getUnstructuredObj(manifest *v1alpha1.Manifest) (objSlice []*unstructured.U
 func updateUnstructuredObjStatus(manifest *v1alpha1.Manifest, obj []*unstructured.Unstructured) *v1alpha1.Manifest {
 	for i := range obj {
 		statusMap, ok := obj[i].Object["status"].(map[string]interface{})
-		if ok {
-			resourceState, ok := statusMap["state"].(string)
-			if ok {
-				if i == 0 {
-					// update custom resource state
-					manifest.Status.ResourceState = resourceState
-				} else {
-					// update related resource state
-					relatedRes := &v1alpha1.RelatedResourceState{
-						ResourceName:  obj[i].GetName(),
-						ResourceState: resourceState,
-					}
-					manifest.Status.RelatedResourceStates = append(manifest.Status.RelatedResourceStates, relatedRes)
-				}
+		if !ok {
+			continue
+		}
+		resourceState, ok := statusMap["state"].(string)
+		if !ok && obj[i].GetKind() == "Kafka" {
+			conditions1, _ := statusMap["conditions"].([]interface{})
+			if len(conditions1) > 0 {
+				conditions2, _ := conditions1[0].(map[string]interface{})
+				typeStr, _ := conditions2["type"].(string)
+				status, _ := conditions2["status"].(string)
+				resourceState = status + "-" + typeStr
 			}
 		}
+		if resourceState == "" || resourceState == "-" {
+			continue
+		}
+		if i == 0 {
+			// update custom resource state
+			manifest.Status.ResourceState = resourceState
+		} else {
+			// update related resource state
+			relatedRes := &v1alpha1.RelatedResourceState{
+				ResourceName:  obj[i].GetName(),
+				ResourceState: resourceState,
+			}
+			manifest.Status.RelatedResourceStates = append(manifest.Status.RelatedResourceStates, relatedRes)
+		}
+
 	}
 	return manifest
 }
