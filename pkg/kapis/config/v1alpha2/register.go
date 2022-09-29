@@ -17,13 +17,16 @@ limitations under the License.
 package v1alpha2
 
 import (
+	"net/http"
+
 	"github.com/emicklei/go-restful"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 
-	"kubesphere.io/kubesphere/pkg/simple/client/gpu"
-
+	"kubesphere.io/kubesphere/pkg/api"
 	kubesphereconfig "kubesphere.io/kubesphere/pkg/apiserver/config"
 	"kubesphere.io/kubesphere/pkg/apiserver/runtime"
+	"kubesphere.io/kubesphere/pkg/simple/client/gpu"
 )
 
 const (
@@ -32,9 +35,9 @@ const (
 
 var GroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1alpha2"}
 
-func AddToContainer(c *restful.Container, config *kubesphereconfig.Config) error {
+func AddToContainer(c *restful.Container, config *kubesphereconfig.Config, k8sClient kubernetes.Interface) error {
 	webservice := runtime.NewWebService(GroupVersion)
-
+	h := newPlatformUIHandler(k8sClient)
 	webservice.Route(webservice.GET("/configs/oauth").
 		Doc("Information about the authorization server are published.").
 		To(func(request *restful.Request, response *restful.Response) {
@@ -57,6 +60,27 @@ func AddToContainer(c *restful.Container, config *kubesphereconfig.Config) error
 			response.WriteAsJson(kinds)
 		}))
 
+	webservice.Route(webservice.POST("/configs/theme").
+		To(h.createPlatformUI).
+		Doc("create customer platform ui config ").
+		Reads(PlatformUIConf{}).
+		Returns(http.StatusOK, api.StatusOK, PlatformUIConf{}))
+
+	webservice.Route(webservice.PUT("/configs/theme").
+		To(h.updatePlatformUI).
+		Doc("update customer platform ui config ").
+		Reads(PlatformUIConf{}).
+		Returns(http.StatusOK, api.StatusOK, PlatformUIConf{}))
+
+	webservice.Route(webservice.GET("/configs/theme").
+		To(h.getPlatformUI).
+		Doc("get customer platform ui config").
+		Returns(http.StatusOK, api.StatusOK, PlatformUIConf{}))
+
+	webservice.Route(webservice.DELETE("/configs/theme").
+		To(h.deletePlatformUI).
+		Doc("delete customer platform ui").
+		Returns(http.StatusOK, api.StatusOK, "success"))
 	c.Add(webservice)
 	return nil
 }
