@@ -172,7 +172,6 @@ func (r *GlobalPrometheusRuleReconcilers) setupReconciler(ctx context.Context,
 
 	clusterName := cluster.Name
 	kubeconfig := cluster.Spec.Connection.KubeConfig
-	_, isHost := cluster.Labels[clusterv1alpha1.HostCluster]
 
 	if reconciler, ok := r.reconcilerMap[clusterName]; ok {
 		if bytes.Equal(reconciler.kubeconfig, kubeconfig) {
@@ -216,8 +215,6 @@ func (r *GlobalPrometheusRuleReconcilers) setupReconciler(ctx context.Context,
 			return true
 		case string(RuleLevelCluster):
 			return true
-		case string(RuleLevelGlobal):
-			return isHost
 		}
 		return false
 	}
