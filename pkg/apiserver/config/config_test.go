@@ -245,7 +245,7 @@ func newTestMap() map[string]bool {
 		"openpitrix":          true,
 		"openpitrix.appstore": true,
 		"nativehelmrelease":   false,
-		"redis":               true,
+		"cache":               true,
 		"s3":                  true,
 		"servicemesh":         true,
 		"sonarqube":           true,
@@ -303,9 +303,6 @@ func TestToMap(t *testing.T) {
 	}
 	saveTestConfig(t, conf)
 	defer cleanTestConfig(t)
-
-	conf.RedisOptions.Password = "P@88w0rd"
-	os.Setenv("KUBESPHERE_REDIS_PASSWORD", "P@88w0rd")
 
 	conf2, err := TryLoadFromDisk()
 	if err != nil {
