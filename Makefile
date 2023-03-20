@@ -149,7 +149,7 @@ test: vet test-env ;$(info $(M)...Begin to run tests.)  @ ## Run tests.
 
 .PHONY: test-env
 test-env: ;$(info $(M)...Begin to setup test env) @ ## Download unit test libraries e.g. kube-apiserver etcd.
-	@hack/setup-kubebuilder-env.sh
+	@. ./hack/setup-kubebuilder-env.sh
 
 .PHONY: clean
 clean: ;$(info $(M)...Begin to clean.)  @ ## Clean.
